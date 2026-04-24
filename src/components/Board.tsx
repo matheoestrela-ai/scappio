@@ -43,6 +43,8 @@ import {
   Trash2,
   Palette,
   Sparkles as SparklesIcon,
+  LayoutGrid,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
