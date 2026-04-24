@@ -10,61 +10,37 @@ import jsPDF from "jspdf";
 
 const MAX_SIZE = 8 * 1024 * 1024; // 8MB
 
-const isBoardShape = (value: unknown): value is BoardData["nodes"][number]["shape"] =>
-  value === "rectangle" || value === "circle" || value === "diamond";
+const isLevel = (v: unknown): v is 1 | 2 | 3 => v === 1 || v === 2 || v === 3;
 
 const parseBoardData = (input: unknown): BoardData | null => {
   if (!input || typeof input !== "object") return null;
+  const c = input as { nodes?: Array<Record<string, unknown>> };
+  if (!Array.isArray(c.nodes)) return null;
 
-  const candidate = input as {
-    nodes?: Array<Record<string, unknown>>;
-    edges?: Array<Record<string, unknown>>;
-  };
-
-  if (!Array.isArray(candidate.nodes) || !Array.isArray(candidate.edges)) return null;
-
-  const nodes = candidate.nodes
-    .filter((node) => {
-      const position = node.position as { x?: unknown; y?: unknown } | undefined;
-      return (
-        typeof node.id === "string" &&
-        typeof node.label === "string" &&
-        isBoardShape(node.shape) &&
-        !!position &&
-        typeof position.x === "number" &&
-        typeof position.y === "number"
-      );
-    })
-    .map((node) => ({
-      id: node.id as string,
-      label: node.label as string,
-      shape: node.shape as BoardData["nodes"][number]["shape"],
-      position: {
-        x: (node.position as { x: number; y: number }).x,
-        y: (node.position as { x: number; y: number }).y,
-      },
-    }));
-
-  const nodeIds = new Set(nodes.map((node) => node.id));
-
-  const edges = candidate.edges
+  const nodes = c.nodes
     .filter(
-      (edge) =>
-        typeof edge.source === "string" &&
-        typeof edge.target === "string" &&
-        nodeIds.has(edge.source) &&
-        nodeIds.has(edge.target) &&
-        (typeof edge.label === "string" || typeof edge.label === "undefined"),
+      (n) =>
+        typeof n.id === "string" &&
+        typeof n.label === "string" &&
+        isLevel(n.level) &&
+        (n.parent === null || typeof n.parent === "string"),
     )
-    .map((edge) => ({
-      source: edge.source as string,
-      target: edge.target as string,
-      ...(typeof edge.label === "string" ? { label: edge.label } : {}),
+    .map((n) => ({
+      id: n.id as string,
+      label: n.label as string,
+      level: n.level as 1 | 2 | 3,
+      parent: (n.parent as string | null) ?? null,
     }));
 
   if (!nodes.length) return null;
 
-  return { nodes, edges };
+  // Ensure parents reference existing ids
+  const ids = new Set(nodes.map((n) => n.id));
+  const safe = nodes.map((n) =>
+    n.parent && !ids.has(n.parent) ? { ...n, parent: null } : n,
+  );
+
+  return { nodes: safe };
 };
 
 const Dashboard = () => {
@@ -272,7 +248,9 @@ const Dashboard = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4" />
-              {board.nodes.length} nœuds · {board.edges.length} connexions
+              {board.nodes.length} nœuds ·{" "}
+              {board.nodes.filter((n) => n.level === 2).length} idées principales ·{" "}
+              {board.nodes.filter((n) => n.level === 3).length} détails
             </div>
             <div
               ref={boardRef}

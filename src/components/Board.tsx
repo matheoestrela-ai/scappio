@@ -10,33 +10,28 @@ import ReactFlow, {
   type Node,
   type NodeProps,
 } from "reactflow";
+import dagre from "dagre";
 
-export type BoardShape = "rectangle" | "circle" | "diamond";
+export type BoardLevel = 1 | 2 | 3;
 
 export type BoardNode = {
   id: string;
   label: string;
-  shape: BoardShape;
-  position: { x: number; y: number };
-};
-
-export type BoardEdge = {
-  source: string;
-  target: string;
-  label?: string;
+  level: BoardLevel;
+  parent: string | null;
 };
 
 export type BoardData = {
   nodes: BoardNode[];
-  edges: BoardEdge[];
 };
 
-type FlowNodeData = { label: string; shape: BoardShape };
+type FlowNodeData = { label: string; level: BoardLevel };
 
-const SHAPE_COLOR: Record<BoardShape, string> = {
-  rectangle: "#4F46E5", // indigo
-  circle: "#7C3AED", // violet
-  diamond: "#F59E0B", // amber
+// Per-level dimensions (used by both renderer and dagre)
+const NODE_DIMS: Record<BoardLevel, { w: number; h: number }> = {
+  1: { w: 320, h: 96 },
+  2: { w: 230, h: 80 },
+  3: { w: 190, h: 64 },
 };
 
 const handleStyle = {
@@ -50,174 +45,147 @@ const handleStyle = {
 const NodeHandles = () => (
   <>
     <Handle type="target" position={Position.Top} style={handleStyle} />
-    <Handle type="source" position={Position.Right} style={handleStyle} />
     <Handle type="source" position={Position.Bottom} style={handleStyle} />
-    <Handle type="target" position={Position.Left} style={handleStyle} />
   </>
 );
 
-const NodeText = ({ label, className = "" }: { label: string; className?: string }) => (
+const RootNode = ({ data }: NodeProps<FlowNodeData>) => (
   <div
-    className={`px-4 text-center text-sm font-semibold leading-snug text-white whitespace-pre-wrap break-words ${className}`}
-    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
-  >
-    {label}
-  </div>
-);
-
-const RectangleNode = ({ data }: NodeProps<FlowNodeData>) => (
-  <div
-    className="relative flex min-h-[72px] w-[220px] items-center justify-center rounded-2xl shadow-node"
+    className="flex items-center justify-center rounded-2xl px-6 text-center text-white shadow-node"
     style={{
-      background: `linear-gradient(135deg, ${SHAPE_COLOR.rectangle} 0%, #6366F1 100%)`,
+      width: NODE_DIMS[1].w,
+      height: NODE_DIMS[1].h,
+      background: "linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)",
+      border: "1px solid rgba(255,255,255,0.15)",
     }}
   >
-    <NodeHandles />
-    <NodeText label={data.label} className="py-3" />
-  </div>
-);
-
-const CircleNode = ({ data }: NodeProps<FlowNodeData>) => (
-  <div
-    className="relative flex h-[160px] w-[160px] items-center justify-center rounded-full shadow-node"
-    style={{
-      background: `linear-gradient(135deg, ${SHAPE_COLOR.circle} 0%, #A855F7 100%)`,
-    }}
-  >
-    <NodeHandles />
-    <NodeText label={data.label} />
-  </div>
-);
-
-const DiamondNode = ({ data }: NodeProps<FlowNodeData>) => (
-  <div className="relative h-[180px] w-[180px]">
     <NodeHandles />
     <div
-      className="absolute inset-[22px] rounded-2xl shadow-node"
-      style={{
-        transform: "rotate(45deg)",
-        background: `linear-gradient(135deg, ${SHAPE_COLOR.diamond} 0%, #FBBF24 100%)`,
-      }}
-    />
-    <div className="absolute inset-0 flex items-center justify-center px-8">
-      <NodeText label={data.label} />
+      className="text-lg font-bold leading-tight tracking-tight"
+      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.25)" }}
+    >
+      {data.label}
     </div>
   </div>
 );
 
+const MainNode = ({ data }: NodeProps<FlowNodeData>) => (
+  <div
+    className="flex items-center justify-center rounded-xl px-4 text-center text-white shadow-node"
+    style={{
+      width: NODE_DIMS[2].w,
+      height: NODE_DIMS[2].h,
+      background: "linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)",
+    }}
+  >
+    <NodeHandles />
+    <div
+      className="text-sm font-semibold leading-snug"
+      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.2)" }}
+    >
+      {data.label}
+    </div>
+  </div>
+);
+
+const DetailNode = ({ data }: NodeProps<FlowNodeData>) => (
+  <div
+    className="flex items-center justify-center rounded-lg px-3 text-center"
+    style={{
+      width: NODE_DIMS[3].w,
+      height: NODE_DIMS[3].h,
+      background: "#EDE9FE",
+      color: "#4338CA",
+      border: "1px solid #C4B5FD",
+      boxShadow: "0 4px 10px -4px rgba(124, 58, 237, 0.18)",
+    }}
+  >
+    <NodeHandles />
+    <div className="text-xs font-medium leading-snug">{data.label}</div>
+  </div>
+);
+
 const nodeTypes = {
-  rectangle: RectangleNode,
-  circle: CircleNode,
-  diamond: DiamondNode,
+  level1: RootNode,
+  level2: MainNode,
+  level3: DetailNode,
 };
 
-/** Lightweight hierarchical layout: main idea on top, children below. */
-const layoutNodes = (data: BoardData): BoardNode[] => {
-  const { nodes, edges } = data;
-  if (!nodes.length) return nodes;
+/** Run dagre to compute positions for a clean top-down hierarchy. */
+const computeLayout = (nodes: BoardNode[]) => {
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({
+    rankdir: "TB",
+    nodesep: 48,
+    ranksep: 96,
+    marginx: 40,
+    marginy: 40,
+  });
+  g.setDefaultEdgeLabel(() => ({}));
 
-  // Build parent map (first incoming edge wins)
-  const parents = new Map<string, string>();
-  edges.forEach((e) => {
-    if (!parents.has(e.target) && e.source !== e.target) {
-      parents.set(e.target, e.source);
+  nodes.forEach((n) => {
+    const { w, h } = NODE_DIMS[n.level];
+    g.setNode(n.id, { width: w, height: h });
+  });
+
+  nodes.forEach((n) => {
+    if (n.parent) g.setEdge(n.parent, n.id);
+  });
+
+  dagre.layout(g);
+
+  const positions = new Map<string, { x: number; y: number }>();
+  nodes.forEach((n) => {
+    const { w, h } = NODE_DIMS[n.level];
+    const pos = g.node(n.id);
+    if (pos) {
+      // dagre returns center; React Flow expects top-left
+      positions.set(n.id, { x: pos.x - w / 2, y: pos.y - h / 2 });
     }
   });
+  return positions;
+};
 
-  // Roots = nodes with no parent
-  const roots = nodes.filter((n) => !parents.has(n.id));
-  if (!roots.length) return nodes;
-
-  // Build children map
-  const children = new Map<string, string[]>();
-  edges.forEach((e) => {
-    if (!children.has(e.source)) children.set(e.source, []);
-    children.get(e.source)!.push(e.target);
-  });
-
-  // Assign levels (BFS)
-  const level = new Map<string, number>();
-  const queue: string[] = [];
-  roots.forEach((r) => {
-    level.set(r.id, 0);
-    queue.push(r.id);
-  });
-  while (queue.length) {
-    const id = queue.shift()!;
-    const lvl = level.get(id)!;
-    (children.get(id) ?? []).forEach((c) => {
-      if (!level.has(c)) {
-        level.set(c, lvl + 1);
-        queue.push(c);
-      }
-    });
-  }
-  // Orphans get level 0
-  nodes.forEach((n) => { if (!level.has(n.id)) level.set(n.id, 0); });
-
-  // Group by level
-  const byLevel = new Map<number, string[]>();
-  nodes.forEach((n) => {
-    const l = level.get(n.id) ?? 0;
-    if (!byLevel.has(l)) byLevel.set(l, []);
-    byLevel.get(l)!.push(n.id);
-  });
-
-  const H_GAP = 280;
-  const V_GAP = 200;
-  const positions = new Map<string, { x: number; y: number }>();
-
-  const sortedLevels = [...byLevel.keys()].sort((a, b) => a - b);
-  sortedLevels.forEach((lvl) => {
-    const ids = byLevel.get(lvl)!;
-    const totalWidth = (ids.length - 1) * H_GAP;
-    ids.forEach((id, i) => {
-      positions.set(id, {
-        x: i * H_GAP - totalWidth / 2,
-        y: lvl * V_GAP,
-      });
-    });
-  });
-
-  return nodes.map((n) => ({ ...n, position: positions.get(n.id) ?? n.position }));
+const EDGE_COLORS: Record<BoardLevel, string> = {
+  1: "#4F46E5",
+  2: "#7C3AED",
+  3: "#A78BFA",
 };
 
 const Board = ({ data }: { data: BoardData }) => {
   const { nodes, edges } = useMemo(() => {
-    const laidOut = layoutNodes(data);
+    const positions = computeLayout(data.nodes);
 
-    const flowNodes: Node<FlowNodeData>[] = laidOut.map((node) => ({
-      id: node.id,
-      type: node.shape,
-      position: node.position,
+    const flowNodes: Node<FlowNodeData>[] = data.nodes.map((n) => ({
+      id: n.id,
+      type: `level${n.level}`,
+      position: positions.get(n.id) ?? { x: 0, y: 0 },
       draggable: false,
       selectable: false,
-      data: { label: node.label, shape: node.shape },
+      data: { label: n.label, level: n.level },
     }));
 
-    const flowEdges: Edge[] = data.edges.map((edge, index) => ({
-      id: `edge-${edge.source}-${edge.target}-${index}`,
-      source: edge.source,
-      target: edge.target,
-      label: edge.label,
-      type: "default", // bezier curve
-      animated: false,
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 18,
-        height: 18,
-        color: "#7C3AED",
-      },
-      style: {
-        stroke: "#7C3AED",
-        strokeWidth: 2,
-        opacity: 0.75,
-      },
-      labelStyle: { fill: "#4338CA", fontSize: 11, fontWeight: 600 },
-      labelBgStyle: { fill: "#FFFFFF", fillOpacity: 0.95 },
-      labelBgBorderRadius: 6,
-      labelBgPadding: [6, 3],
-    }));
+    // Edges derived strictly from parent → child
+    const flowEdges: Edge[] = data.nodes
+      .filter((n) => n.parent)
+      .map((n) => ({
+        id: `e-${n.parent}-${n.id}`,
+        source: n.parent as string,
+        target: n.id,
+        type: "smoothstep",
+        animated: false,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 14,
+          height: 14,
+          color: EDGE_COLORS[n.level],
+        },
+        style: {
+          stroke: EDGE_COLORS[n.level],
+          strokeWidth: n.level === 2 ? 2 : 1.5,
+          opacity: 0.7,
+        },
+      }));
 
     return { nodes: flowNodes, edges: flowEdges };
   }, [data]);
@@ -229,13 +197,12 @@ const Board = ({ data }: { data: BoardData }) => {
         edges={edges}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2, minZoom: 0.4 }}
+        fitViewOptions={{ padding: 0.18, minZoom: 0.3 }}
         proOptions={{ hideAttribution: true }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
         zoomOnDoubleClick={false}
-        defaultEdgeOptions={{ type: "default" }}
       >
         <Background variant={BackgroundVariant.Dots} color="#C4B5FD" gap={28} size={1.5} />
         <Controls showInteractive={false} />
