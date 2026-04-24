@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon } from "lucide-react";
 import Board, { type BoardData, type BoardApi } from "@/components/Board";
-import SuggestionsPanel, { type Insights } from "@/components/SuggestionsPanel";
+import SuggestionsPanel, {
+  type Insights,
+  type Suggestion,
+} from "@/components/SuggestionsPanel";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
@@ -84,11 +87,109 @@ const Dashboard = () => {
   const [processing, setProcessing] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [improving, setImproving] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
+
+  const refreshSuggestions = useCallback(async () => {
+    const api = boardApiRef.current;
+    if (!api) return;
+    const current = api.getBoardData();
+    if (!current.nodes.length) return;
+    setSuggestionsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("board-suggest", {
+        body: { board: current },
+      });
+      if (error) {
+        const msg = (error as any)?.message ?? "Erreur de suggestions";
+        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
+        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        else toast.error(msg);
+        return;
+      }
+      setInsights({
+        summary: typeof (data as any)?.summary === "string" ? (data as any).summary : "",
+        warning:
+          typeof (data as any)?.warning === "string" && (data as any).warning.length
+            ? (data as any).warning
+            : null,
+        suggestions: Array.isArray((data as any)?.suggestions)
+          ? ((data as any).suggestions as any[]).map((s) => ({
+              id: String(s.id),
+              category: s.category,
+              label: String(s.label),
+              why: typeof s.why === "string" ? s.why : "",
+              level: s.level === 2 ? 2 : 3,
+              parentHint: s.parent_id ?? null,
+            }))
+          : [],
+      });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, []);
+
+  const autoImprove = useCallback(async () => {
+    const api = boardApiRef.current;
+    if (!api) return;
+    const current = api.getBoardData();
+    if (!current.nodes.length) return;
+    setImproving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("board-improve", {
+        body: { board: current },
+      });
+      if (error) {
+        const msg = (error as any)?.message ?? "Erreur Auto-améliorer";
+        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
+        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        else toast.error(msg);
+        return;
+      }
+      const nodes = (data as any)?.nodes;
+      if (!Array.isArray(nodes) || !nodes.length) {
+        toast.error("L'IA n'a pas pu restructurer le board.");
+        return;
+      }
+      api.replaceBoard({ nodes });
+      setBoard({ nodes });
+      toast.success("Board restructuré par l'IA");
+      // refresh suggestions on the new board
+      setTimeout(() => refreshSuggestions(), 200);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+    } finally {
+      setImproving(false);
+    }
+  }, [refreshSuggestions]);
+
+  const acceptSuggestion = useCallback((s: Suggestion) => {
+    boardApiRef.current?.addSuggestionNode({
+      label: s.label,
+      level: s.level,
+      shape: s.shape,
+      parentHint: s.parentHint ?? null,
+    });
+    setInsights((prev) =>
+      prev
+        ? { ...prev, suggestions: prev.suggestions.filter((x) => x.id !== s.id) }
+        : prev,
+    );
+    toast.success("Ajouté au board");
+  }, []);
+
+  const rejectSuggestion = useCallback((id: string) => {
+    setInsights((prev) =>
+      prev ? { ...prev, suggestions: prev.suggestions.filter((x) => x.id !== id) } : prev,
+    );
+  }, []);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -148,25 +249,17 @@ const Dashboard = () => {
       }
 
       setBoard(parsedBoard);
-
-      const ins = (data as any)?.insights;
-      if (ins && typeof ins === "object") {
-        setInsights({
-          summary: typeof ins.summary === "string" ? ins.summary : "",
-          warning: typeof ins.warning === "string" && ins.warning.length ? ins.warning : null,
-          suggestions: Array.isArray(ins.suggestions) ? ins.suggestions : [],
-        });
-      } else {
-        setInsights(null);
-      }
+      setInsights(null);
 
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
+      // Auto-fetch suggestions for the freshly generated board
+      setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     } finally {
       setProcessing(false);
     }
-  }, []);
+  }, [refreshSuggestions]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -312,15 +405,15 @@ const Dashboard = () => {
               >
                 <Board data={board} apiRef={boardApiRef} />
               </div>
-              {insights && (
-                <SuggestionsPanel
-                  insights={insights}
-                  onAdd={(label, level) => {
-                    boardApiRef.current?.addSuggestionNode(label, level);
-                    toast.success("Ajouté au board");
-                  }}
-                />
-              )}
+              <SuggestionsPanel
+                insights={insights}
+                loading={suggestionsLoading}
+                improving={improving}
+                onAccept={acceptSuggestion}
+                onReject={rejectSuggestion}
+                onRefresh={refreshSuggestions}
+                onAutoImprove={autoImprove}
+              />
             </div>
           </div>
         )}
