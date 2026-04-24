@@ -1,77 +1,156 @@
 import { Link } from "react-router-dom";
+import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Sparkles, Share2, ArrowRight, Workflow, FileDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Camera,
+  Sparkles,
+  Share2,
+  ArrowRight,
+  Workflow,
+  FileDown,
+  Menu,
+  X,
+  Clock,
+  Layers,
+  Frown,
+  Zap,
+  Image as ImageIcon,
+  PenLine,
+  MousePointerClick,
+  Wand2,
+  Download,
+  Quote,
+} from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!email.includes("@")) {
+      toast.error("Entre un email valide");
+      return;
+    }
+    toast.success("Inscription confirmée — on te tient au courant !");
+    setEmail("");
+  };
+
   return (
-    <div className="min-h-screen bg-hero">
+    <div className="min-h-screen bg-hero pb-24 md:pb-0">
       {/* Nav */}
-      <header className="container flex items-center justify-between py-6">
-        <Link to="/" className="flex items-center gap-2">
+      <header className="container flex items-center justify-between py-5 md:py-6">
+        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
           <div className="h-8 w-8 rounded-lg bg-gradient-primary shadow-glow" />
           <span className="text-xl font-semibold tracking-tight">gribouille</span>
         </Link>
-        <nav className="flex items-center gap-3">
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition">
-            Connexion
-          </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-3">
+          <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">Comment ça marche</a>
+          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Fonctionnalités</a>
+          <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Témoignages</a>
+          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition">Connexion</Link>
           <Button asChild size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90">
-            <Link to="/auth">Essayer gratuitement</Link>
+            <Link to="/auth">Commencer gratuitement</Link>
           </Button>
         </nav>
+
+        {/* Mobile menu button */}
+        <button
+          aria-label="Menu"
+          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </header>
 
+      {/* Mobile menu drawer */}
+      {menuOpen && (
+        <div className="md:hidden container pb-4">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-elegant flex flex-col gap-1 text-base">
+            <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Comment ça marche</a>
+            <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Le problème</a>
+            <a href="#features" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Fonctionnalités</a>
+            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Témoignages</a>
+            <Link to="/auth" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Connexion</Link>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
-      <section className="container pt-16 pb-24 text-center">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
+      <section className="container pt-8 md:pt-16 pb-16 md:pb-24 text-center">
+        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           Propulsé par l'IA Vision
         </div>
-        <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-bold tracking-tight md:text-7xl">
-          Tes notes manuscrites,
-          <br />
-          <span className="text-gradient">en tableau visuel.</span>
+        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.1] font-bold tracking-tight sm:text-5xl md:text-7xl">
+          Tes notes manuscrites deviennent un{" "}
+          <span className="text-gradient">board visuel structuré</span> en 10 secondes
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Prends une photo de tes gribouillis. gribouille extrait les idées, les
-          priorités et les connexions, puis te livre un mindmap propre en quelques secondes.
+        <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
+          Photographie tes gribouillis. L'IA extrait les idées, les priorités et les connexions.
+          Tu obtiens un mindmap propre et éditable, sans rien retaper.
         </p>
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button asChild size="lg" className="bg-gradient-primary shadow-glow hover:opacity-90">
+        <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-primary shadow-glow hover:opacity-90">
             <Link to="/auth">
-              Essayer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
+              Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
+          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
             <a href="#how">Voir comment ça marche</a>
           </Button>
         </div>
 
-        {/* Mock preview */}
-        <div className="mx-auto mt-20 max-w-5xl rounded-3xl border border-border bg-gradient-card p-3 shadow-elegant">
-          <div className="rounded-2xl bg-gradient-board p-10">
-            <div className="flex flex-col items-center gap-10">
-              {/* Top: main idea (rectangle indigo) */}
-              <div className="rounded-2xl px-6 py-4 text-white font-semibold shadow-node"
-                style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
-                Idée principale
+        {/* Mockup transformation */}
+        <div className="mx-auto mt-12 md:mt-20 max-w-5xl rounded-2xl md:rounded-3xl border border-border bg-gradient-card p-2 md:p-3 shadow-elegant">
+          <div className="rounded-xl md:rounded-2xl bg-gradient-board p-4 md:p-10">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6 md:gap-8">
+              {/* Notes côté gauche */}
+              <div className="rounded-2xl bg-card border border-border p-5 md:p-6 text-left shadow-node">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+                  <ImageIcon className="h-3.5 w-3.5" /> Tes notes
+                </div>
+                <div className="font-handwritten space-y-2 text-sm md:text-base text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
+                  <p>→ Lancer beta</p>
+                  <p>· landing fr</p>
+                  <p>· waitlist email</p>
+                  <p>· 3 témoins</p>
+                  <p>+ partage public ?</p>
+                </div>
               </div>
-              {/* Middle: 3 children */}
-              <div className="flex flex-wrap items-center justify-center gap-10">
-                <div className="flex h-28 w-28 items-center justify-center rounded-full text-white text-sm font-semibold text-center shadow-node"
-                  style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
-                  Concept A
+
+              <div className="flex md:flex-col items-center justify-center gap-2 text-primary">
+                <Sparkles className="h-5 w-5 animate-brand-pulse" />
+                <ArrowRight className="h-5 w-5 md:rotate-90" />
+              </div>
+
+              {/* Board côté droit */}
+              <div className="flex flex-col items-center gap-5 md:gap-6">
+                <div className="rounded-2xl px-5 py-3 text-white text-sm md:text-base font-semibold shadow-node"
+                  style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
+                  Lancer la beta
                 </div>
-                <div className="relative h-28 w-28">
-                  <div className="absolute inset-2 rounded-xl shadow-node"
-                    style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
-                  <div className="absolute inset-0 flex items-center justify-center text-white text-sm font-semibold">
-                    Décision
+                <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6">
+                  <div className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-full text-white text-xs md:text-sm font-semibold text-center px-2 shadow-node"
+                    style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+                    Landing FR
                   </div>
-                </div>
-                <div className="flex h-28 w-28 items-center justify-center rounded-full text-white text-sm font-semibold text-center shadow-node"
-                  style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
-                  Concept B
+                  <div className="relative h-20 w-20 md:h-24 md:w-24">
+                    <div className="absolute inset-2 rounded-xl shadow-node"
+                      style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
+                    <div className="absolute inset-0 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
+                      Waitlist
+                    </div>
+                  </div>
+                  <div className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-full text-white text-xs md:text-sm font-semibold text-center px-2 shadow-node"
+                    style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+                    Témoins
+                  </div>
                 </div>
               </div>
             </div>
@@ -79,52 +158,186 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Social proof */}
+      <section className="container pb-16 md:pb-20">
+        <div className="rounded-2xl border border-border bg-card/60 backdrop-blur px-6 py-6 md:py-7 text-center shadow-elegant">
+          <p className="text-sm md:text-base text-muted-foreground">
+            Déjà <span className="font-semibold text-foreground">2 481 personnes</span> sur la waitlist
+          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-muted-foreground/70 text-sm font-semibold tracking-wide">
+            <span>Miro</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Notion</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Figma</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Linear</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Slack</span>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">Utilisé par des équipes qui viennent de ces outils.</p>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section id="how" className="container py-24">
-        <h2 className="text-center text-3xl font-bold tracking-tight md:text-4xl">
-          Comment ça marche
-        </h2>
-        <p className="mt-3 text-center text-muted-foreground">
-          Trois étapes, zéro friction.
-        </p>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+      <section id="how" className="container py-16 md:py-24">
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
+        <p className="mt-3 text-center text-muted-foreground">Trois étapes, zéro friction.</p>
+        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
-            { icon: Camera, title: "1. Prends en photo", desc: "Drag & drop ou upload une photo JPG/PNG de tes notes manuscrites." },
-            { icon: Workflow, title: "2. L'IA structure", desc: "Notre IA Vision détecte titres, idées, priorités et connexions." },
-            { icon: FileDown, title: "3. Exporte & partage", desc: "Visualise ton tableau, exporte-le en PDF, partage le lien." },
+            { icon: Camera, title: "1. Photo", desc: "Prends ou importe une photo de tes notes manuscrites — JPG ou PNG." },
+            { icon: Workflow, title: "2. IA", desc: "L'IA Vision détecte titres, idées, priorités, flèches et annotations." },
+            { icon: FileDown, title: "3. Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF." },
           ].map((f, i) => (
             <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <f.icon className="h-5 w-5" />
               </div>
               <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="container pb-24">
-        <div className="rounded-3xl border border-border bg-gradient-card p-12 text-center shadow-elegant">
+      {/* Problem */}
+      <section id="problem" className="container py-16 md:py-24">
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+            Miro est trop complexe.<br />
+            Retaper tes notes te fait <span className="text-gradient">perdre du temps</span>.
+          </h2>
+          <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
+            Tes meilleures idées naissent sur papier. Mais entre la photo et un board propre, tout le monde abandonne.
+          </p>
+        </div>
+        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
+          {[
+            { icon: Clock, title: "30 minutes perdues", desc: "Recopier chaque note dans Miro ou Notion à la main, c'est une demi-heure à chaque réunion." },
+            { icon: Layers, title: "Outils trop lourds", desc: "Miro, FigJam, Whimsical : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
+            { icon: Frown, title: "Les idées disparaissent", desc: "Les carnets s'empilent, les photos restent dans la galerie. Personne n'y revient." },
+          ].map((f, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-elegant">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <f.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="container py-16 md:py-24">
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut. Rien de plus.</h2>
+        <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
+        <div className="mt-10 md:mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { icon: Sparkles, title: "IA Vision avancée", desc: "Détecte mots, flèches et hiérarchie même sur une écriture brouillonne." },
+            { icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
+            { icon: PenLine, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
+            { icon: MousePointerClick, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
+            { icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
+            { icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la photo et un mindmap propre, prêt à présenter." },
+          ].map((f, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <f.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section id="testimonials" className="container py-16 md:py-24">
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de retaper</h2>
+        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
+          {[
+            {
+              name: "Camille D.",
+              role: "Product Manager, Paris",
+              text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau.",
+            },
+            {
+              name: "Thomas R.",
+              role: "Fondateur, Lyon",
+              text: "J'ai testé tous les outils de mindmap. gribouille c'est le seul qui comprend mon écriture pourrie. Bluffant.",
+            },
+            {
+              name: "Sarah M.",
+              role: "Designer UX, Bordeaux",
+              text: "L'auto-improve est dingue. Il rajoute les connexions logiques que j'avais oubliées sur le papier. Comme un co-pilote.",
+            },
+          ].map((t, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-elegant flex flex-col">
+              <Quote className="h-6 w-6 text-primary/60" />
+              <p className="mt-4 text-sm md:text-base text-foreground/90 flex-1">"{t.text}"</p>
+              <div className="mt-5 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gradient-primary text-white flex items-center justify-center text-sm font-semibold shadow-glow">
+                  {t.name.charAt(0)}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">{t.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="container pb-16 md:pb-24">
+        <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
           <Share2 className="mx-auto h-8 w-8 text-primary" />
-          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-            Prêt à transformer tes notes ?
+          <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">
+            Arrête de retaper.<br />
+            <span className="text-gradient">Commence à penser.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Crée ton compte gratuitement et upload ta première photo en moins d'une minute.
+            Rejoins la beta gratuite. Crée ton premier board en moins d'une minute.
           </p>
-          <Button asChild size="lg" className="mt-8 bg-gradient-primary shadow-glow hover:opacity-90">
-            <Link to="/auth">
-              Commencer maintenant <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <form
+            onSubmit={handleSubmit}
+            className="mx-auto mt-8 flex flex-col sm:flex-row gap-3 max-w-md"
+          >
+            <Input
+              type="email"
+              required
+              placeholder="ton@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12 text-base"
+              aria-label="Adresse email"
+            />
+            <Button
+              type="submit"
+              size="lg"
+              className="h-12 bg-gradient-primary shadow-glow hover:opacity-90 shrink-0"
+            >
+              Commencer gratuitement
+            </Button>
+          </form>
+          <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
         </div>
       </section>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} gribouille — Construit avec Lovable
       </footer>
+
+      {/* Sticky mobile CTA */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
+        <Button asChild size="lg" className="w-full h-12 bg-gradient-primary shadow-glow hover:opacity-90 text-base">
+          <Link to="/auth">
+            Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 };
