@@ -3,13 +3,13 @@ import ReactFlow, {
   addEdge,
   Background,
   BackgroundVariant,
-  Controls,
   Handle,
   MarkerType,
   Position,
   ReactFlowProvider,
   applyEdgeChanges,
   applyNodeChanges,
+  useReactFlow,
   type Connection,
   type Edge,
   type EdgeChange,
@@ -18,7 +18,7 @@ import ReactFlow, {
   type NodeProps,
 } from "reactflow";
 import dagre from "dagre";
-import { Plus, Trash2, Square, Circle as CircleIcon, Diamond as DiamondIcon } from "lucide-react";
+import { Plus, Trash2, Square, Circle as CircleIcon, Diamond as DiamondIcon, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
