@@ -732,7 +732,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         selected: true,
         data: { ...src.data },
       };
-      setNodes((nds) => nds.map((n) => ({ ...n, selected: false })).concat(dup));
+      setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), dup]);
     },
     [nodes, edges, pushHistory],
   );
@@ -826,7 +826,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           onDelete: () => {},
         },
       };
-      setNodes((nds) => nds.map((n) => ({ ...n, selected: false })).concat(newNode));
+      setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), newNode]);
       setEditingId(id);
     },
     [nodes, edges, pushHistory],
@@ -871,7 +871,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           onDelete: () => {},
         },
       };
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) => [...nds, newNode]);
 
       if (parent) {
         setEdges((eds) => [
