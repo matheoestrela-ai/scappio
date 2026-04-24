@@ -11,77 +11,110 @@ type BoardNode = {
   parent: string | null;
 };
 
-type BoardPayload = {
-  nodes: BoardNode[];
+type Suggestion = {
+  kind: "missing_idea" | "connection" | "question";
+  label: string;
+  level: 1 | 2 | 3;
 };
 
-const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes and turning them into a clean hierarchical mind map.
+type Insights = {
+  summary: string;
+  suggestions: Suggestion[];
+  warning: string | null;
+};
 
-Your job: read the image, understand the underlying structure, and output a STRICT 3-level tree.
+type AnalyzePayload = {
+  nodes: BoardNode[];
+  insights: Insights;
+};
 
-HIERARCHY RULES (MANDATORY):
-- Level 1: EXACTLY ONE root node = the single main topic of the notes. parent = null.
-- Level 2: 3 to 6 main ideas. Each has parent = root node id.
-- Level 3: optional sub-ideas / details. Each has parent = a level-2 node id.
-- A node at level 3 can NEVER have a level-1 parent.
-- A node at level 2 can ONLY have the root as parent.
-- The root has parent = null. No other node has parent = null.
-- No orphans. Every non-root node MUST reference an existing parent id.
-- Tree only — a node has exactly ONE parent. No cycles, no cross-links.
+const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes and turning them into a clean hierarchical mind map AND a smart insights panel.
 
-CONTENT RULES:
+PHASE 1 — EXHAUSTIVE EXTRACTION
+Read the image with extreme care. Do NOT skip anything.
+- Capture every visible idea, keyword, arrow, bullet, and annotation, even if small or in the margins.
+- Read every short word/phrase, even if poorly written. Keep the original handwritten language.
+- Use arrows and visual proximity to infer parent/child relationships.
+- Prefer including a node over dropping it. If unsure of the level, choose level 3.
+
+PHASE 2 — STRICT 3-LEVEL TREE
+- Level 1: EXACTLY ONE root node = the single main topic. parent = "" (empty string).
+- Level 2: 3 to 8 main ideas. Each parent = root id.
+- Level 3: optional sub-ideas / details. Each parent = a level-2 id.
+- A level-3 node can NEVER have a level-1 parent.
+- A level-2 node can ONLY have the root as parent.
+- Tree only: one parent per node, no cycles, no cross-links.
 - The root label is a short title (max 5 words) summarizing the whole note.
-- Level 2 labels are concise themes (max 5 words).
-- Level 3 labels are short details (max 6 words).
-- Keep the original handwritten language.
-- Group related handwritten items under the same level-2 parent so children are coherent.
-- Do NOT create a level-2 node that has no real connection to the main topic.
-- If notes are sparse, it's fine to omit level 3 entirely.
-- If image is unreadable: return one root node labeled "Notes illisibles" and nothing else.
+- Level 2 labels: concise themes (max 5 words).
+- Level 3 labels: short details (max 6 words).
+- If image is unreadable: one root node "Notes illisibles" and empty insights.
 
-OUTPUT:
-- Call the tool extract_tree with { nodes: [...] }.
-- Each node has: id (unique short string), label, level (1|2|3), parent (string id or null).
-- Do NOT include positions — layout is computed automatically.
-- Do NOT include edges — they are derived from parent.`;
+PHASE 3 — INSIGHTS
+Then think about the topic and produce:
+- summary: ONE sentence (max 25 words) describing what the board represents.
+- suggestions: 3 to 6 items to enrich the board. Each is one of:
+    • "missing_idea": a topic clearly missing from the board.
+    • "connection": a sub-idea linking two existing themes.
+    • "question": a thought-provoking question to deepen the subject.
+  Each suggestion has a short label (max 6 words), in the same language as the notes, and a level (2 for major missing themes, 3 for sub-ideas/questions).
+- warning: if the board feels incomplete, sparse, or unbalanced (e.g. < 3 level-2 ideas, or one branch much heavier than others), write a short friendly warning sentence in the notes' language. Otherwise null.
+
+OUTPUT
+Call the tool extract_board with:
+- nodes_json: JSON string of the nodes array (id, label, level, parent="" for root).
+- summary: string.
+- suggestions_json: JSON string of suggestions array, each {kind, label, level}.
+- warning: string or empty string if no warning.`;
 
 const TOOL = {
   type: "function",
   function: {
-    name: "extract_tree",
-    description: "Return the handwritten notes as a strict 3-level hierarchical tree.",
+    name: "extract_board",
+    description:
+      "Return the handwritten notes as a strict 3-level hierarchical tree plus smart insights.",
     parameters: {
       type: "object",
       properties: {
         nodes_json: {
           type: "string",
           description:
-            "A JSON string representing an array of nodes. Each node must be an object with id, label, level (1, 2, or 3), and parent (string id or empty string for the root). Example: [{\"id\":\"root\",\"label\":\"Projet\",\"level\":1,\"parent\":\"\"}]",
+            'JSON string array of nodes. Each node: {"id":string,"label":string,"level":1|2|3,"parent":string}. Root parent is "".',
+        },
+        summary: {
+          type: "string",
+          description: "One-sentence summary of what the board represents.",
+        },
+        suggestions_json: {
+          type: "string",
+          description:
+            'JSON string array. Each item: {"kind":"missing_idea"|"connection"|"question","label":string,"level":2|3}.',
+        },
+        warning: {
+          type: "string",
+          description:
+            "Short friendly warning if the board seems incomplete or unbalanced. Empty string if none.",
         },
       },
-      required: ["nodes_json"],
+      required: ["nodes_json", "summary", "suggestions_json", "warning"],
       additionalProperties: false,
     },
   },
 };
 
-const sanitize = (input: unknown): BoardPayload => {
-  if (!input || typeof input !== "object") throw new Error("Invalid AI payload");
-  const c = input as { nodes?: Array<Record<string, unknown>> };
-  if (!Array.isArray(c.nodes)) throw new Error("Missing nodes");
+const sanitizeNodes = (rawNodes: unknown): BoardNode[] => {
+  if (!Array.isArray(rawNodes)) throw new Error("Missing nodes");
 
-  // First pass: keep structurally valid nodes
-  const raw = c.nodes
+  const raw = rawNodes
     .filter(
-      (n) =>
+      (n: any) =>
+        n &&
         typeof n.id === "string" &&
-        (n.id as string).length > 0 &&
+        n.id.length > 0 &&
         typeof n.label === "string" &&
-        (n.label as string).trim().length > 0 &&
-        (n.level === 1 || n.level === 2 || n.level === 3) &&
-        (n.parent === null || n.parent === undefined || typeof n.parent === "string"),
+        n.label.trim().length > 0 &&
+        (n.level === 1 || n.level === 2 || n.level === 3),
     )
-    .map((n) => {
+    .map((n: any) => {
       const p = n.parent;
       const parent = typeof p === "string" && p.length > 0 ? p : null;
       return {
@@ -94,21 +127,17 @@ const sanitize = (input: unknown): BoardPayload => {
 
   if (!raw.length) throw new Error("No valid nodes");
 
-  // Find single root (level 1, parent null). If multiple, keep first; promote nothing else.
   const roots = raw.filter((n) => n.level === 1 && n.parent === null);
   let root = roots[0];
   if (!root) {
-    // No root: synthesize one from the first level-2 candidate or first node
     const fallback = raw[0];
     root = { id: fallback.id, label: fallback.label, level: 1, parent: null };
   }
 
-  // Force exactly one root
   const cleaned: BoardNode[] = [{ ...root, level: 1, parent: null }];
   const rootId = root.id;
   const idsSeen = new Set<string>([rootId]);
 
-  // Level 2: parent must be root
   const lvl2 = raw.filter((n) => n.level === 2 && n.id !== rootId);
   for (const n of lvl2) {
     if (idsSeen.has(n.id)) continue;
@@ -117,9 +146,8 @@ const sanitize = (input: unknown): BoardPayload => {
   }
   const lvl2Ids = new Set(cleaned.filter((n) => n.level === 2).map((n) => n.id));
 
-  // Cap level 2 at 6
-  if (lvl2Ids.size > 6) {
-    const keep = [...lvl2Ids].slice(0, 6);
+  if (lvl2Ids.size > 8) {
+    const keep = [...lvl2Ids].slice(0, 8);
     const keepSet = new Set(keep);
     for (let i = cleaned.length - 1; i >= 0; i--) {
       if (cleaned[i].level === 2 && !keepSet.has(cleaned[i].id)) {
@@ -131,16 +159,33 @@ const sanitize = (input: unknown): BoardPayload => {
     keep.forEach((id) => lvl2Ids.add(id));
   }
 
-  // Level 3: parent must be a valid level-2 id
   const lvl3 = raw.filter((n) => n.level === 3 && n.id !== rootId);
   for (const n of lvl3) {
     if (idsSeen.has(n.id)) continue;
-    if (!n.parent || !lvl2Ids.has(n.parent)) continue; // drop orphans
+    if (!n.parent || !lvl2Ids.has(n.parent)) continue;
     cleaned.push({ ...n, parent: n.parent });
     idsSeen.add(n.id);
   }
 
-  return { nodes: cleaned };
+  return cleaned;
+};
+
+const sanitizeSuggestions = (raw: unknown): Suggestion[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (s: any) =>
+        s &&
+        typeof s.label === "string" &&
+        s.label.trim().length > 0 &&
+        (s.kind === "missing_idea" || s.kind === "connection" || s.kind === "question"),
+    )
+    .map((s: any) => ({
+      kind: s.kind,
+      label: (s.label as string).trim().slice(0, 80),
+      level: (s.level === 2 || s.level === 3 ? s.level : 3) as 2 | 3,
+    }))
+    .slice(0, 8);
 };
 
 Deno.serve(async (req) => {
@@ -161,10 +206,10 @@ Deno.serve(async (req) => {
     const mimeMatch = image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
     const mimeType = mimeMatch?.[1]?.toLowerCase() ?? "";
     if (!["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"].includes(mimeType)) {
-      return new Response(JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -180,13 +225,17 @@ Deno.serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: "Analyze these handwritten notes and call extract_tree with a strict 3-level hierarchy." },
+              {
+                type: "text",
+                text:
+                  "Analyze these handwritten notes EXHAUSTIVELY. Capture every word, arrow and annotation. Then call extract_board with the strict 3-level hierarchy AND the insights (summary, suggestions, warning).",
+              },
               { type: "image_url", image_url: { url: image } },
             ],
           },
         ],
         tools: [TOOL],
-        tool_choice: { type: "function", function: { name: "extract_tree" } },
+        tool_choice: { type: "function", function: { name: "extract_board" } },
       }),
     });
 
@@ -194,23 +243,25 @@ Deno.serve(async (req) => {
       const text = await response.text();
       console.error("AI gateway error", response.status, text);
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded (429). Try again shortly." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded (429). Try again shortly." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted (402). Add credits to your Lovable workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error: "AI credits exhausted (402). Add credits to your Lovable workspace.",
+          }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
       const lowered = text.toLowerCase();
       if (lowered.includes("unable to process input image")) {
-        return new Response(JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
       return new Response(JSON.stringify({ error: `AI gateway error ${response.status}` }), {
         status: 500,
@@ -228,12 +279,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    let parsed;
+    let toolArgs: any;
+    let nodesParsed: unknown;
+    let suggestionsParsed: unknown = [];
     try {
-      const toolArgs = JSON.parse(toolCall.function.arguments);
-      parsed = {
-        nodes: JSON.parse(toolArgs.nodes_json),
-      };
+      toolArgs = JSON.parse(toolCall.function.arguments);
+      nodesParsed = JSON.parse(toolArgs.nodes_json);
+      if (typeof toolArgs.suggestions_json === "string" && toolArgs.suggestions_json.trim().length) {
+        try {
+          suggestionsParsed = JSON.parse(toolArgs.suggestions_json);
+        } catch {
+          suggestionsParsed = [];
+        }
+      }
     } catch {
       return new Response(JSON.stringify({ error: "Failed to parse AI output" }), {
         status: 502,
@@ -241,9 +299,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const board = sanitize(parsed);
+    const nodes = sanitizeNodes(nodesParsed);
+    const suggestions = sanitizeSuggestions(suggestionsParsed);
+    const summary =
+      typeof toolArgs.summary === "string" ? toolArgs.summary.trim().slice(0, 220) : "";
+    const rawWarning =
+      typeof toolArgs.warning === "string" ? toolArgs.warning.trim().slice(0, 220) : "";
+    const warning = rawWarning.length > 0 ? rawWarning : null;
 
-    return new Response(JSON.stringify(board), {
+    const payload: AnalyzePayload = {
+      nodes,
+      insights: { summary, suggestions, warning },
+    };
+
+    return new Response(JSON.stringify(payload), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
