@@ -473,6 +473,29 @@ const BoardInner = ({ data, apiRef }: BoardProps) => {
     [nodes, edges, pushHistory],
   );
 
+  // Imperative API for the parent (suggestions panel etc.)
+  const addSuggestionNode = useCallback(
+    (label: string, level: BoardLevel) => {
+      pushHistory(nodes, edges);
+      const id = `s-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const newNode: Node = {
+        id,
+        type: `level${level}`,
+        position: { x: 250 + Math.random() * 300, y: 200 + Math.random() * 200 },
+        data: { label, level },
+      };
+      setNodes((nds) => [...nds, newNode]);
+    },
+    [nodes, edges, pushHistory],
+  );
+
+  useEffect(() => {
+    if (apiRef) apiRef.current = { addSuggestionNode };
+    return () => {
+      if (apiRef) apiRef.current = null;
+    };
+  }, [apiRef, addSuggestionNode]);
+
   // Keyboard: undo/redo (delete is handled natively by ReactFlow via deleteKeyCode)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
