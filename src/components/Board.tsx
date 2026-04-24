@@ -3,213 +3,128 @@ import ReactFlow, {
   Background,
   Controls,
   Handle,
-  Position,
   MarkerType,
+  Position,
   type Edge,
   type Node,
   type NodeProps,
 } from "reactflow";
 
 export type BoardShape = "rectangle" | "circle" | "diamond";
-export type BoardRole = "main" | "sub" | "decision";
 
-export type BoardIdea = {
+export type BoardNode = {
   id: string;
-  title: string;
-  detail?: string;
-  priority?: "high" | "medium" | "low";
-  category?: string;
-  shape?: BoardShape;
-  role?: BoardRole;
+  label: string;
+  shape: BoardShape;
+  position: {
+    x: number;
+    y: number;
+  };
 };
 
-export type BoardConnection = {
-  from: string;
-  to: string;
+export type BoardEdge = {
+  source: string;
+  target: string;
   label?: string;
 };
 
 export type BoardData = {
-  ideas: BoardIdea[];
-  connections: BoardConnection[];
+  nodes: BoardNode[];
+  edges: BoardEdge[];
 };
 
-const priorityColor: Record<string, string> = {
-  high: "hsl(0 72% 55%)",
-  medium: "hsl(38 92% 55%)",
-  low: "hsl(160 60% 45%)",
+type FlowNodeData = {
+  label: string;
+  shape: BoardShape;
 };
 
-const shapeAccent: Record<BoardShape, string> = {
-  rectangle: "hsl(239 84% 60%)",
-  circle: "hsl(280 70% 60%)",
-  diamond: "hsl(38 92% 55%)",
+const handleStyle = {
+  width: 8,
+  height: 8,
+  border: "1px solid hsl(var(--border))",
+  background: "hsl(var(--background))",
 };
 
-function inferShape(idea: BoardIdea): BoardShape {
-  if (idea.shape) return idea.shape;
-  if (idea.role === "decision") return "diamond";
-  if (idea.role === "sub") return "circle";
-  return "rectangle";
-}
+const shapeStyles: Record<BoardShape, { borderColor: string; shadowColor: string }> = {
+  rectangle: {
+    borderColor: "hsl(var(--primary))",
+    shadowColor: "hsl(var(--primary) / 0.35)",
+  },
+  circle: {
+    borderColor: "hsl(var(--accent))",
+    shadowColor: "hsl(var(--accent) / 0.35)",
+  },
+  diamond: {
+    borderColor: "hsl(var(--primary-glow))",
+    shadowColor: "hsl(var(--primary-glow) / 0.35)",
+  },
+};
 
-/** Layered layout: main nodes on a central row, sub-ideas radiate around their parents. */
-function layout(
-  ideas: BoardIdea[],
-  connections: BoardConnection[],
-): Record<string, { x: number; y: number }> {
-  const pos: Record<string, { x: number; y: number }> = {};
-  if (!ideas.length) return pos;
-
-  const mains = ideas.filter((i) => (i.role ?? (i.shape === "rectangle" ? "main" : "sub")) === "main");
-  const others = ideas.filter((i) => !mains.includes(i));
-
-  const mainList = mains.length ? mains : [ideas[0]];
-  const restFallback = mains.length ? others : ideas.slice(1);
-
-  // Place mains along a horizontal axis
-  const mainGap = 480;
-  const mainStartX = -((mainList.length - 1) * mainGap) / 2;
-  mainList.forEach((m, i) => {
-    pos[m.id] = { x: mainStartX + i * mainGap, y: 0 };
-  });
-
-  // Build parent map from connections (first incoming edge from a main)
-  const parentOf: Record<string, string> = {};
-  connections.forEach((c) => {
-    if (pos[c.from] && !pos[c.to] && !parentOf[c.to]) parentOf[c.to] = c.from;
-  });
-
-  // Group children per parent
-  const children: Record<string, BoardIdea[]> = {};
-  const orphans: BoardIdea[] = [];
-  restFallback.forEach((idea) => {
-    const p = parentOf[idea.id];
-    if (p) {
-      (children[p] ||= []).push(idea);
-    } else {
-      orphans.push(idea);
-    }
-  });
-
-  // Distribute orphans evenly across mains
-  orphans.forEach((idea, i) => {
-    const parent = mainList[i % mainList.length];
-    (children[parent.id] ||= []).push(idea);
-  });
-
-  // Place children radially around each main
-  Object.entries(children).forEach(([parentId, kids]) => {
-    const center = pos[parentId];
-    const radius = 280;
-    kids.forEach((kid, i) => {
-      const angle = (i / kids.length) * Math.PI * 2 - Math.PI / 2;
-      pos[kid.id] = {
-        x: center.x + Math.cos(angle) * radius,
-        y: center.y + Math.sin(angle) * radius,
-      };
-    });
-  });
-
-  // Safety net for any unplaced node
-  ideas.forEach((idea, i) => {
-    if (!pos[idea.id]) pos[idea.id] = { x: i * 240, y: 320 };
-  });
-
-  return pos;
-}
-
-const handleStyle = { background: "transparent", border: "none", width: 1, height: 1 };
-
-const NodeContent = ({ idea }: { idea: BoardIdea }) => (
-  <div className="text-center px-2">
-    {idea.category && (
-      <div className="text-[9px] uppercase tracking-wider opacity-70 mb-0.5">
-        {idea.category}
-      </div>
-    )}
-    <div className="font-semibold text-sm leading-tight">{idea.title}</div>
-    {idea.detail && (
-      <div className="mt-1 text-[11px] opacity-80 leading-snug">{idea.detail}</div>
-    )}
-    {idea.priority && (
-      <div
-        className="mt-1.5 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-medium"
-        style={{
-          background: priorityColor[idea.priority] + "33",
-          color: priorityColor[idea.priority],
-        }}
-      >
-        {idea.priority}
-      </div>
-    )}
-  </div>
-);
-
-const Handles = () => (
+const NodeHandles = () => (
   <>
     <Handle type="target" position={Position.Top} style={handleStyle} />
-    <Handle type="target" position={Position.Left} style={handleStyle} />
     <Handle type="source" position={Position.Right} style={handleStyle} />
     <Handle type="source" position={Position.Bottom} style={handleStyle} />
+    <Handle type="target" position={Position.Left} style={handleStyle} />
   </>
 );
 
-const baseBox = "flex items-center justify-center text-foreground bg-card";
+const NodeLabel = ({ label }: { label: string }) => (
+  <div className="px-4 text-center text-sm font-semibold leading-tight text-card-foreground whitespace-pre-wrap break-words">
+    {label}
+  </div>
+);
 
-const RectangleNode = ({ data }: NodeProps<{ idea: BoardIdea }>) => {
-  const accent = data.idea.priority ? priorityColor[data.idea.priority] : shapeAccent.rectangle;
+const RectangleNode = ({ data }: NodeProps<FlowNodeData>) => {
+  const styles = shapeStyles.rectangle;
+
   return (
     <div
-      className={`${baseBox} rounded-xl px-4 py-3`}
+      className="relative flex min-h-24 w-[220px] items-center justify-center rounded-md border bg-card"
       style={{
-        border: `2px solid ${accent}`,
-        minWidth: 200,
-        maxWidth: 240,
-        boxShadow: `0 10px 30px -12px ${accent}55`,
+        borderColor: styles.borderColor,
+        boxShadow: `0 22px 40px -26px ${styles.shadowColor}`,
       }}
     >
-      <Handles />
-      <NodeContent idea={data.idea} />
+      <NodeHandles />
+      <NodeLabel label={data.label} />
     </div>
   );
 };
 
-const CircleNode = ({ data }: NodeProps<{ idea: BoardIdea }>) => {
-  const accent = data.idea.priority ? priorityColor[data.idea.priority] : shapeAccent.circle;
+const CircleNode = ({ data }: NodeProps<FlowNodeData>) => {
+  const styles = shapeStyles.circle;
+
   return (
     <div
-      className={`${baseBox} rounded-full p-4`}
+      className="relative flex h-[180px] w-[180px] items-center justify-center rounded-full border bg-card"
       style={{
-        border: `2px solid ${accent}`,
-        width: 180,
-        height: 180,
-        boxShadow: `0 10px 30px -12px ${accent}55`,
+        borderColor: styles.borderColor,
+        boxShadow: `0 22px 40px -26px ${styles.shadowColor}`,
       }}
     >
-      <Handles />
-      <NodeContent idea={data.idea} />
+      <NodeHandles />
+      <NodeLabel label={data.label} />
     </div>
   );
 };
 
-const DiamondNode = ({ data }: NodeProps<{ idea: BoardIdea }>) => {
-  const accent = data.idea.priority ? priorityColor[data.idea.priority] : shapeAccent.diamond;
-  const size = 200;
+const DiamondNode = ({ data }: NodeProps<FlowNodeData>) => {
+  const styles = shapeStyles.diamond;
+
   return (
-    <div style={{ width: size, height: size, position: "relative" }}>
-      <Handles />
+    <div className="relative h-[210px] w-[210px]">
+      <NodeHandles />
       <div
-        className="absolute inset-0 bg-card"
+        className="absolute inset-[24px] rounded-md border bg-card"
         style={{
           transform: "rotate(45deg)",
-          border: `2px solid ${accent}`,
-          borderRadius: 12,
-          boxShadow: `0 10px 30px -12px ${accent}55`,
+          borderColor: styles.borderColor,
+          boxShadow: `0 22px 40px -26px ${styles.shadowColor}`,
         }}
       />
-      <div className="absolute inset-0 flex items-center justify-center px-6">
-        <NodeContent idea={data.idea} />
+      <div className="absolute inset-0 flex items-center justify-center px-10">
+        <NodeLabel label={data.label} />
       </div>
     </div>
   );
@@ -223,47 +138,68 @@ const nodeTypes = {
 
 const Board = ({ data }: { data: BoardData }) => {
   const { nodes, edges } = useMemo(() => {
-    const positions = layout(data.ideas, data.connections);
-    const nodes: Node[] = data.ideas.map((idea, i) => {
-      const shape = inferShape(idea);
-      return {
-        id: idea.id,
-        position: positions[idea.id] ?? { x: i * 240, y: 0 },
-        data: { idea },
-        type: shape,
-      };
-    });
+    const nodes: Node<FlowNodeData>[] = data.nodes.map((node) => ({
+      id: node.id,
+      type: node.shape,
+      position: node.position,
+      draggable: false,
+      selectable: false,
+      data: {
+        label: node.label,
+        shape: node.shape,
+      },
+    }));
 
-    const edges: Edge[] = data.connections.map((c, i) => ({
-      id: `e-${i}`,
-      source: c.from,
-      target: c.to,
-      label: c.label,
+    const edges: Edge[] = data.edges.map((edge, index) => ({
+      id: `edge-${edge.source}-${edge.target}-${index}`,
+      source: edge.source,
+      target: edge.target,
+      label: edge.label,
       type: "smoothstep",
-      animated: true,
-      markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(239 84% 60%)", width: 22, height: 22 },
-      style: { stroke: "hsl(239 84% 60% / 0.8)", strokeWidth: 2 },
-      labelStyle: { fill: "hsl(240 10% 96%)", fontSize: 11 },
-      labelBgStyle: { fill: "hsl(240 8% 8%)" },
-      labelBgPadding: [6, 4] as [number, number],
-      labelBgBorderRadius: 4,
+      animated: false,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: "hsl(var(--primary))",
+      },
+      style: {
+        stroke: "hsl(var(--primary))",
+        strokeWidth: 2.5,
+      },
+      labelStyle: {
+        fill: "hsl(var(--foreground))",
+        fontSize: 12,
+        fontWeight: 600,
+      },
+      labelBgStyle: {
+        fill: "hsl(var(--card))",
+      },
+      labelBgBorderRadius: 6,
+      labelBgPadding: [8, 4],
     }));
 
     return { nodes, edges };
   }, [data]);
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background color="hsl(240 6% 16%)" gap={20} />
-      <Controls />
-    </ReactFlow>
+    <div className="h-full w-full bg-background">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.18, minZoom: 0.5 }}
+        proOptions={{ hideAttribution: true }}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        zoomOnDoubleClick={false}
+      >
+        <Background color="hsl(var(--border))" gap={24} />
+        <Controls showInteractive={false} />
+      </ReactFlow>
+    </div>
   );
 };
 

@@ -10,6 +10,63 @@ import jsPDF from "jspdf";
 
 const MAX_SIZE = 8 * 1024 * 1024; // 8MB
 
+const isBoardShape = (value: unknown): value is BoardData["nodes"][number]["shape"] =>
+  value === "rectangle" || value === "circle" || value === "diamond";
+
+const parseBoardData = (input: unknown): BoardData | null => {
+  if (!input || typeof input !== "object") return null;
+
+  const candidate = input as {
+    nodes?: Array<Record<string, unknown>>;
+    edges?: Array<Record<string, unknown>>;
+  };
+
+  if (!Array.isArray(candidate.nodes) || !Array.isArray(candidate.edges)) return null;
+
+  const nodes = candidate.nodes
+    .filter((node) => {
+      const position = node.position as { x?: unknown; y?: unknown } | undefined;
+      return (
+        typeof node.id === "string" &&
+        typeof node.label === "string" &&
+        isBoardShape(node.shape) &&
+        !!position &&
+        typeof position.x === "number" &&
+        typeof position.y === "number"
+      );
+    })
+    .map((node) => ({
+      id: node.id as string,
+      label: node.label as string,
+      shape: node.shape as BoardData["nodes"][number]["shape"],
+      position: {
+        x: (node.position as { x: number; y: number }).x,
+        y: (node.position as { x: number; y: number }).y,
+      },
+    }));
+
+  const nodeIds = new Set(nodes.map((node) => node.id));
+
+  const edges = candidate.edges
+    .filter(
+      (edge) =>
+        typeof edge.source === "string" &&
+        typeof edge.target === "string" &&
+        nodeIds.has(edge.source) &&
+        nodeIds.has(edge.target) &&
+        (typeof edge.label === "string" || typeof edge.label === "undefined"),
+    )
+    .map((edge) => ({
+      source: edge.source as string,
+      target: edge.target as string,
+      ...(typeof edge.label === "string" ? { label: edge.label } : {}),
+    }));
+
+  if (!nodes.length) return null;
+
+  return { nodes, edges };
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
@@ -67,13 +124,15 @@ const Dashboard = () => {
         return;
       }
 
-      if (!data?.ideas || data.ideas.length === 0) {
-        toast.error("L'IA n'a pas réussi à extraire d'idées. Essaie une photo plus nette.");
+      const parsedBoard = parseBoardData(data);
+
+      if (!parsedBoard) {
+        toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie une photo plus nette.");
         return;
       }
 
-      setBoard(data as BoardData);
-      toast.success(`${data.ideas.length} idées extraites !`);
+      setBoard(parsedBoard);
+      toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     } finally {
@@ -205,7 +264,7 @@ const Dashboard = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4" />
-              {board.ideas.length} idées · {board.connections.length} connexions
+              {board.nodes.length} nœuds · {board.edges.length} connexions
             </div>
             <div
               ref={boardRef}

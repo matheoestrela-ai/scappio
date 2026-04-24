@@ -1,73 +1,170 @@
-// Analyze handwritten notes via Lovable AI Vision (Gemini)
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes, sketches, mind maps and flowcharts.
-Given an image, extract a real diagram (not a list) as a JSON object using the provided tool.
+type BoardShape = "rectangle" | "circle" | "diamond";
+
+type BoardNode = {
+  id: string;
+  label: string;
+  shape: BoardShape;
+  position: {
+    x: number;
+    y: number;
+  };
+};
+
+type BoardEdge = {
+  source: string;
+  target: string;
+  label?: string;
+};
+
+type BoardPayload = {
+  nodes: BoardNode[];
+  edges: BoardEdge[];
+};
+
+const SYSTEM_PROMPT = `You analyze handwritten notes and convert them into a strict diagram JSON.
+
+Return a real board, not prose and not a list.
+
+You MUST call the provided tool with this exact structure:
+- nodes: array of objects with id, label, shape, position { x, y }
+- edges: array of objects with source, target, optional label
 
 Rules:
-- Identify each distinct idea, title, sub-idea, decision or note as one entry in "ideas".
-- Assign a "shape" to each idea based on its role:
-  * "rectangle" — main ideas, titles, key concepts, processes (default)
-  * "circle" — sub-ideas, supporting details, small notes, start/end points
-  * "diamond" — decision points, questions, branches (anything with "?", "if", "or", choices)
-- Assign a "role": "main" (central topics), "sub" (children/details), or "decision".
-- Detect arrows, lines, or visual connections between ideas — list them in "connections".
-  Every non-trivial idea should be connected to at least one other idea so the result reads like a real diagram.
-- Detect priorities from cues like stars, exclamation marks, underlines, "!!", "TODO", or red/highlighted items.
-- Group ideas by category when categories are visible.
-- Use short, clear titles (max 6 words). Put extra context in "detail".
-- Always return at least 1 idea. If the image is unreadable, return one idea explaining that.
-- IDs must be short, unique slugs like "idea-1", "idea-2".
-- Connection "from" and "to" must reference existing idea IDs.
-- Translate handwriting as-is (keep the original language).`;
+- Every node must become a visible diagram element.
+- Shapes:
+  * rectangle = idea, topic, process, action, heading
+  * circle = concept, detail, supporting point, start/end
+  * diamond = decision, question, branch, yes/no split
+- Use short labels, max 6 words.
+- Positions must be explicit numeric coordinates.
+- Spread nodes so they do not overlap.
+- Use a readable left-to-right or top-to-bottom flow.
+- Connect related nodes with edges so the diagram is coherent.
+- source and target must reference valid node ids.
+- Keep the handwritten language as-is.
+- If the image is unreadable, return one rectangle node labeled accordingly and no edges.
+- Never include markdown, comments, or extra keys.`;
 
 const TOOL = {
   type: "function",
   function: {
     name: "extract_board",
-    description: "Return the structured board extracted from the handwritten notes.",
+    description: "Return the handwritten notes as strict board JSON for React Flow.",
     parameters: {
       type: "object",
       properties: {
-        ideas: {
+        nodes: {
           type: "array",
           items: {
             type: "object",
             properties: {
               id: { type: "string" },
-              title: { type: "string" },
-              detail: { type: "string" },
-              priority: { type: "string", enum: ["high", "medium", "low"] },
-              category: { type: "string" },
+              label: { type: "string" },
               shape: { type: "string", enum: ["rectangle", "circle", "diamond"] },
-              role: { type: "string", enum: ["main", "sub", "decision"] },
+              position: {
+                type: "object",
+                properties: {
+                  x: { type: "number" },
+                  y: { type: "number" },
+                },
+                required: ["x", "y"],
+                additionalProperties: false,
+              },
             },
-            required: ["id", "title", "shape"],
+            required: ["id", "label", "shape", "position"],
             additionalProperties: false,
           },
         },
-        connections: {
+        edges: {
           type: "array",
           items: {
             type: "object",
             properties: {
-              from: { type: "string" },
-              to: { type: "string" },
+              source: { type: "string" },
+              target: { type: "string" },
               label: { type: "string" },
             },
-            required: ["from", "to"],
+            required: ["source", "target"],
             additionalProperties: false,
           },
         },
       },
-      required: ["ideas", "connections"],
+      required: ["nodes", "edges"],
       additionalProperties: false,
     },
   },
+};
+
+const isShape = (value: unknown): value is BoardShape =>
+  value === "rectangle" || value === "circle" || value === "diamond";
+
+const sanitizeBoardPayload = (input: unknown): BoardPayload => {
+  if (!input || typeof input !== "object") {
+    throw new Error("AI returned an invalid board payload");
+  }
+
+  const candidate = input as {
+    nodes?: Array<Record<string, unknown>>;
+    edges?: Array<Record<string, unknown>>;
+  };
+
+  if (!Array.isArray(candidate.nodes) || !Array.isArray(candidate.edges)) {
+    throw new Error("AI response is missing nodes or edges");
+  }
+
+  const nodes = candidate.nodes
+    .filter((node) => {
+      const position = node.position as { x?: unknown; y?: unknown } | undefined;
+      return (
+        typeof node.id === "string" &&
+        typeof node.label === "string" &&
+        isShape(node.shape) &&
+        !!position &&
+        typeof position.x === "number" &&
+        typeof position.y === "number"
+      );
+    })
+    .map((node) => ({
+      id: node.id as string,
+      label: (node.label as string).trim(),
+      shape: node.shape as BoardShape,
+      position: {
+        x: Math.round((node.position as { x: number; y: number }).x),
+        y: Math.round((node.position as { x: number; y: number }).y),
+      },
+    }))
+    .filter((node) => node.id.length > 0 && node.label.length > 0);
+
+  if (!nodes.length) {
+    throw new Error("AI did not return any valid nodes");
+  }
+
+  const ids = new Set(nodes.map((node) => node.id));
+
+  const edges = candidate.edges
+    .filter(
+      (edge) =>
+        typeof edge.source === "string" &&
+        typeof edge.target === "string" &&
+        ids.has(edge.source) &&
+        ids.has(edge.target) &&
+        (typeof edge.label === "string" || typeof edge.label === "undefined"),
+    )
+    .map((edge) => ({
+      source: edge.source as string,
+      target: edge.target as string,
+      ...(typeof edge.label === "string" && edge.label.trim().length > 0
+        ? { label: edge.label.trim() }
+        : {}),
+    }));
+
+  return { nodes, edges };
 };
 
 Deno.serve(async (req) => {
@@ -142,14 +239,16 @@ Deno.serve(async (req) => {
     let parsed;
     try {
       parsed = JSON.parse(toolCall.function.arguments);
-    } catch (e) {
+    } catch {
       return new Response(JSON.stringify({ error: "Failed to parse AI output" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify(parsed), {
+    const board = sanitizeBoardPayload(parsed);
+
+    return new Response(JSON.stringify(board), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
