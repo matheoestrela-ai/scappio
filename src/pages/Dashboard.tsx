@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon } from "lucide-react";
 import Board, { type BoardData, type BoardApi } from "@/components/Board";
-import SuggestionsPanel, { type Insights } from "@/components/SuggestionsPanel";
+import SuggestionsPanel, {
+  type Insights,
+  type Suggestion,
+} from "@/components/SuggestionsPanel";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
