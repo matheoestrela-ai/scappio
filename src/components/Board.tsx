@@ -587,9 +587,9 @@ const FitToScreenButton = () => {
   );
 };
 
-const Board = ({ data }: { data: BoardData }) => (
+const Board = ({ data, apiRef }: BoardProps) => (
   <ReactFlowProvider>
-    <BoardInner data={data} />
+    <BoardInner data={data} apiRef={apiRef} />
   </ReactFlowProvider>
 );
 
