@@ -1,5 +1,9 @@
 // Analyze handwritten notes via Lovable AI Vision (Gemini)
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 
 const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes, sketches and mind maps.
 Given an image of handwritten notes, extract the structure as a JSON object using the provided tool.
