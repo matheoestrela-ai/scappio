@@ -9,7 +9,7 @@ import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
 
-const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 const normalizeImageFile = async (file: File): Promise<File> => {
   const isHeic =
@@ -112,7 +112,7 @@ const Dashboard = () => {
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast.error("Image trop lourde (max 8 MB).");
+      toast.error("Image trop lourde (max 25 MB).");
       return;
     }
     setProcessing(true);
@@ -243,7 +243,7 @@ const Dashboard = () => {
                 <Upload className="h-6 w-6" />
               </div>
               <p className="mt-4 font-medium">Glisse une photo ici, ou clique pour choisir</p>
-               <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC · max 8 MB</p>
+               <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC · max 25 MB</p>
               <input
                 ref={inputRef}
                 type="file"
