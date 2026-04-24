@@ -182,6 +182,8 @@ const Dashboard = () => {
         ? { ...prev, suggestions: prev.suggestions.filter((x) => x.id !== s.id) }
         : prev,
     );
+    // Re-run hierarchical layout so the new node lands cleanly under its parent
+    setTimeout(() => boardApiRef.current?.relayout(), 50);
     toast.success("Ajouté au board");
   }, []);
 
