@@ -163,8 +163,6 @@ const Dashboard = () => {
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
-    } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
     } finally {
       setProcessing(false);
     }
