@@ -112,7 +112,7 @@ const Dashboard = () => {
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast.error("Image trop lourde (max 8 MB).");
+      toast.error("Image trop lourde (max 25 MB).");
       return;
     }
     setProcessing(true);
