@@ -158,6 +158,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    const mimeMatch = image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+    const mimeType = mimeMatch?.[1]?.toLowerCase() ?? "";
+    if (!["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"].includes(mimeType)) {
+      return new Response(JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -193,6 +202,13 @@ Deno.serve(async (req) => {
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted (402). Add credits to your Lovable workspace." }), {
           status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const lowered = text.toLowerCase();
+      if (lowered.includes("unable to process input image")) {
+        return new Response(JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }), {
+          status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
