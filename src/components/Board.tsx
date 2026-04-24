@@ -301,7 +301,16 @@ const buildInitial = (data: BoardData) => {
 
 type Snapshot = { nodes: Node[]; edges: Edge[] };
 
-const BoardInner = ({ data }: { data: BoardData }) => {
+export type BoardApi = {
+  addSuggestionNode: (label: string, level: BoardLevel) => void;
+};
+
+export type BoardProps = {
+  data: BoardData;
+  apiRef?: React.MutableRefObject<BoardApi | null>;
+};
+
+const BoardInner = ({ data, apiRef }: BoardProps) => {
   const initial = useMemo(() => buildInitial(data), [data]);
   const [nodes, setNodes] = useState<Node[]>(initial.nodes);
   const [edges, setEdges] = useState<Edge[]>(initial.edges);
