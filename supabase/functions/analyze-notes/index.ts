@@ -5,14 +5,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes, sketches and mind maps.
-Given an image of handwritten notes, extract the structure as a JSON object using the provided tool.
+const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes, sketches, mind maps and flowcharts.
+Given an image, extract a real diagram (not a list) as a JSON object using the provided tool.
 
 Rules:
-- Identify each distinct idea, title, sub-idea or note as one entry in "ideas".
+- Identify each distinct idea, title, sub-idea, decision or note as one entry in "ideas".
+- Assign a "shape" to each idea based on its role:
+  * "rectangle" — main ideas, titles, key concepts, processes (default)
+  * "circle" — sub-ideas, supporting details, small notes, start/end points
+  * "diamond" — decision points, questions, branches (anything with "?", "if", "or", choices)
+- Assign a "role": "main" (central topics), "sub" (children/details), or "decision".
 - Detect arrows, lines, or visual connections between ideas — list them in "connections".
+  Every non-trivial idea should be connected to at least one other idea so the result reads like a real diagram.
 - Detect priorities from cues like stars, exclamation marks, underlines, "!!", "TODO", or red/highlighted items.
-- Group ideas by category when categories are visible (boxes, columns, headers).
+- Group ideas by category when categories are visible.
 - Use short, clear titles (max 6 words). Put extra context in "detail".
 - Always return at least 1 idea. If the image is unreadable, return one idea explaining that.
 - IDs must be short, unique slugs like "idea-1", "idea-2".
@@ -37,8 +43,10 @@ const TOOL = {
               detail: { type: "string" },
               priority: { type: "string", enum: ["high", "medium", "low"] },
               category: { type: "string" },
+              shape: { type: "string", enum: ["rectangle", "circle", "diamond"] },
+              role: { type: "string", enum: ["main", "sub", "decision"] },
             },
-            required: ["id", "title"],
+            required: ["id", "title", "shape"],
             additionalProperties: false,
           },
         },
