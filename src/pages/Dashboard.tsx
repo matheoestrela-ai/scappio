@@ -25,13 +25,12 @@ const parseBoardData = (input: unknown): BoardData | null => {
 
   const nodes = candidate.nodes
     .filter((node) => {
-      const position = node.position;
+      const position = node.position as { x?: unknown; y?: unknown } | undefined;
       return (
         typeof node.id === "string" &&
         typeof node.label === "string" &&
         isBoardShape(node.shape) &&
-        position &&
-        typeof position === "object" &&
+        !!position &&
         typeof position.x === "number" &&
         typeof position.y === "number"
       );
