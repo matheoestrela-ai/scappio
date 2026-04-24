@@ -514,6 +514,8 @@ const BoardInner = ({ data }: { data: BoardData }) => {
         </div>
       </div>
 
+      <FitToScreenButton />
+
       <ReactFlow
         nodes={enrichedNodes}
         edges={edges}
@@ -522,15 +524,34 @@ const BoardInner = ({ data }: { data: BoardData }) => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         fitView
-        fitViewOptions={{ padding: 0.18, minZoom: 0.3 }}
+        fitViewOptions={{ padding: 0.18 }}
         proOptions={{ hideAttribution: true }}
         deleteKeyCode={["Delete", "Backspace"]}
         zoomOnDoubleClick={false}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        panOnScroll={false}
+        preventScrolling={false}
+        minZoom={0.1}
+        maxZoom={2}
       >
         <Background variant={BackgroundVariant.Dots} color="#C4B5FD" gap={28} size={1.5} />
-        <Controls showInteractive={false} />
       </ReactFlow>
     </div>
+  );
+};
+
+const FitToScreenButton = () => {
+  const { fitView } = useReactFlow();
+  return (
+    <button
+      type="button"
+      onClick={() => fitView({ padding: 0.18, duration: 400 })}
+      className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-xl border border-border bg-background/90 px-3 py-2 text-xs font-medium shadow-elegant backdrop-blur transition hover:bg-accent"
+      aria-label="Adapter à l'écran"
+    >
+      <Maximize2 className="h-3.5 w-3.5" /> Adapter à l'écran
+    </button>
   );
 };
 
