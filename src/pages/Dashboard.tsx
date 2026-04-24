@@ -152,7 +152,7 @@ const Dashboard = () => {
     toast.info("Génération du PDF…");
     try {
       const dataUrl = await toPng(boardRef.current, {
-        backgroundColor: "#0d0d12",
+        backgroundColor: "#F5F3FF",
         pixelRatio: 2,
       });
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1600, 1000] });
@@ -182,8 +182,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border">
+    <div className="min-h-screen bg-hero flex flex-col">
+      <header className="border-b border-border/60 backdrop-blur bg-background/70 sticky top-0 z-10">
         <div className="container flex items-center justify-between py-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-gradient-primary shadow-glow" />
@@ -220,11 +220,13 @@ const Dashboard = () => {
               onDragLeave={() => setDragActive(false)}
               onDrop={onDrop}
               onClick={() => inputRef.current?.click()}
-              className={`mt-8 cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition ${
-                dragActive ? "border-primary bg-primary/5" : "border-border bg-gradient-card"
+              className={`mt-8 cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition shadow-elegant ${
+                dragActive
+                  ? "border-primary bg-primary/5 scale-[1.01]"
+                  : "border-primary/30 bg-gradient-card hover:border-primary/60"
               }`}
             >
-              <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-primary text-white shadow-glow">
                 <Upload className="h-6 w-6" />
               </div>
               <p className="mt-4 font-medium">Glisse une photo ici, ou clique pour choisir</p>
@@ -245,16 +247,22 @@ const Dashboard = () => {
 
         {processing && (
           <div className="mx-auto max-w-2xl text-center py-20">
-            <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-            <h2 className="mt-6 text-2xl font-semibold">L'IA analyse tes notes…</h2>
+            <div className="relative mx-auto h-20 w-20">
+              <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-20 animate-brand-pulse" />
+              <div className="absolute inset-3 rounded-full bg-gradient-primary shadow-glow" />
+              <div className="absolute inset-0 animate-brand-orbit">
+                <div className="absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-accent shadow-md" />
+              </div>
+            </div>
+            <h2 className="mt-8 text-2xl font-semibold tracking-tight">L'IA analyse tes notes…</h2>
             <p className="mt-2 text-muted-foreground">
-              Détection des idées, priorités et connexions. Environ 10–15 secondes.
+              Détection des idées, formes et connexions. Environ 10–15 secondes.
             </p>
             {preview && (
               <img
                 src={preview}
                 alt="Aperçu de tes notes"
-                className="mx-auto mt-8 max-h-64 rounded-lg border border-border"
+                className="mx-auto mt-8 max-h-64 rounded-2xl border border-border shadow-elegant"
               />
             )}
           </div>
@@ -268,7 +276,7 @@ const Dashboard = () => {
             </div>
             <div
               ref={boardRef}
-              className="h-[calc(100vh-220px)] w-full rounded-2xl border border-border bg-background overflow-hidden"
+              className="h-[calc(100vh-220px)] w-full rounded-2xl border border-border shadow-elegant overflow-hidden"
             >
               <Board data={board} />
             </div>
