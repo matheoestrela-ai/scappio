@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon } from "lucide-react";
-import Board, { type BoardData } from "@/components/Board";
+import Board, { type BoardData, type BoardApi } from "@/components/Board";
+import SuggestionsPanel, { type Insights } from "@/components/SuggestionsPanel";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
@@ -82,10 +83,12 @@ const Dashboard = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
+  const [insights, setInsights] = useState<Insights | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const boardApiRef = useRef<BoardApi | null>(null);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -117,6 +120,7 @@ const Dashboard = () => {
     }
     setProcessing(true);
     setBoard(null);
+    setInsights(null);
     try {
       const normalizedFile = await normalizeImageFile(file);
       const dataUrl = await fileToBase64(normalizedFile);
@@ -127,13 +131,12 @@ const Dashboard = () => {
       });
 
       if (error) {
-        // Surface meaningful errors
         const msg = (error as any)?.message ?? "Erreur d'analyse";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
         else if (msg.includes("402")) toast.error("Crédits IA épuisés. Recharge ton workspace.");
-         else if (msg.toLowerCase().includes("unsupported image format")) {
-           toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
-         } else toast.error(msg);
+        else if (msg.toLowerCase().includes("unsupported image format")) {
+          toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
+        } else toast.error(msg);
         return;
       }
 
@@ -145,6 +148,18 @@ const Dashboard = () => {
       }
 
       setBoard(parsedBoard);
+
+      const ins = (data as any)?.insights;
+      if (ins && typeof ins === "object") {
+        setInsights({
+          summary: typeof ins.summary === "string" ? ins.summary : "",
+          warning: typeof ins.warning === "string" && ins.warning.length ? ins.warning : null,
+          suggestions: Array.isArray(ins.suggestions) ? ins.suggestions : [],
+        });
+      } else {
+        setInsights(null);
+      }
+
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
@@ -179,6 +194,7 @@ const Dashboard = () => {
 
   const reset = () => {
     setBoard(null);
+    setInsights(null);
     setPreview(null);
   };
 
@@ -289,11 +305,22 @@ const Dashboard = () => {
               {board.nodes.filter((n) => n.level === 2).length} idées principales ·{" "}
               {board.nodes.filter((n) => n.level === 3).length} détails
             </div>
-            <div
-              ref={boardRef}
-              className="h-[calc(100vh-220px)] w-full rounded-2xl border border-border shadow-elegant overflow-hidden"
-            >
-              <Board data={board} />
+            <div className="flex h-[calc(100vh-220px)] w-full gap-4">
+              <div
+                ref={boardRef}
+                className="flex-1 rounded-2xl border border-border shadow-elegant overflow-hidden"
+              >
+                <Board data={board} apiRef={boardApiRef} />
+              </div>
+              {insights && (
+                <SuggestionsPanel
+                  insights={insights}
+                  onAdd={(label, level) => {
+                    boardApiRef.current?.addSuggestionNode(label, level);
+                    toast.success("Ajouté au board");
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
