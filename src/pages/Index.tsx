@@ -48,19 +48,32 @@ const Index = () => {
         </div>
 
         {/* Mock preview */}
-        <div className="mx-auto mt-20 max-w-5xl rounded-2xl border border-border bg-gradient-card p-2 shadow-elegant">
-          <div className="rounded-xl bg-background/50 p-8">
-            <div className="grid grid-cols-3 gap-4">
-              {["Idée principale", "Sous-idée A", "Sous-idée B", "Priorité 1", "Note", "Action"].map((t, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-border bg-card p-4 text-left text-sm"
-                  style={{ borderColor: i === 0 ? "hsl(var(--primary))" : undefined }}
-                >
-                  <div className="text-xs text-muted-foreground">Node #{i + 1}</div>
-                  <div className="mt-1 font-medium">{t}</div>
+        <div className="mx-auto mt-20 max-w-5xl rounded-3xl border border-border bg-gradient-card p-3 shadow-elegant">
+          <div className="rounded-2xl bg-gradient-board p-10">
+            <div className="flex flex-col items-center gap-10">
+              {/* Top: main idea (rectangle indigo) */}
+              <div className="rounded-2xl px-6 py-4 text-white font-semibold shadow-node"
+                style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
+                Idée principale
+              </div>
+              {/* Middle: 3 children */}
+              <div className="flex flex-wrap items-center justify-center gap-10">
+                <div className="flex h-28 w-28 items-center justify-center rounded-full text-white text-sm font-semibold text-center shadow-node"
+                  style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+                  Concept A
                 </div>
-              ))}
+                <div className="relative h-28 w-28">
+                  <div className="absolute inset-2 rounded-xl shadow-node"
+                    style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
+                  <div className="absolute inset-0 flex items-center justify-center text-white text-sm font-semibold">
+                    Décision
+                  </div>
+                </div>
+                <div className="flex h-28 w-28 items-center justify-center rounded-full text-white text-sm font-semibold text-center shadow-node"
+                  style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+                  Concept B
+                </div>
+              </div>
             </div>
           </div>
         </div>
