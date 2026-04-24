@@ -61,7 +61,7 @@ const TOOL = {
               id: { type: "string" },
               label: { type: "string" },
               level: { type: "number", enum: [1, 2, 3] },
-              parent: { type: ["string", "null"] },
+              parent: { type: "string", nullable: true, description: "Parent node id, or empty string for the root" },
             },
             required: ["id", "label", "level", "parent"],
             additionalProperties: false,
