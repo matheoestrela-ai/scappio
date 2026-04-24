@@ -83,10 +83,12 @@ const Dashboard = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
+  const [insights, setInsights] = useState<Insights | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const boardApiRef = useRef<BoardApi | null>(null);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
