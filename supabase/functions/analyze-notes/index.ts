@@ -53,22 +53,13 @@ const TOOL = {
     parameters: {
       type: "object",
       properties: {
-        nodes: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              label: { type: "string" },
-              level: { type: "number", enum: [1, 2, 3] },
-              parent: { type: "string", nullable: true, description: "Parent node id, or empty string for the root" },
-            },
-            required: ["id", "label", "level", "parent"],
-            additionalProperties: false,
-          },
+        nodes_json: {
+          type: "string",
+          description:
+            "A JSON string representing an array of nodes. Each node must be an object with id, label, level (1, 2, or 3), and parent (string id or empty string for the root). Example: [{\"id\":\"root\",\"label\":\"Projet\",\"level\":1,\"parent\":\"\"}]",
         },
       },
-      required: ["nodes"],
+      required: ["nodes_json"],
       additionalProperties: false,
     },
   },
@@ -167,6 +158,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    const mimeMatch = image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+    const mimeType = mimeMatch?.[1]?.toLowerCase() ?? "";
+    if (!["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"].includes(mimeType)) {
+      return new Response(JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -205,6 +205,13 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const lowered = text.toLowerCase();
+      if (lowered.includes("unable to process input image")) {
+        return new Response(JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: `AI gateway error ${response.status}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -223,7 +230,10 @@ Deno.serve(async (req) => {
 
     let parsed;
     try {
-      parsed = JSON.parse(toolCall.function.arguments);
+      const toolArgs = JSON.parse(toolCall.function.arguments);
+      parsed = {
+        nodes: JSON.parse(toolArgs.nodes_json),
+      };
     } catch {
       return new Response(JSON.stringify({ error: "Failed to parse AI output" }), {
         status: 502,

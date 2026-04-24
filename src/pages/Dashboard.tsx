@@ -7,8 +7,32 @@ import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon } fro
 import Board, { type BoardData } from "@/components/Board";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import heic2any from "heic2any";
 
 const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+
+const normalizeImageFile = async (file: File): Promise<File> => {
+  const isHeic =
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    /\.(heic|heif)$/i.test(file.name);
+
+  if (!isHeic) return file;
+
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.9,
+  });
+
+  const output = Array.isArray(converted) ? converted[0] : converted;
+  if (!(output instanceof Blob)) {
+    throw new Error("Conversion HEIC impossible");
+  }
+
+  const safeName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+  return new File([output], safeName, { type: "image/jpeg" });
+};
 
 const isLevel = (v: unknown): v is 1 | 2 | 3 => v === 1 || v === 2 || v === 3;
 
@@ -73,8 +97,8 @@ const Dashboard = () => {
     });
 
   const handleFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Format non supporté. Utilise JPG ou PNG.");
+    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+      toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
       return;
     }
     if (file.size > MAX_SIZE) {
@@ -84,7 +108,8 @@ const Dashboard = () => {
     setProcessing(true);
     setBoard(null);
     try {
-      const dataUrl = await fileToBase64(file);
+      const normalizedFile = await normalizeImageFile(file);
+      const dataUrl = await fileToBase64(normalizedFile);
       setPreview(dataUrl);
 
       const { data, error } = await supabase.functions.invoke("analyze-notes", {
@@ -96,7 +121,9 @@ const Dashboard = () => {
         const msg = (error as any)?.message ?? "Erreur d'analyse";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
         else if (msg.includes("402")) toast.error("Crédits IA épuisés. Recharge ton workspace.");
-        else toast.error(msg);
+         else if (msg.toLowerCase().includes("unsupported image format")) {
+           toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
+         } else toast.error(msg);
         return;
       }
 
@@ -206,11 +233,11 @@ const Dashboard = () => {
                 <Upload className="h-6 w-6" />
               </div>
               <p className="mt-4 font-medium">Glisse une photo ici, ou clique pour choisir</p>
-              <p className="mt-1 text-sm text-muted-foreground">JPG, PNG · max 8 MB</p>
+               <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC · max 8 MB</p>
               <input
                 ref={inputRef}
                 type="file"
-                accept="image/png,image/jpeg"
+                 accept="image/png,image/jpeg,image/heic,image/heif,.heic,.heif"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
