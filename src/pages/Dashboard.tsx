@@ -19,19 +19,29 @@ const normalizeImageFile = async (file: File): Promise<File> => {
 
   if (!isHeic) return file;
 
-  const converted = await heic2any({
-    blob: file,
-    toType: "image/jpeg",
-    quality: 0.9,
-  });
+  try {
+    const converted = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9,
+    });
 
-  const output = Array.isArray(converted) ? converted[0] : converted;
-  if (!(output instanceof Blob)) {
-    throw new Error("Conversion HEIC impossible");
+    const output = Array.isArray(converted) ? converted[0] : converted;
+    if (!(output instanceof Blob)) {
+      throw new Error("Conversion HEIC impossible");
+    }
+
+    const safeName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+    return new File([output], safeName, { type: "image/jpeg" });
+  } catch (err: any) {
+    const msg = String(err?.message ?? err ?? "");
+    if (msg.includes("ERR_LIBHEIF") || msg.toLowerCase().includes("format not supported")) {
+      throw new Error(
+        "Ce fichier HEIC n'est pas lisible par le navigateur. Sur iPhone : Réglages > Appareil photo > Formats > « Le plus compatible », ou exporte la photo en JPG/PNG.",
+      );
+    }
+    throw new Error("Impossible de convertir l'image HEIC. Réessaie en JPG ou PNG.");
   }
-
-  const safeName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
-  return new File([output], safeName, { type: "image/jpeg" });
 };
 
 const isLevel = (v: unknown): v is 1 | 2 | 3 => v === 1 || v === 2 || v === 3;
