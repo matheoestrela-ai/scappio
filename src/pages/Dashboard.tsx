@@ -249,25 +249,17 @@ const Dashboard = () => {
       }
 
       setBoard(parsedBoard);
-
-      const ins = (data as any)?.insights;
-      if (ins && typeof ins === "object") {
-        setInsights({
-          summary: typeof ins.summary === "string" ? ins.summary : "",
-          warning: typeof ins.warning === "string" && ins.warning.length ? ins.warning : null,
-          suggestions: Array.isArray(ins.suggestions) ? ins.suggestions : [],
-        });
-      } else {
-        setInsights(null);
-      }
+      setInsights(null);
 
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
+      // Auto-fetch suggestions for the freshly generated board
+      setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     } finally {
       setProcessing(false);
     }
-  }, []);
+  }, [refreshSuggestions]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
