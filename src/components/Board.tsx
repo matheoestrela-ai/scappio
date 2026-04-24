@@ -1024,10 +1024,26 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
     [nodes, edges],
   );
 
+  // Recompute clean hierarchical layout for the current board (keeps styles + edges).
+  const relayout = useCallback(() => {
+    pushHistory(nodes, edges);
+    const current = snapshotToBoardData(nodes, edges);
+    const built = buildInitial({ nodes: current.nodes });
+    // preserve user style overrides (color/bold/italic/width/height) where present
+    const styleById = new Map(nodes.map((n) => [n.id, n.data] as const));
+    const merged = built.nodes.map((n) => {
+      const prev = styleById.get(n.id);
+      return prev ? { ...n, data: { ...n.data, color: prev.color, bold: prev.bold, italic: prev.italic } } : n;
+    });
+    setNodes(merged);
+    setEdges(built.edges);
+    requestAnimationFrame(() => fitView({ padding: 0.18, duration: 500 }));
+  }, [nodes, edges, fitView, pushHistory]);
+
   useEffect(() => {
-    if (apiRef) apiRef.current = { addSuggestionNode, addNode, getBoardData, replaceBoard };
+    if (apiRef) apiRef.current = { addSuggestionNode, addNode, getBoardData, replaceBoard, relayout };
     return () => { if (apiRef) apiRef.current = null; };
-  }, [apiRef, addSuggestionNode, addNode, getBoardData, replaceBoard]);
+  }, [apiRef, addSuggestionNode, addNode, getBoardData, replaceBoard, relayout]);
 
   // ------- Keyboard shortcuts (undo/redo) -------
   useEffect(() => {
