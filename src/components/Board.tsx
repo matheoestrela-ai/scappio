@@ -1117,8 +1117,47 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={relayout}
+          title="Réorganiser le board"
+        >
+          <LayoutGrid className="mr-1 h-4 w-4" /> Réorganiser
+        </Button>
         <div className="hidden md:block px-2 text-xs text-muted-foreground">
           Double-clic : éditer · Clic droit : menu · Shift-clic : multi-sélection · ⌘Z / ⌘Y · ⌘D
+        </div>
+      </div>
+
+      {/* Legend (bottom-left) */}
+      <div className="absolute bottom-3 left-3 z-10 rounded-xl border border-border bg-background/90 p-3 shadow-elegant backdrop-blur text-xs space-y-2 max-w-[220px]">
+        <div className="flex items-center gap-1.5 font-semibold text-foreground">
+          <Info className="h-3.5 w-3.5" /> Légende
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-5 rounded-sm" style={{ background: LEVEL_COLOR[1] }} />
+            <span className="font-semibold">Sujet principal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: LEVEL_COLOR[2] }} />
+            <span>Idées clés</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-5 rounded-sm" style={{ background: LEVEL_COLOR[3] }} />
+            <span>Détails</span>
+          </div>
+        </div>
+        <div className="pt-1 border-t border-border space-y-1 text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-[3px] w-6 rounded" style={{ background: "#4F46E5" }} />
+            <span>Lien principal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-[1.5px] w-6 rounded" style={{ background: "#94A3B8" }} />
+            <span>Lien secondaire</span>
+          </div>
         </div>
       </div>
 
