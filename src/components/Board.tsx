@@ -108,27 +108,34 @@ const SHAPE_DEFAULTS: Record<
   BoardShape,
   { w: number; h: number; minW: number; minH: number; color: string; textColor: string }
 > = {
-  rect:    { w: 220, h: 80,  minW: 120, minH: 60, color: "#4F46E5", textColor: "#FFFFFF" },
-  circle:  { w: 180, h: 180, minW: 100, minH: 100, color: "#7C3AED", textColor: "#FFFFFF" },
-  diamond: { w: 180, h: 180, minW: 120, minH: 120, color: "#F59E0B", textColor: "#FFFFFF" },
+  rect:    { w: 280, h: 110, minW: 160, minH: 80,  color: "#4F46E5", textColor: "#FFFFFF" },
+  circle:  { w: 220, h: 220, minW: 140, minH: 140, color: "#7C3AED", textColor: "#FFFFFF" },
+  diamond: { w: 200, h: 200, minW: 140, minH: 140, color: "#F59E0B", textColor: "#FFFFFF" },
 };
 
 const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
   1: "rect",
   2: "circle",
-  3: "diamond",
+  3: "rect",
+};
+
+// Distinct color per hierarchy level — instantly readable hierarchy.
+const LEVEL_COLOR: Record<BoardLevel, string> = {
+  1: "#4F46E5", // indigo — main topic
+  2: "#7C3AED", // violet — secondary ideas
+  3: "#10B981", // emerald — details
 };
 
 const LEVEL_DEFAULT_SIZE: Record<BoardLevel, { w: number; h: number }> = {
-  1: { w: 280, h: 88 },
-  2: { w: 180, h: 180 },
-  3: { w: 160, h: 160 },
+  1: { w: 360, h: 120 },
+  2: { w: 220, h: 110 },
+  3: { w: 200, h: 90 },
 };
 
 const LEVEL_FONT: Record<BoardLevel, { size: string; weight: number }> = {
-  1: { size: "1.05rem", weight: 700 },
-  2: { size: "0.9rem",  weight: 600 },
-  3: { size: "0.78rem", weight: 500 },
+  1: { size: "1.45rem", weight: 800 },
+  2: { size: "1.05rem", weight: 700 },
+  3: { size: "0.92rem", weight: 500 },
 };
 
 const PALETTE = [
