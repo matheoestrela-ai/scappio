@@ -4,58 +4,52 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type BoardShape = "rectangle" | "circle" | "diamond";
-
 type BoardNode = {
   id: string;
   label: string;
-  shape: BoardShape;
-  position: {
-    x: number;
-    y: number;
-  };
-};
-
-type BoardEdge = {
-  source: string;
-  target: string;
-  label?: string;
+  level: 1 | 2 | 3;
+  parent: string | null;
 };
 
 type BoardPayload = {
   nodes: BoardNode[];
-  edges: BoardEdge[];
 };
 
-const SYSTEM_PROMPT = `You analyze handwritten notes and convert them into a strict diagram JSON.
+const SYSTEM_PROMPT = `You are an expert at analyzing handwritten notes and turning them into a clean hierarchical mind map.
 
-Return a real board, not prose and not a list.
+Your job: read the image, understand the underlying structure, and output a STRICT 3-level tree.
 
-You MUST call the provided tool with this exact structure:
-- nodes: array of objects with id, label, shape, position { x, y }
-- edges: array of objects with source, target, optional label
+HIERARCHY RULES (MANDATORY):
+- Level 1: EXACTLY ONE root node = the single main topic of the notes. parent = null.
+- Level 2: 3 to 6 main ideas. Each has parent = root node id.
+- Level 3: optional sub-ideas / details. Each has parent = a level-2 node id.
+- A node at level 3 can NEVER have a level-1 parent.
+- A node at level 2 can ONLY have the root as parent.
+- The root has parent = null. No other node has parent = null.
+- No orphans. Every non-root node MUST reference an existing parent id.
+- Tree only — a node has exactly ONE parent. No cycles, no cross-links.
 
-Rules:
-- Every node must become a visible diagram element.
-- Shapes:
-  * rectangle = idea, topic, process, action, heading
-  * circle = concept, detail, supporting point, start/end
-  * diamond = decision, question, branch, yes/no split
-- Use short labels, max 6 words.
-- Positions must be explicit numeric coordinates.
-- Spread nodes so they do not overlap.
-- Use a readable left-to-right or top-to-bottom flow.
-- Connect related nodes with edges so the diagram is coherent.
-- source and target must reference valid node ids.
-- Keep the handwritten language as-is.
-- If the image is unreadable, return one rectangle node labeled accordingly and no edges.
-- Never include markdown, comments, or extra keys.`;
+CONTENT RULES:
+- The root label is a short title (max 5 words) summarizing the whole note.
+- Level 2 labels are concise themes (max 5 words).
+- Level 3 labels are short details (max 6 words).
+- Keep the original handwritten language.
+- Group related handwritten items under the same level-2 parent so children are coherent.
+- Do NOT create a level-2 node that has no real connection to the main topic.
+- If notes are sparse, it's fine to omit level 3 entirely.
+- If image is unreadable: return one root node labeled "Notes illisibles" and nothing else.
+
+OUTPUT:
+- Call the tool extract_tree with { nodes: [...] }.
+- Each node has: id (unique short string), label, level (1|2|3), parent (string id or null).
+- Do NOT include positions — layout is computed automatically.
+- Do NOT include edges — they are derived from parent.`;
 
 const TOOL = {
   type: "function",
   function: {
-    name: "extract_board",
-    description: "Return the handwritten notes as strict board JSON for React Flow.",
+    name: "extract_tree",
+    description: "Return the handwritten notes as a strict 3-level hierarchical tree.",
     parameters: {
       type: "object",
       properties: {
@@ -66,105 +60,92 @@ const TOOL = {
             properties: {
               id: { type: "string" },
               label: { type: "string" },
-              shape: { type: "string", enum: ["rectangle", "circle", "diamond"] },
-              position: {
-                type: "object",
-                properties: {
-                  x: { type: "number" },
-                  y: { type: "number" },
-                },
-                required: ["x", "y"],
-                additionalProperties: false,
-              },
+              level: { type: "number", enum: [1, 2, 3] },
+              parent: { type: ["string", "null"] },
             },
-            required: ["id", "label", "shape", "position"],
-            additionalProperties: false,
-          },
-        },
-        edges: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              source: { type: "string" },
-              target: { type: "string" },
-              label: { type: "string" },
-            },
-            required: ["source", "target"],
+            required: ["id", "label", "level", "parent"],
             additionalProperties: false,
           },
         },
       },
-      required: ["nodes", "edges"],
+      required: ["nodes"],
       additionalProperties: false,
     },
   },
 };
 
-const isShape = (value: unknown): value is BoardShape =>
-  value === "rectangle" || value === "circle" || value === "diamond";
+const sanitize = (input: unknown): BoardPayload => {
+  if (!input || typeof input !== "object") throw new Error("Invalid AI payload");
+  const c = input as { nodes?: Array<Record<string, unknown>> };
+  if (!Array.isArray(c.nodes)) throw new Error("Missing nodes");
 
-const sanitizeBoardPayload = (input: unknown): BoardPayload => {
-  if (!input || typeof input !== "object") {
-    throw new Error("AI returned an invalid board payload");
-  }
-
-  const candidate = input as {
-    nodes?: Array<Record<string, unknown>>;
-    edges?: Array<Record<string, unknown>>;
-  };
-
-  if (!Array.isArray(candidate.nodes) || !Array.isArray(candidate.edges)) {
-    throw new Error("AI response is missing nodes or edges");
-  }
-
-  const nodes = candidate.nodes
-    .filter((node) => {
-      const position = node.position as { x?: unknown; y?: unknown } | undefined;
-      return (
-        typeof node.id === "string" &&
-        typeof node.label === "string" &&
-        isShape(node.shape) &&
-        !!position &&
-        typeof position.x === "number" &&
-        typeof position.y === "number"
-      );
-    })
-    .map((node) => ({
-      id: node.id as string,
-      label: (node.label as string).trim(),
-      shape: node.shape as BoardShape,
-      position: {
-        x: Math.round((node.position as { x: number; y: number }).x),
-        y: Math.round((node.position as { x: number; y: number }).y),
-      },
-    }))
-    .filter((node) => node.id.length > 0 && node.label.length > 0);
-
-  if (!nodes.length) {
-    throw new Error("AI did not return any valid nodes");
-  }
-
-  const ids = new Set(nodes.map((node) => node.id));
-
-  const edges = candidate.edges
+  // First pass: keep structurally valid nodes
+  const raw = c.nodes
     .filter(
-      (edge) =>
-        typeof edge.source === "string" &&
-        typeof edge.target === "string" &&
-        ids.has(edge.source) &&
-        ids.has(edge.target) &&
-        (typeof edge.label === "string" || typeof edge.label === "undefined"),
+      (n) =>
+        typeof n.id === "string" &&
+        (n.id as string).length > 0 &&
+        typeof n.label === "string" &&
+        (n.label as string).trim().length > 0 &&
+        (n.level === 1 || n.level === 2 || n.level === 3) &&
+        (n.parent === null || typeof n.parent === "string"),
     )
-    .map((edge) => ({
-      source: edge.source as string,
-      target: edge.target as string,
-      ...(typeof edge.label === "string" && edge.label.trim().length > 0
-        ? { label: edge.label.trim() }
-        : {}),
+    .map((n) => ({
+      id: n.id as string,
+      label: (n.label as string).trim(),
+      level: n.level as 1 | 2 | 3,
+      parent: (n.parent as string | null) ?? null,
     }));
 
-  return { nodes, edges };
+  if (!raw.length) throw new Error("No valid nodes");
+
+  // Find single root (level 1, parent null). If multiple, keep first; promote nothing else.
+  const roots = raw.filter((n) => n.level === 1 && n.parent === null);
+  let root = roots[0];
+  if (!root) {
+    // No root: synthesize one from the first level-2 candidate or first node
+    const fallback = raw[0];
+    root = { id: fallback.id, label: fallback.label, level: 1, parent: null };
+  }
+
+  // Force exactly one root
+  const cleaned: BoardNode[] = [{ ...root, level: 1, parent: null }];
+  const rootId = root.id;
+  const idsSeen = new Set<string>([rootId]);
+
+  // Level 2: parent must be root
+  const lvl2 = raw.filter((n) => n.level === 2 && n.id !== rootId);
+  for (const n of lvl2) {
+    if (idsSeen.has(n.id)) continue;
+    cleaned.push({ ...n, parent: rootId });
+    idsSeen.add(n.id);
+  }
+  const lvl2Ids = new Set(cleaned.filter((n) => n.level === 2).map((n) => n.id));
+
+  // Cap level 2 at 6
+  if (lvl2Ids.size > 6) {
+    const keep = [...lvl2Ids].slice(0, 6);
+    const keepSet = new Set(keep);
+    for (let i = cleaned.length - 1; i >= 0; i--) {
+      if (cleaned[i].level === 2 && !keepSet.has(cleaned[i].id)) {
+        idsSeen.delete(cleaned[i].id);
+        cleaned.splice(i, 1);
+      }
+    }
+    lvl2Ids.clear();
+    keep.forEach((id) => lvl2Ids.add(id));
+  }
+
+  // Level 3: parent must be a valid level-2 id
+  const lvl3 = raw.filter((n) => n.level === 3 && n.id !== rootId);
+  for (const n of lvl3) {
+    if (idsSeen.has(n.id)) continue;
+    if (!n.parent || !lvl2Ids.has(n.parent)) continue; // drop orphans
+    cleaned.push({ ...n, parent: n.parent });
+    idsSeen.add(n.id);
+  }
+
+  return { nodes: cleaned };
 };
 
 Deno.serve(async (req) => {
@@ -195,13 +176,13 @@ Deno.serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: "Analyze this image of handwritten notes and call extract_board." },
+              { type: "text", text: "Analyze these handwritten notes and call extract_tree with a strict 3-level hierarchy." },
               { type: "image_url", image_url: { url: image } },
             ],
           },
         ],
         tools: [TOOL],
-        tool_choice: { type: "function", function: { name: "extract_board" } },
+        tool_choice: { type: "function", function: { name: "extract_tree" } },
       }),
     });
 
@@ -246,7 +227,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const board = sanitizeBoardPayload(parsed);
+    const board = sanitize(parsed);
 
     return new Response(JSON.stringify(board), {
       status: 200,
