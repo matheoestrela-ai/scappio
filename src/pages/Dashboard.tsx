@@ -305,11 +305,22 @@ const Dashboard = () => {
               {board.nodes.filter((n) => n.level === 2).length} idées principales ·{" "}
               {board.nodes.filter((n) => n.level === 3).length} détails
             </div>
-            <div
-              ref={boardRef}
-              className="h-[calc(100vh-220px)] w-full rounded-2xl border border-border shadow-elegant overflow-hidden"
-            >
-              <Board data={board} />
+            <div className="flex h-[calc(100vh-220px)] w-full gap-4">
+              <div
+                ref={boardRef}
+                className="flex-1 rounded-2xl border border-border shadow-elegant overflow-hidden"
+              >
+                <Board data={board} apiRef={boardApiRef} />
+              </div>
+              {insights && (
+                <SuggestionsPanel
+                  insights={insights}
+                  onAdd={(label, level) => {
+                    boardApiRef.current?.addSuggestionNode(label, level);
+                    toast.success("Ajouté au board");
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
