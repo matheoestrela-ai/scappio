@@ -735,6 +735,7 @@ export type BoardApi = {
   addNode: (shape: BoardShape) => void;
   getBoardData: () => BoardData;
   replaceBoard: (data: BoardData) => void;
+  relayout: () => void;
 };
 
 export type BoardProps = {
