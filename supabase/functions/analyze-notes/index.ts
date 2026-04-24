@@ -88,14 +88,18 @@ const sanitize = (input: unknown): BoardPayload => {
         typeof n.label === "string" &&
         (n.label as string).trim().length > 0 &&
         (n.level === 1 || n.level === 2 || n.level === 3) &&
-        (n.parent === null || typeof n.parent === "string"),
+        (n.parent === null || n.parent === undefined || typeof n.parent === "string"),
     )
-    .map((n) => ({
-      id: n.id as string,
-      label: (n.label as string).trim(),
-      level: n.level as 1 | 2 | 3,
-      parent: (n.parent as string | null) ?? null,
-    }));
+    .map((n) => {
+      const p = n.parent;
+      const parent = typeof p === "string" && p.length > 0 ? p : null;
+      return {
+        id: n.id as string,
+        label: (n.label as string).trim(),
+        level: n.level as 1 | 2 | 3,
+        parent,
+      };
+    });
 
   if (!raw.length) throw new Error("No valid nodes");
 
