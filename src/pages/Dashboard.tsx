@@ -405,15 +405,15 @@ const Dashboard = () => {
               >
                 <Board data={board} apiRef={boardApiRef} />
               </div>
-              {insights && (
-                <SuggestionsPanel
-                  insights={insights}
-                  onAdd={(label, level) => {
-                    boardApiRef.current?.addSuggestionNode(label, level);
-                    toast.success("Ajouté au board");
-                  }}
-                />
-              )}
+              <SuggestionsPanel
+                insights={insights}
+                loading={suggestionsLoading}
+                improving={improving}
+                onAccept={acceptSuggestion}
+                onReject={rejectSuggestion}
+                onRefresh={refreshSuggestions}
+                onAutoImprove={autoImprove}
+              />
             </div>
           </div>
         )}
