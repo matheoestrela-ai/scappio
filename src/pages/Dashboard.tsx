@@ -120,6 +120,7 @@ const Dashboard = () => {
     }
     setProcessing(true);
     setBoard(null);
+    setInsights(null);
     try {
       const normalizedFile = await normalizeImageFile(file);
       const dataUrl = await fileToBase64(normalizedFile);
@@ -130,13 +131,12 @@ const Dashboard = () => {
       });
 
       if (error) {
-        // Surface meaningful errors
         const msg = (error as any)?.message ?? "Erreur d'analyse";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
         else if (msg.includes("402")) toast.error("Crédits IA épuisés. Recharge ton workspace.");
-         else if (msg.toLowerCase().includes("unsupported image format")) {
-           toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
-         } else toast.error(msg);
+        else if (msg.toLowerCase().includes("unsupported image format")) {
+          toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
+        } else toast.error(msg);
         return;
       }
 
@@ -148,7 +148,21 @@ const Dashboard = () => {
       }
 
       setBoard(parsedBoard);
+
+      const ins = (data as any)?.insights;
+      if (ins && typeof ins === "object") {
+        setInsights({
+          summary: typeof ins.summary === "string" ? ins.summary : "",
+          warning: typeof ins.warning === "string" && ins.warning.length ? ins.warning : null,
+          suggestions: Array.isArray(ins.suggestions) ? ins.suggestions : [],
+        });
+      } else {
+        setInsights(null);
+      }
+
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     } finally {
