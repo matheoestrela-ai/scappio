@@ -194,6 +194,7 @@ const Dashboard = () => {
 
   const reset = () => {
     setBoard(null);
+    setInsights(null);
     setPreview(null);
   };
 
