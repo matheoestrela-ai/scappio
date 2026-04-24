@@ -9,7 +9,7 @@ import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
 
-const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 const normalizeImageFile = async (file: File): Promise<File> => {
   const isHeic =
