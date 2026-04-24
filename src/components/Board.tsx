@@ -43,6 +43,8 @@ import {
   Trash2,
   Palette,
   Sparkles as SparklesIcon,
+  LayoutGrid,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,27 +108,34 @@ const SHAPE_DEFAULTS: Record<
   BoardShape,
   { w: number; h: number; minW: number; minH: number; color: string; textColor: string }
 > = {
-  rect:    { w: 220, h: 80,  minW: 120, minH: 60, color: "#4F46E5", textColor: "#FFFFFF" },
-  circle:  { w: 180, h: 180, minW: 100, minH: 100, color: "#7C3AED", textColor: "#FFFFFF" },
-  diamond: { w: 180, h: 180, minW: 120, minH: 120, color: "#F59E0B", textColor: "#FFFFFF" },
+  rect:    { w: 280, h: 110, minW: 160, minH: 80,  color: "#4F46E5", textColor: "#FFFFFF" },
+  circle:  { w: 220, h: 220, minW: 140, minH: 140, color: "#7C3AED", textColor: "#FFFFFF" },
+  diamond: { w: 200, h: 200, minW: 140, minH: 140, color: "#F59E0B", textColor: "#FFFFFF" },
 };
 
 const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
   1: "rect",
   2: "circle",
-  3: "diamond",
+  3: "rect",
+};
+
+// Distinct color per hierarchy level — instantly readable hierarchy.
+const LEVEL_COLOR: Record<BoardLevel, string> = {
+  1: "#4F46E5", // indigo — main topic
+  2: "#7C3AED", // violet — secondary ideas
+  3: "#10B981", // emerald — details
 };
 
 const LEVEL_DEFAULT_SIZE: Record<BoardLevel, { w: number; h: number }> = {
-  1: { w: 280, h: 88 },
-  2: { w: 180, h: 180 },
-  3: { w: 160, h: 160 },
+  1: { w: 360, h: 120 },
+  2: { w: 220, h: 110 },
+  3: { w: 200, h: 90 },
 };
 
 const LEVEL_FONT: Record<BoardLevel, { size: string; weight: number }> = {
-  1: { size: "1.05rem", weight: 700 },
-  2: { size: "0.9rem",  weight: 600 },
-  3: { size: "0.78rem", weight: 500 },
+  1: { size: "1.45rem", weight: 800 },
+  2: { size: "1.05rem", weight: 700 },
+  3: { size: "0.92rem", weight: 500 },
 };
 
 const PALETTE = [
@@ -485,51 +494,134 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
 const nodeTypes = { shape: ShapeNode };
 
 // ============================================================
-//  Layout (dagre) for initial generated boards
+//  Hierarchical auto-layout
+//  - Row 1: root(s) centered at top, biggest
+//  - Row 2: secondary ideas evenly distributed
+//  - Row 3: details grouped tightly under their parent
+//  Generous spacing — readability over compactness.
 // ============================================================
 
-const computeLayout = (nodes: BoardNode[]) => {
-  const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "TB", nodesep: 56, ranksep: 96, marginx: 40, marginy: 40 });
-  g.setDefaultEdgeLabel(() => ({}));
-  nodes.forEach((n) => {
-    const size = LEVEL_DEFAULT_SIZE[n.level];
-    g.setNode(n.id, { width: n.width ?? size.w, height: n.height ?? size.h });
-  });
-  nodes.forEach((n) => {
-    if (n.parent && nodes.find((x) => x.id === n.parent)) g.setEdge(n.parent, n.id);
-  });
-  dagre.layout(g);
+const LAYOUT = {
+  rowGap: 220,        // vertical gap between levels
+  siblingGap: 80,     // min horizontal gap between siblings of same parent
+  branchGap: 140,     // min horizontal gap between different branches
+  marginX: 80,
+  marginY: 80,
+};
+
+const sizeOf = (n: BoardNode) => {
+  const def = LEVEL_DEFAULT_SIZE[n.level];
+  return { w: n.width ?? def.w, h: n.height ?? def.h };
+};
+
+/**
+ * Tidy hierarchical layout. Returns a Map of node id -> top-left position.
+ * Caps depth at 3: any node deeper than level 3 is collapsed to level 3.
+ */
+const computeLayout = (nodes: BoardNode[]): Map<string, { x: number; y: number }> => {
   const positions = new Map<string, { x: number; y: number }>();
-  nodes.forEach((n) => {
-    const size = LEVEL_DEFAULT_SIZE[n.level];
-    const w = n.width ?? size.w;
-    const h = n.height ?? size.h;
-    const pos = g.node(n.id);
-    if (pos) positions.set(n.id, { x: pos.x - w / 2, y: pos.y - h / 2 });
+  if (!nodes.length) return positions;
+
+  // Index
+  const byId = new Map(nodes.map((n) => [n.id, n] as const));
+  const childrenOf = new Map<string | null, BoardNode[]>();
+  for (const n of nodes) {
+    const p = n.parent && byId.has(n.parent) ? n.parent : null;
+    const arr = childrenOf.get(p) ?? [];
+    arr.push(n);
+    childrenOf.set(p, arr);
+  }
+
+  // Roots = level 1 with no parent (or any orphan)
+  const roots = (childrenOf.get(null) ?? []).slice();
+  if (!roots.length) {
+    // fallback: pick first node as root
+    roots.push(nodes[0]);
+  }
+
+  // Compute subtree width recursively (only down to level 3)
+  const subtreeWidth = new Map<string, number>();
+  const computeWidth = (n: BoardNode): number => {
+    const own = sizeOf(n).w;
+    if (n.level >= 3) {
+      subtreeWidth.set(n.id, own);
+      return own;
+    }
+    const kids = (childrenOf.get(n.id) ?? []).filter((c) => c.level > n.level);
+    if (!kids.length) {
+      subtreeWidth.set(n.id, own);
+      return own;
+    }
+    const childTotal = kids.reduce((acc, k, i) => {
+      return acc + computeWidth(k) + (i > 0 ? LAYOUT.siblingGap : 0);
+    }, 0);
+    const w = Math.max(own, childTotal);
+    subtreeWidth.set(n.id, w);
+    return w;
+  };
+
+  // Place a subtree starting at left edge `left`, top `top`
+  const place = (n: BoardNode, left: number, top: number) => {
+    const w = subtreeWidth.get(n.id) ?? sizeOf(n).w;
+    const own = sizeOf(n);
+    const cx = left + w / 2;
+    positions.set(n.id, { x: cx - own.w / 2, y: top });
+
+    if (n.level >= 3) return;
+    const kids = (childrenOf.get(n.id) ?? []).filter((c) => c.level > n.level);
+    if (!kids.length) return;
+
+    const childTop = top + own.h + LAYOUT.rowGap;
+    const childTotal = kids.reduce(
+      (acc, k, i) => acc + (subtreeWidth.get(k.id) ?? sizeOf(k).w) + (i > 0 ? LAYOUT.siblingGap : 0),
+      0,
+    );
+    let cursor = cx - childTotal / 2;
+    for (const k of kids) {
+      const kw = subtreeWidth.get(k.id) ?? sizeOf(k).w;
+      place(k, cursor, childTop);
+      cursor += kw + LAYOUT.siblingGap;
+    }
+  };
+
+  // Total width of all roots
+  const rootWidths = roots.map((r) => computeWidth(r));
+  const totalW = rootWidths.reduce((a, b, i) => a + b + (i > 0 ? LAYOUT.branchGap : 0), 0);
+  let cursor = LAYOUT.marginX;
+  // Center roots horizontally around 0 — viewport will fitView anyway
+  cursor = -totalW / 2;
+  roots.forEach((r, i) => {
+    place(r, cursor, LAYOUT.marginY);
+    cursor += rootWidths[i] + LAYOUT.branchGap;
   });
+
   return positions;
 };
 
-const buildEdgeStyle = (level: BoardLevel) => ({
-  type: "smoothstep" as const,
-  animated: false,
-  markerEnd: {
-    type: MarkerType.ArrowClosed,
-    width: 14,
-    height: 14,
-    color: "#7C3AED",
-  },
-  style: {
-    stroke: "#7C3AED",
-    strokeWidth: level === 2 ? 2 : 1.5,
-    opacity: 0.7,
-  },
-});
+const buildEdgeStyle = (level: BoardLevel) => {
+  // Edge thickness reflects importance: connection TO a level-2 node is "main"
+  const isMain = level === 2;
+  const stroke = isMain ? "#4F46E5" : "#94A3B8";
+  return {
+    type: "default" as const, // bezier curve
+    animated: false,
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: isMain ? 18 : 14,
+      height: isMain ? 18 : 14,
+      color: stroke,
+    },
+    style: {
+      stroke,
+      strokeWidth: isMain ? 2.6 : 1.5,
+      opacity: isMain ? 0.85 : 0.6,
+    },
+  };
+};
 
 const toFlowNode = (n: BoardNode, pos?: { x: number; y: number }): Node<EditorNodeData> => {
   const shape: BoardShape = n.shape ?? LEVEL_TO_SHAPE[n.level];
-  const color = n.color ?? SHAPE_DEFAULTS[shape].color;
+  const color = n.color ?? LEVEL_COLOR[n.level] ?? SHAPE_DEFAULTS[shape].color;
   const size = LEVEL_DEFAULT_SIZE[n.level];
   return {
     id: n.id,
@@ -540,7 +632,7 @@ const toFlowNode = (n: BoardNode, pos?: { x: number; y: number }): Node<EditorNo
       level: n.level,
       shape,
       color,
-      bold: n.bold ?? false,
+      bold: n.bold ?? (n.level === 1),
       italic: n.italic ?? false,
       width: n.width ?? size.w,
       height: n.height ?? size.h,
@@ -554,17 +646,46 @@ const toFlowNode = (n: BoardNode, pos?: { x: number; y: number }): Node<EditorNo
   };
 };
 
+/**
+ * Cap depth at 3 levels. If the AI ever returns deeper trees, collapse them
+ * by clamping level and reparenting to the nearest level-3 ancestor.
+ */
+const capDepth = (data: BoardData): BoardData => {
+  const byId = new Map(data.nodes.map((n) => [n.id, n] as const));
+  return {
+    nodes: data.nodes.map((n) => {
+      const lvl = (n.level > 3 ? 3 : n.level) as BoardLevel;
+      return { ...n, level: lvl };
+    }),
+  };
+};
+
 const buildInitial = (data: BoardData) => {
-  const positions = computeLayout(data.nodes);
-  const nodes = data.nodes.map((n) => toFlowNode(n, positions.get(n.id)));
-  const edges: Edge[] = data.nodes
+  const capped = capDepth(data);
+  // Strip stored x/y so layout always re-runs cleanly on (re)generate
+  const fresh = capped.nodes.map((n) => ({ ...n, x: undefined, y: undefined }));
+  const positions = computeLayout(fresh);
+  const nodes = fresh.map((n) => toFlowNode(n, positions.get(n.id)));
+  const edges: Edge[] = fresh
     .filter((n) => n.parent)
-    .map((n) => ({
-      id: `e-${n.parent}-${n.id}`,
-      source: n.parent as string,
-      target: n.id,
-      ...buildEdgeStyle(n.level),
-    }));
+    .map((n) => {
+      const labelText = (n as any).edgeLabel as string | undefined;
+      return {
+        id: `e-${n.parent}-${n.id}`,
+        source: n.parent as string,
+        target: n.id,
+        label: labelText,
+        labelStyle: labelText
+          ? { fill: "#475569", fontSize: 11, fontWeight: 600 }
+          : undefined,
+        labelBgStyle: labelText
+          ? { fill: "#FFFFFF", fillOpacity: 0.9 }
+          : undefined,
+        labelBgPadding: [4, 6] as [number, number],
+        labelBgBorderRadius: 4,
+        ...buildEdgeStyle(n.level),
+      };
+    });
   return { nodes, edges };
 };
 
@@ -614,6 +735,7 @@ export type BoardApi = {
   addNode: (shape: BoardShape) => void;
   getBoardData: () => BoardData;
   replaceBoard: (data: BoardData) => void;
+  relayout: () => void;
 };
 
 export type BoardProps = {
@@ -902,10 +1024,26 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
     [nodes, edges],
   );
 
+  // Recompute clean hierarchical layout for the current board (keeps styles + edges).
+  const relayout = useCallback(() => {
+    pushHistory(nodes, edges);
+    const current = snapshotToBoardData(nodes, edges);
+    const built = buildInitial({ nodes: current.nodes });
+    // preserve user style overrides (color/bold/italic/width/height) where present
+    const styleById = new Map(nodes.map((n) => [n.id, n.data] as const));
+    const merged = built.nodes.map((n) => {
+      const prev = styleById.get(n.id);
+      return prev ? { ...n, data: { ...n.data, color: prev.color, bold: prev.bold, italic: prev.italic } } : n;
+    });
+    setNodes(merged);
+    setEdges(built.edges);
+    requestAnimationFrame(() => fitView({ padding: 0.18, duration: 500 }));
+  }, [nodes, edges, fitView, pushHistory]);
+
   useEffect(() => {
-    if (apiRef) apiRef.current = { addSuggestionNode, addNode, getBoardData, replaceBoard };
+    if (apiRef) apiRef.current = { addSuggestionNode, addNode, getBoardData, replaceBoard, relayout };
     return () => { if (apiRef) apiRef.current = null; };
-  }, [apiRef, addSuggestionNode, addNode, getBoardData, replaceBoard]);
+  }, [apiRef, addSuggestionNode, addNode, getBoardData, replaceBoard, relayout]);
 
   // ------- Keyboard shortcuts (undo/redo) -------
   useEffect(() => {
@@ -979,8 +1117,47 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={relayout}
+          title="Réorganiser le board"
+        >
+          <LayoutGrid className="mr-1 h-4 w-4" /> Réorganiser
+        </Button>
         <div className="hidden md:block px-2 text-xs text-muted-foreground">
           Double-clic : éditer · Clic droit : menu · Shift-clic : multi-sélection · ⌘Z / ⌘Y · ⌘D
+        </div>
+      </div>
+
+      {/* Legend (bottom-left) */}
+      <div className="absolute bottom-3 left-3 z-10 rounded-xl border border-border bg-background/90 p-3 shadow-elegant backdrop-blur text-xs space-y-2 max-w-[220px]">
+        <div className="flex items-center gap-1.5 font-semibold text-foreground">
+          <Info className="h-3.5 w-3.5" /> Légende
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-5 rounded-sm" style={{ background: LEVEL_COLOR[1] }} />
+            <span className="font-semibold">Sujet principal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: LEVEL_COLOR[2] }} />
+            <span>Idées clés</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-5 rounded-sm" style={{ background: LEVEL_COLOR[3] }} />
+            <span>Détails</span>
+          </div>
+        </div>
+        <div className="pt-1 border-t border-border space-y-1 text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-[3px] w-6 rounded" style={{ background: "#4F46E5" }} />
+            <span>Lien principal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-[1.5px] w-6 rounded" style={{ background: "#94A3B8" }} />
+            <span>Lien secondaire</span>
+          </div>
         </div>
       </div>
 
