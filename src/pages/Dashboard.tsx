@@ -3,7 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { type BoardData, type BoardApi } from "@/components/Board";
 import TldrawBoard from "@/components/TldrawBoard";
 import SuggestionsPanel, {
@@ -96,7 +104,10 @@ const Dashboard = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [textDialogOpen, setTextDialogOpen] = useState(false);
+  const [textInput, setTextInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
 
@@ -217,25 +228,13 @@ const Dashboard = () => {
       r.readAsDataURL(file);
     });
 
-  const handleFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
-      toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
-      return;
-    }
-    if (file.size > MAX_SIZE) {
-      toast.error("Image trop lourde (max 25 MB).");
-      return;
-    }
+  const runAnalysis = useCallback(async (payload: { image?: string; text?: string; pdf?: string }) => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
     try {
-      const normalizedFile = await normalizeImageFile(file);
-      const dataUrl = await fileToBase64(normalizedFile);
-      setPreview(dataUrl);
-
       const { data, error } = await supabase.functions.invoke("analyze-notes", {
-        body: { image: dataUrl },
+        body: payload,
       });
 
       if (error) {
@@ -251,15 +250,13 @@ const Dashboard = () => {
       const parsedBoard = parseBoardData(data);
 
       if (!parsedBoard) {
-        toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie une photo plus nette.");
+        toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie un contenu plus clair.");
         return;
       }
 
       setBoard(parsedBoard);
       setInsights(null);
-
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
-      // Auto-fetch suggestions for the freshly generated board
       setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
@@ -267,6 +264,55 @@ const Dashboard = () => {
       setProcessing(false);
     }
   }, [refreshSuggestions]);
+
+  const handleFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+      toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error("Image trop lourde (max 25 MB).");
+      return;
+    }
+    try {
+      const normalizedFile = await normalizeImageFile(file);
+      const dataUrl = await fileToBase64(normalizedFile);
+      setPreview(dataUrl);
+      await runAnalysis({ image: dataUrl });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+    }
+  }, [runAnalysis]);
+
+  const handlePdfFile = useCallback(async (file: File) => {
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+      toast.error("Format non supporté. Choisis un fichier PDF.");
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error("PDF trop lourd (max 25 MB).");
+      return;
+    }
+    try {
+      setPreview(null);
+      const dataUrl = await fileToBase64(file);
+      await runAnalysis({ pdf: dataUrl });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+    }
+  }, [runAnalysis]);
+
+  const handleTextSubmit = useCallback(async () => {
+    const value = textInput.trim();
+    if (!value) {
+      toast.error("Écris un peu de texte d'abord.");
+      return;
+    }
+    setTextDialogOpen(false);
+    setPreview(null);
+    await runAnalysis({ text: value });
+    setTextInput("");
+  }, [runAnalysis, textInput]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -373,8 +419,71 @@ const Dashboard = () => {
                 }}
               />
             </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setTextDialogOpen(true)}
+                className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-card p-4 text-left shadow-elegant transition hover:border-primary/60"
+              >
+                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
+                  <Pencil className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">✏️ Écrire un texte</p>
+                  <p className="text-xs text-muted-foreground">Colle ou tape ton contenu</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => pdfInputRef.current?.click()}
+                className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-card p-4 text-left shadow-elegant transition hover:border-primary/60"
+              >
+                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">📄 Choisir un document</p>
+                  <p className="text-xs text-muted-foreground">PDF · max 25 MB</p>
+                </div>
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handlePdfFile(f);
+                    e.target.value = "";
+                  }}
+                />
+              </button>
+            </div>
           </div>
         )}
+
+        <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Écrire un texte</DialogTitle>
+              <DialogDescription>
+                Colle ou tape ton contenu. L'IA en fera un board hiérarchique.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Tape ou colle ton texte ici…"
+              className="min-h-[220px]"
+            />
+            <div className="flex justify-end">
+              <Button onClick={handleTextSubmit} className="bg-gradient-primary shadow-glow hover:opacity-90">
+                Transformer en board →
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {processing && (
           <div className="mx-auto max-w-2xl text-center py-20">
