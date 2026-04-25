@@ -526,46 +526,38 @@ const Dashboard = () => {
                 <TldrawBoard data={board} apiRef={boardApiRef} />
               </div>
 
-              {/* Desktop : panneau latéral */}
-              {!isMobile && (
-                <SuggestionsPanel
-                  insights={insights}
-                  loading={suggestionsLoading}
-                  improving={improving}
-                  onAccept={acceptSuggestion}
-                  onReject={rejectSuggestion}
-                  onRefresh={refreshSuggestions}
-                  onAutoImprove={autoImprove}
-                />
-              )}
-
-              {/* Mobile : bouton flottant + Sheet */}
-              {isMobile && (
-                <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
-                  <SheetTrigger asChild>
-                    <button
-                      type="button"
-                      className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
-                      aria-label="Ouvrir l'agent IA"
-                    >
-                      <Sparkles className="h-5 w-5" />
-                    </button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-2xl">
-                    <div className="h-full pt-2">
-                      <SuggestionsPanel
-                        insights={insights}
-                        loading={suggestionsLoading}
-                        improving={improving}
-                        onAccept={(s) => { acceptSuggestion(s); }}
-                        onReject={rejectSuggestion}
-                        onRefresh={refreshSuggestions}
-                        onAutoImprove={autoImprove}
-                      />
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              )}
+              {/* Agent IA : bouton flottant + Sheet (desktop & mobile) */}
+              <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    type="button"
+                    className="absolute bottom-4 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105 active:scale-95"
+                    aria-label="Ouvrir l'agent IA"
+                  >
+                    <Sparkles className="h-6 w-6" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent
+                  side={isMobile ? "bottom" : "right"}
+                  className={
+                    isMobile
+                      ? "h-[85vh] p-0 rounded-t-2xl"
+                      : "w-full sm:max-w-md p-0"
+                  }
+                >
+                  <div className="h-full pt-2">
+                    <SuggestionsPanel
+                      insights={insights}
+                      loading={suggestionsLoading}
+                      improving={improving}
+                      onAccept={acceptSuggestion}
+                      onReject={rejectSuggestion}
+                      onRefresh={refreshSuggestions}
+                      onAutoImprove={autoImprove}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         )}
