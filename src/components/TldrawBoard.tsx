@@ -563,7 +563,11 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
 
   return (
     <div className="h-full w-full relative">
-      <Tldraw persistenceKey={PERSIST_KEY} onMount={handleMount} />
+      <Tldraw
+        persistenceKey={PERSIST_KEY}
+        onMount={handleMount}
+        licenseKey="tldraw-2026-08-03/WyJOWWwxMEtsaiIsWyIqIl0sMTYsIjIwMjYtMDgtMDMiXQ.xedsaiEOkJIoMSqTxL5xT8ebkwSIXsIeI2uamoT3SdvJb4EFJPUFE0gw/PSIpKhS9UIuzW6BqgGRVaqKJDzT9g"
+      />
     </div>
   );
 };
