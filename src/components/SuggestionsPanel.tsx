@@ -114,7 +114,7 @@ export const SuggestionsPanel = ({
   }));
 
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-background/90 shadow-elegant backdrop-blur">
+    <aside className="flex w-full md:w-[340px] h-full md:h-auto shrink-0 flex-col overflow-hidden rounded-none md:rounded-2xl border-0 md:border md:border-border bg-background/90 shadow-none md:shadow-elegant backdrop-blur">
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-primary text-white shadow-glow">
