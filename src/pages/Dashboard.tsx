@@ -419,8 +419,71 @@ const Dashboard = () => {
                 }}
               />
             </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setTextDialogOpen(true)}
+                className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-card p-4 text-left shadow-elegant transition hover:border-primary/60"
+              >
+                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
+                  <Pencil className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">✏️ Écrire un texte</p>
+                  <p className="text-xs text-muted-foreground">Colle ou tape ton contenu</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => pdfInputRef.current?.click()}
+                className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-card p-4 text-left shadow-elegant transition hover:border-primary/60"
+              >
+                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">📄 Choisir un document</p>
+                  <p className="text-xs text-muted-foreground">PDF · max 25 MB</p>
+                </div>
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handlePdfFile(f);
+                    e.target.value = "";
+                  }}
+                />
+              </button>
+            </div>
           </div>
         )}
+
+        <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Écrire un texte</DialogTitle>
+              <DialogDescription>
+                Colle ou tape ton contenu. L'IA en fera un board hiérarchique.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Tape ou colle ton texte ici…"
+              className="min-h-[220px]"
+            />
+            <div className="flex justify-end">
+              <Button onClick={handleTextSubmit} className="bg-gradient-primary shadow-glow hover:opacity-90">
+                Transformer en board →
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {processing && (
           <div className="mx-auto max-w-2xl text-center py-20">
