@@ -57,7 +57,7 @@ const Index = () => {
       {/* Nav */}
       <header className="container flex items-center justify-between py-5 md:py-6">
         <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
-          <span className="text-xl md:text-2xl font-bold tracking-tight">gribouille</span>
+          <span className="text-xl md:text-2xl font-bold tracking-tight"><span className="text-primary">gri</span>bouille</span>
         </Link>
 
         {/* Desktop nav */}
