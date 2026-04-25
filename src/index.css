@@ -77,15 +77,22 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "cv02","cv03","cv04","cv11";
+  }
+  h1, h2, h3, .font-display {
+    font-family: 'General Sans', 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
   }
 }
 
 @layer utilities {
+  .font-display { font-family: 'General Sans', 'Geist Sans', ui-sans-serif, system-ui, sans-serif; }
+  .text-hero-sub { color: hsl(var(--hero-sub)); }
   .bg-hero { background: var(--gradient-hero); }
   .bg-gradient-primary { background: var(--gradient-primary); }
   .bg-gradient-card { background: var(--gradient-card); }
   .bg-gradient-board { background: var(--gradient-board); }
+  .bg-gradient-headline { background-image: var(--gradient-headline); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-node { box-shadow: var(--shadow-node); }
@@ -95,6 +102,29 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+}
+
+/* Liquid glass utility */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* React Flow tweaks (light theme, premium) */
