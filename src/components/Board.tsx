@@ -108,9 +108,9 @@ const SHAPE_DEFAULTS: Record<
   BoardShape,
   { w: number; h: number; minW: number; minH: number; color: string; textColor: string }
 > = {
-  rect:    { w: 280, h: 110, minW: 160, minH: 80,  color: "#4F46E5", textColor: "#FFFFFF" },
-  circle:  { w: 220, h: 220, minW: 140, minH: 140, color: "#7C3AED", textColor: "#FFFFFF" },
-  diamond: { w: 200, h: 200, minW: 140, minH: 140, color: "#F59E0B", textColor: "#FFFFFF" },
+  rect:    { w: 300, h: 120, minW: 180, minH: 84,  color: "#312E81", textColor: "#FFFFFF" },
+  circle:  { w: 230, h: 230, minW: 150, minH: 150, color: "#7C3AED", textColor: "#FFFFFF" },
+  diamond: { w: 210, h: 210, minW: 150, minH: 150, color: "#F59E0B", textColor: "#FFFFFF" },
 };
 
 const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
@@ -120,27 +120,37 @@ const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
 };
 
 // Distinct color per hierarchy level — instantly readable hierarchy.
+// Indigo foncé → Violet → Lavande
 const LEVEL_COLOR: Record<BoardLevel, string> = {
-  1: "#4F46E5", // indigo — main topic
-  2: "#7C3AED", // violet — secondary ideas
-  3: "#10B981", // emerald — details
+  1: "#312E81", // indigo-900 — sujet principal, dense et profond
+  2: "#7C3AED", // violet-600 — idées clés
+  3: "#C4B5FD", // lavande (violet-300) — détails
+};
+
+// Texte par niveau : niveau 3 (lavande clair) doit avoir du texte sombre
+const LEVEL_TEXT: Record<BoardLevel, string> = {
+  1: "#FFFFFF",
+  2: "#FFFFFF",
+  3: "#1E1B4B", // indigo-950 sur fond lavande
 };
 
 const LEVEL_DEFAULT_SIZE: Record<BoardLevel, { w: number; h: number }> = {
-  1: { w: 360, h: 120 },
-  2: { w: 220, h: 110 },
-  3: { w: 200, h: 90 },
+  1: { w: 380, h: 130 },
+  2: { w: 240, h: 120 },
+  3: { w: 210, h: 96 },
 };
 
 const LEVEL_FONT: Record<BoardLevel, { size: string; weight: number }> = {
-  1: { size: "1.45rem", weight: 800 },
-  2: { size: "1.05rem", weight: 700 },
-  3: { size: "0.92rem", weight: 500 },
+  1: { size: "1.5rem", weight: 800 },
+  2: { size: "1.1rem", weight: 700 },
+  3: { size: "0.95rem", weight: 600 },
 };
 
 const PALETTE = [
-  "#4F46E5", // indigo
-  "#7C3AED", // violet
+  "#312E81", // indigo-900
+  "#4F46E5", // indigo-600
+  "#7C3AED", // violet-600
+  "#C4B5FD", // lavender
   "#F59E0B", // amber
   "#10B981", // emerald
   "#EF4444", // red
