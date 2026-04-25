@@ -100,17 +100,16 @@ const Index = () => {
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           Propulsé par l'IA Vision
         </div>
-        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.2] font-bold tracking-tight sm:text-5xl md:text-7xl">
-          Transforme tes{" "}
-          <span className="inline-flex items-center justify-center align-middle ml-0 mr-3 md:mr-5 my-3 md:my-5 h-[1.2em] md:h-[1.4em] px-1 -translate-x-1 md:-translate-x-2">
+        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.25] font-bold tracking-tight sm:text-5xl sm:leading-[1.2] md:text-7xl md:leading-[1.15]">
+          <span className="block">Transforme tes{" "}
             <span
-              className="inline-block font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 text-[1.5em] md:text-[1.6em]"
+              className="inline-block font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 text-[1.1em] align-middle"
               style={{ fontFamily: "'Caveat', cursive" }}
             >
               idées
             </span>
-          </span>{" "}
-          en board visuel en 10 secondes
+          </span>
+          <span className="block mt-2 md:mt-4">en board visuel en 10 secondes</span>
         </h1>
         <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
           Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
