@@ -478,14 +478,15 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
         isVisible={selected}
         minWidth={minW}
         minHeight={minH}
-        keepAspectRatio={shape !== "rect"}
-        lineStyle={{ borderColor: color, opacity: 0.4 }}
+        keepAspectRatio={keepRatio}
+        lineStyle={{ borderColor: color, opacity: 0.5, borderWidth: 1.5 }}
         handleStyle={{
-          width: 10,
-          height: 10,
+          width: 12,
+          height: 12,
           borderRadius: 3,
           background: "white",
           border: `2px solid ${color}`,
+          boxShadow: "0 2px 6px -1px rgba(15,23,42,0.25)",
         }}
         onResize={(_e, params) =>
           data.onPatch(id, { width: params.width, height: params.height })
