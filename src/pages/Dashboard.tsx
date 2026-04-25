@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles } from "lucide-react";
 import Board, { type BoardData, type BoardApi } from "@/components/Board";
 import SuggestionsPanel, {
   type Insights,
   type Suggestion,
 } from "@/components/SuggestionsPanel";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
