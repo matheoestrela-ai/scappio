@@ -622,26 +622,235 @@ const computeLayout = (nodes: BoardNode[]): Map<string, { x: number; y: number }
   return positions;
 };
 
-const buildEdgeStyle = (level: BoardLevel) => {
-  // Edge thickness reflects importance: connection TO a level-2 node is "main"
-  const isMain = level === 2;
-  const stroke = isMain ? "#4F46E5" : "#94A3B8";
+// ============================================================
+//  Edges — Bézier propre, 3 styles (arrow, double, line), hover delete + label
+// ============================================================
+
+export type EdgeStyleVariant = "arrow" | "double" | "line";
+
+type EditorEdgeData = {
+  variant: EdgeStyleVariant;
+  importance: "main" | "secondary";
+  label?: string;
+};
+
+const EDGE_COLOR_MAIN = "#4F46E5";
+const EDGE_COLOR_SECONDARY = "#94A3B8";
+
+const edgeVisualFor = (variant: EdgeStyleVariant, importance: "main" | "secondary") => {
+  const isMain = importance === "main";
+  const stroke = isMain ? EDGE_COLOR_MAIN : EDGE_COLOR_SECONDARY;
+  const strokeWidth = isMain ? 2.8 : 1.6;
+  const opacity = isMain ? 0.92 : 0.72;
+  const arrowSize = isMain ? 20 : 16;
+  return { stroke, strokeWidth, opacity, arrowSize };
+};
+
+const buildEdgeStyle = (level: BoardLevel, variant: EdgeStyleVariant = "arrow") => {
+  const importance: "main" | "secondary" = level === 2 ? "main" : "secondary";
   return {
-    type: "default" as const, // bezier curve
-    animated: false,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: isMain ? 18 : 14,
-      height: isMain ? 18 : 14,
-      color: stroke,
-    },
-    style: {
-      stroke,
-      strokeWidth: isMain ? 2.6 : 1.5,
-      opacity: isMain ? 0.85 : 0.6,
-    },
+    type: "smart" as const,
+    data: { variant, importance } as EditorEdgeData,
   };
 };
+
+// Custom Bézier edge with hover halo + delete button + inline label editing
+const SmartEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  selected,
+  data,
+}: EdgeProps<EditorEdgeData>) => {
+  const variant = data?.variant ?? "arrow";
+  const importance = data?.importance ?? "secondary";
+  const { stroke, strokeWidth, opacity, arrowSize } = edgeVisualFor(variant, importance);
+
+  const [path, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    curvature: 0.28,
+  });
+
+  const [hovered, setHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(data?.label ?? "");
+  const flow = useReactFlow();
+
+  useEffect(() => setLabel(data?.label ?? ""), [data?.label]);
+
+  const showOverlay = hovered || selected || editing;
+
+  // Unique marker IDs per edge to allow per-edge color/size variations
+  const markerEndId = `m-end-${id}`;
+  const markerStartId = `m-start-${id}`;
+
+  const commitLabel = () => {
+    setEditing(false);
+    flow.setEdges((eds) =>
+      eds.map((e) =>
+        e.id === id
+          ? { ...e, data: { ...(e.data as EditorEdgeData), label: label.trim() || undefined } }
+          : e,
+      ),
+    );
+  };
+
+  const removeEdge = () => {
+    flow.setEdges((eds) => eds.filter((e) => e.id !== id));
+  };
+
+  return (
+    <>
+      <defs>
+        <marker
+          id={markerEndId}
+          viewBox="0 0 12 12"
+          refX="10"
+          refY="6"
+          markerWidth={arrowSize / 2}
+          markerHeight={arrowSize / 2}
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 12 6 L 0 12 z" fill={stroke} />
+        </marker>
+        {variant === "double" && (
+          <marker
+            id={markerStartId}
+            viewBox="0 0 12 12"
+            refX="10"
+            refY="6"
+            markerWidth={arrowSize / 2}
+            markerHeight={arrowSize / 2}
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 12 6 L 0 12 z" fill={stroke} />
+          </marker>
+        )}
+      </defs>
+
+      {/* Halo on hover/selection */}
+      {showOverlay && (
+        <path
+          d={path}
+          fill="none"
+          stroke={stroke}
+          strokeOpacity={0.18}
+          strokeWidth={strokeWidth + 8}
+          strokeLinecap="round"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+
+      {/* Visible edge */}
+      <BaseEdge
+        id={id}
+        path={path}
+        style={{
+          stroke,
+          strokeWidth,
+          opacity: showOverlay ? 1 : opacity,
+          transition: "opacity 120ms ease, stroke-width 120ms ease",
+          strokeLinecap: "round",
+        }}
+        markerEnd={variant === "line" ? undefined : `url(#${markerEndId})`}
+        markerStart={variant === "double" ? `url(#${markerStartId})` : undefined}
+      />
+
+      {/* Wide invisible hit area for hover + double-click */}
+      <path
+        d={path}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={20}
+        style={{ cursor: "pointer", pointerEvents: "stroke" }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+      />
+
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: "absolute",
+            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+            pointerEvents: "all",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+          className="nodrag nopan"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          {editing ? (
+            <input
+              autoFocus
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              onBlur={commitLabel}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitLabel();
+                if (e.key === "Escape") {
+                  setLabel(data?.label ?? "");
+                  setEditing(false);
+                }
+              }}
+              className="rounded-md border border-border bg-background px-2 py-0.5 text-xs font-semibold text-foreground shadow-sm outline-none ring-2 ring-primary/30"
+              style={{ minWidth: 80 }}
+            />
+          ) : data?.label ? (
+            <button
+              type="button"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setEditing(true);
+              }}
+              className="rounded-md border border-border bg-background/95 px-2 py-0.5 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
+              title="Double-clic pour modifier"
+            >
+              {data.label}
+            </button>
+          ) : showOverlay ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-md border border-dashed border-border bg-background/90 px-2 py-0.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur"
+              title="Ajouter un label"
+            >
+              + label
+            </button>
+          ) : null}
+
+          {showOverlay && (
+            <button
+              type="button"
+              onClick={removeEdge}
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-destructive shadow-sm transition hover:bg-destructive hover:text-white"
+              title="Supprimer la connexion"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
+
+const edgeTypes = { smart: SmartEdge };
+
 
 const toFlowNode = (n: BoardNode, pos?: { x: number; y: number }): Node<EditorNodeData> => {
   const shape: BoardShape = n.shape ?? LEVEL_TO_SHAPE[n.level];
