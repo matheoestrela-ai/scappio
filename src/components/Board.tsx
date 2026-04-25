@@ -476,15 +476,17 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
 
       {shape === "diamond" ? (
         // Diamond: a rotated square with un-rotated content centered in it
-        <div style={containerStyle}>
+        <div style={{ ...containerStyle, boxShadow: "none", background: "transparent" }}>
           <div
             style={{
               position: "absolute",
               inset: 0,
               transform: "rotate(45deg)",
               background: color,
-              borderRadius: 12,
-              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.18)",
+              borderRadius: 14,
+              boxShadow: selected
+                ? `0 0 0 2px white, 0 0 0 4px ${color}, 0 24px 48px -16px rgba(49,46,129,0.45)`
+                : "0 18px 36px -14px rgba(49,46,129,0.35), 0 6px 12px -6px rgba(15,23,42,0.18)",
             }}
           />
           <div
