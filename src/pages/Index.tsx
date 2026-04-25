@@ -129,18 +129,28 @@ const Index = () => {
         {/* Mockup transformation */}
         <div className="mx-auto mt-12 md:mt-20 max-w-5xl rounded-2xl md:rounded-3xl border border-border bg-gradient-card p-2 md:p-3 shadow-elegant">
           <div className="rounded-xl md:rounded-2xl bg-gradient-board p-4 md:p-10">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6 md:gap-8">
-              {/* Notes côté gauche */}
-              <div className="rounded-2xl bg-card border border-border p-5 md:p-6 text-left shadow-node">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
-                  <ImageIcon className="h-3.5 w-3.5" /> Tes notes
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1.4fr] items-center gap-6 md:gap-8">
+              {/* Inputs côté gauche : voix + photo */}
+              <div className="flex flex-col gap-3">
+                <div className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
+                    <Mic className="h-3.5 w-3.5 text-primary" /> Note vocale · 0:08
+                  </div>
+                  <div className="flex items-end gap-1 h-8">
+                    {[6, 12, 20, 14, 28, 22, 16, 24, 10, 18, 26, 14, 8, 20, 12].map((h, i) => (
+                      <span key={i} className="w-1.5 rounded-full bg-gradient-to-t from-primary to-secondary" style={{ height: `${h}px` }} />
+                    ))}
+                  </div>
                 </div>
-                <div className="font-handwritten space-y-2 text-sm md:text-base text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
-                  <p>→ Lancer beta</p>
-                  <p>· landing fr</p>
-                  <p>· waitlist email</p>
-                  <p>· 3 témoins</p>
-                  <p>+ partage public ?</p>
+                <div className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
+                    <ImageIcon className="h-3.5 w-3.5 text-primary" /> Photo de tes notes
+                  </div>
+                  <div className="space-y-1 text-sm text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
+                    <p>→ Lancer beta</p>
+                    <p>· landing fr</p>
+                    <p>· waitlist · témoins</p>
+                  </div>
                 </div>
               </div>
 
@@ -149,28 +159,41 @@ const Index = () => {
                 <ArrowRight className="h-5 w-5 md:rotate-90" />
               </div>
 
-              {/* Board côté droit */}
-              <div className="flex flex-col items-center gap-5 md:gap-6">
-                <div className="rounded-2xl px-5 py-3 text-white text-sm md:text-base font-semibold shadow-node"
+              {/* Board côté droit — hiérarchie claire */}
+              <div className="flex flex-col items-center gap-4 md:gap-5">
+                {/* Niveau 1 : sujet principal */}
+                <div className="rounded-2xl px-6 py-3 text-white text-sm md:text-lg font-semibold shadow-node"
                   style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
                   Lancer la beta
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6">
-                  <div className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-full text-white text-xs md:text-sm font-semibold text-center px-2 shadow-node"
+                {/* Connecteurs */}
+                <div className="flex gap-10 md:gap-16 -my-1">
+                  <span className="block h-4 w-px bg-primary/40" />
+                  <span className="block h-4 w-px bg-primary/40" />
+                  <span className="block h-4 w-px bg-primary/40" />
+                </div>
+                {/* Niveau 2 : idées secondaires */}
+                <div className="flex items-center justify-center gap-3 md:gap-5">
+                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
                     style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
                     Landing FR
                   </div>
-                  <div className="relative h-20 w-20 md:h-24 md:w-24">
-                    <div className="absolute inset-2 rounded-xl shadow-node"
+                  <div className="relative h-16 w-16 md:h-20 md:w-20">
+                    <div className="absolute inset-1.5 rounded-xl shadow-node"
                       style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
+                    <div className="absolute inset-0 flex items-center justify-center text-white text-[11px] md:text-sm font-semibold">
                       Waitlist
                     </div>
                   </div>
-                  <div className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-full text-white text-xs md:text-sm font-semibold text-center px-2 shadow-node"
+                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
                     style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
                     Témoins
                   </div>
+                </div>
+                {/* Suggestion IA */}
+                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs text-primary">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  Suggestion IA : ajouter "Partage public"
                 </div>
               </div>
             </div>
