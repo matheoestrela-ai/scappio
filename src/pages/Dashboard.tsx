@@ -104,6 +104,8 @@ const Dashboard = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [panelFullscreen, setPanelFullscreen] = useState(false);
+  const [bubbleOpen, setBubbleOpen] = useState(false);
   const [textDialogOpen, setTextDialogOpen] = useState(false);
   const [textInput, setTextInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
