@@ -1408,6 +1408,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         nodes={enrichedNodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
