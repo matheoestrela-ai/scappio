@@ -1132,18 +1132,20 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
     (conn: Connection) => {
       if (!conn.source || !conn.target) return;
       pushHistory(nodes, edges);
+      const base = buildEdgeStyle(2, arrowVariant);
       setEdges((eds) =>
         addEdge(
           {
             ...conn,
             id: `e-${conn.source}-${conn.target}-${Date.now()}`,
-            ...buildEdgeStyle(2),
+            type: base.type,
+            data: base.data,
           },
           eds,
         ),
       );
     },
-    [nodes, edges, pushHistory],
+    [nodes, edges, pushHistory, arrowVariant],
   );
 
   // ------- Add node -------
