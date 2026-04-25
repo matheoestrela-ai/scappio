@@ -111,7 +111,8 @@ const Index = () => {
           en board visuel en 10 secondes
         </h1>
         <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-          Photographie tes gribouillis. L'IA extrait les idées, les priorités et les connexions.
+          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
+          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
           Tu obtiens un mindmap propre et éditable, sans rien retaper.
         </p>
         <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
