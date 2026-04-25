@@ -41,11 +41,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-hero pb-24 md:pb-0">
+    <div className="relative min-h-screen bg-hero pb-24 md:pb-0">
+      {/* Dotted background pattern (like the board) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          backgroundImage: "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+          maskImage: "linear-gradient(180deg, black, black 85%, transparent)",
+          WebkitMaskImage: "linear-gradient(180deg, black, black 85%, transparent)",
+        }}
+      />
+      <div className="relative z-10">
       {/* Nav */}
       <header className="container flex items-center justify-between py-5 md:py-6">
-        <Link to="/" className="flex items-center" onClick={() => setMenuOpen(false)} aria-label="Accueil">
-          <img src={logo} alt="Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
+        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
+          <span className="text-xl md:text-2xl font-bold tracking-tight">gribouille</span>
         </Link>
 
         {/* Desktop nav */}
