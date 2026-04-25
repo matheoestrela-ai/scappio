@@ -349,12 +349,15 @@ const renderBoardInEditor = (editor: Editor, data: BoardData) => {
     x: p._x,
     y: p._y,
     props: {
-      geo: (SHAPE_TO_GEO[p.shape ?? "rect"] ?? LEVEL_GEO[p.level]) as "rectangle" | "ellipse" | "diamond",
+      geo: (SHAPE_TO_GEO[p.shape ?? "rect"] ?? geoForLevel(p.level)) as
+        | "rectangle"
+        | "ellipse"
+        | "diamond",
       w: p._w,
       h: p._h,
-      color: LEVEL_COLOR[p.level],
-      fill: (p.level === 1 ? "solid" : p.level === 2 ? "semi" : "none") as "solid" | "semi" | "none",
-      size: (p.level === 1 ? "l" : p.level === 2 ? "m" : "s") as "l" | "m" | "s",
+      color: colorForLevel(p.level),
+      fill: fillForLevel(p.level),
+      size: sizeForLevel(p.level),
       font: "sans" as const,
       align: "middle" as const,
       verticalAlign: "middle" as const,
