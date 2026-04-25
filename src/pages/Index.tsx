@@ -88,8 +88,14 @@ const Index = () => {
           Propulsé par l'IA Vision
         </div>
         <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.1] font-bold tracking-tight sm:text-5xl md:text-7xl">
-          Tes notes manuscrites deviennent un{" "}
-          <span className="text-gradient">board visuel structuré</span> en 10 secondes
+          Transforme tes{" "}
+          <span
+            className="font-handwritten font-normal text-[hsl(265_85%_70%)] italic"
+            style={{ fontFamily: "'Caveat', 'Shadows Into Light', cursive" }}
+          >
+            idées
+          </span>{" "}
+          en board visuel en 10 secondes
         </h1>
         <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
           Photographie tes gribouillis. L'IA extrait les idées, les priorités et les connexions.
