@@ -234,16 +234,24 @@ const Index = () => {
 
       {/* How it works */}
       <section id="how" className="container py-16 md:py-24">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
-        <p className="mt-3 text-center text-muted-foreground">Trois étapes, zéro friction.</p>
-        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
+        <div className="text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+            <Workflow className="h-3.5 w-3.5 text-primary" /> Le process
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
+          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+            Capture en vocal ou en photo. L'IA structure. Tu gardes la main.
+          </p>
+        </div>
+        <div className="mt-10 md:mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Camera, title: "1. Photo", desc: "Prends ou importe une photo de tes notes manuscrites — JPG ou PNG." },
-            { icon: Workflow, title: "2. IA", desc: "L'IA Vision détecte titres, idées, priorités, flèches et annotations." },
-            { icon: FileDown, title: "3. Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF." },
+            { icon: Mic, title: "1. Vocal", desc: "Dicte tes idées à voix haute. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
+            { icon: Camera, title: "2. Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
+            { icon: Workflow, title: "3. IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
+            { icon: FileDown, title: "4. Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
           ].map((f, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div key={i} className="relative rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
                 <f.icon className="h-5 w-5" />
               </div>
               <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
