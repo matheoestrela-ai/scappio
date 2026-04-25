@@ -112,10 +112,9 @@ const Index = () => {
           </span>
           <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en 10 secondes</span>
         </h1>
-        <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
-          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
-          Tu obtiens un mindmap propre et éditable, sans rien retaper.
+        <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground inline-flex items-center justify-center gap-2 flex-wrap">
+          <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+          <span>Suggestion IA : ajouter <span className="font-semibold text-foreground">"Partage public"</span></span>
         </p>
         <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-primary shadow-glow hover:opacity-90">
@@ -192,15 +191,19 @@ const Index = () => {
                     Témoins
                   </div>
                 </div>
-                {/* Suggestion IA */}
-                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs text-primary">
-                  <Lightbulb className="h-3.5 w-3.5" />
-                  Suggestion IA : ajouter "Partage public"
-                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Description entre le board et la social proof */}
+      <section className="container pb-10 md:pb-14">
+        <p className="mx-auto max-w-2xl text-center text-base md:text-lg text-muted-foreground">
+          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
+          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
+          Tu obtiens un mindmap propre et éditable, sans rien retaper.
+        </p>
       </section>
 
       {/* Social proof */}
