@@ -1225,13 +1225,15 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
       setNodes((nds) => [...nds, newNode]);
 
       if (parent) {
+        const base = buildEdgeStyle(s.level, "arrow");
         setEdges((eds) => [
           ...eds,
           {
             id: `e-${parent.id}-${id}`,
             source: parent.id,
             target: id,
-            ...buildEdgeStyle(s.level),
+            type: base.type,
+            data: base.data,
           },
         ]);
       }
