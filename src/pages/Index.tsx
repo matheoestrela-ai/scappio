@@ -219,7 +219,7 @@ const Index = () => {
             <div className="flex w-max animate-marquee gap-12 text-muted-foreground/70 text-base md:text-lg font-semibold tracking-wide whitespace-nowrap">
               {Array.from({ length: 2 }).map((_, dup) => (
                 <div key={dup} className="flex items-center gap-12 pr-12" aria-hidden={dup === 1}>
-                  {["Miro", "Notion", "Figma", "Linear", "Slack", "FigJam", "Whimsical", "Trello", "Asana"].map((name) => (
+                  {["Notion", "Figma", "Linear", "Slack", "FigJam", "Whimsical", "Trello", "Asana"].map((name) => (
                     <span key={`${dup}-${name}`} className="flex items-center gap-12">
                       {name}
                       <span className="text-muted-foreground/40">•</span>
