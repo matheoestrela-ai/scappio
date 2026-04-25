@@ -67,11 +67,6 @@
     --sidebar-accent-foreground: 240 25% 12%;
     --sidebar-border: 250 30% 91%;
     --sidebar-ring: 243 75% 59%;
-
-    /* Landing tokens */
-    --paper: 48 33% 95%;          /* #FAFAF8 warm off-white */
-    --ink: 0 0% 10%;              /* #1A1A1A deep ink */
-    --postit: 48 96% 76%;         /* #FDE68A warm sticky yellow */
   }
 }
 
@@ -85,46 +80,6 @@
 
 @layer utilities {
   .bg-hero { background: var(--gradient-hero); }
-  .bg-paper {
-    background-color: hsl(var(--paper));
-    background-image:
-      radial-gradient(hsl(var(--ink) / 0.035) 1px, transparent 1px),
-      radial-gradient(hsl(var(--ink) / 0.025) 1px, transparent 1px);
-    background-size: 24px 24px, 7px 7px;
-    background-position: 0 0, 3px 3px;
-  }
-  .bg-paper-soft {
-    background-color: hsl(var(--paper));
-    background-image: radial-gradient(hsl(var(--ink) / 0.025) 1px, transparent 1px);
-    background-size: 8px 8px;
-  }
-  .bg-hero-warm {
-    background:
-      radial-gradient(900px 500px at 30% -10%, hsl(var(--primary) / 0.12), transparent 60%),
-      radial-gradient(700px 400px at 90% 10%, hsl(var(--secondary) / 0.10), transparent 60%),
-      hsl(var(--paper));
-    background-size: 120% 120%;
-    animation: bg-shift 8s ease-in-out infinite;
-  }
-  .font-hand { font-family: 'Caveat', 'Indie Flower', cursive; }
-  .font-serif-display { font-family: 'Playfair Display', Georgia, serif; }
-  .text-handwritten {
-    font-family: 'Caveat', cursive;
-    display: inline-block;
-    transform: rotate(-2deg);
-    color: hsl(var(--secondary));
-  }
-  .postit-shadow {
-    box-shadow: 0 1px 1px hsl(0 0% 0% / 0.05), 0 8px 18px -8px hsl(0 0% 0% / 0.18);
-  }
-  .ink-underline {
-    background-image: linear-gradient(currentColor, currentColor);
-    background-size: 0% 2px;
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    transition: background-size .3s ease;
-  }
-  .ink-underline:hover { background-size: 100% 2px; }
   .bg-gradient-primary { background: var(--gradient-primary); }
   .bg-gradient-card { background: var(--gradient-card); }
   .bg-gradient-board { background: var(--gradient-board); }
