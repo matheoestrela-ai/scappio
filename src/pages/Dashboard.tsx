@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles } from "lucide-react";
 import Board, { type BoardData, type BoardApi } from "@/components/Board";
 import SuggestionsPanel, {
   type Insights,
   type Suggestion,
 } from "@/components/SuggestionsPanel";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
@@ -83,6 +85,7 @@ const parseBoardData = (input: unknown): BoardData | null => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [authChecked, setAuthChecked] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -91,6 +94,7 @@ const Dashboard = () => {
   const [improving, setImproving] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
@@ -308,19 +312,21 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-hero flex flex-col">
       <header className="border-b border-border/60 backdrop-blur bg-background/70 sticky top-0 z-10">
-        <div className="container flex items-center justify-between py-4">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="container flex items-center justify-between py-3 sm:py-4 gap-2">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="h-7 w-7 rounded-lg bg-gradient-primary shadow-glow" />
             <span className="font-semibold tracking-tight">gribouille</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {board && (
               <>
-                <Button variant="outline" size="sm" onClick={reset}>
-                  <RefreshCcw className="mr-2 h-4 w-4" /> Nouvelle photo
+                <Button variant="outline" size="sm" onClick={reset} className="px-2 sm:px-3">
+                  <RefreshCcw className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouvelle photo</span>
                 </Button>
-                <Button size="sm" onClick={exportPDF} className="bg-gradient-primary shadow-glow hover:opacity-90">
-                  <FileDown className="mr-2 h-4 w-4" /> Exporter PDF
+                <Button size="sm" onClick={exportPDF} className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
+                  <FileDown className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Exporter PDF</span>
                 </Button>
               </>
             )}
@@ -331,7 +337,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container py-4 sm:py-8">
         {!board && !processing && (
           <div className="mx-auto max-w-2xl">
             <h1 className="text-3xl font-bold tracking-tight">Upload tes notes</h1>
@@ -393,29 +399,63 @@ const Dashboard = () => {
         )}
 
         {board && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ImageIcon className="h-4 w-4" />
-              {board.nodes.length} nœuds ·{" "}
-              {board.nodes.filter((n) => n.level === 2).length} idées principales ·{" "}
-              {board.nodes.filter((n) => n.level === 3).length} détails
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <ImageIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {board.nodes.length} nœuds ·{" "}
+                {board.nodes.filter((n) => n.level === 2).length} idées ·{" "}
+                {board.nodes.filter((n) => n.level === 3).length} détails
+              </span>
             </div>
-            <div className="flex h-[calc(100vh-220px)] w-full gap-4">
+            <div className="relative flex h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] w-full gap-4">
               <div
                 ref={boardRef}
-                className="flex-1 rounded-2xl border border-border shadow-elegant overflow-hidden"
+                className="flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden"
               >
                 <Board data={board} apiRef={boardApiRef} />
               </div>
-              <SuggestionsPanel
-                insights={insights}
-                loading={suggestionsLoading}
-                improving={improving}
-                onAccept={acceptSuggestion}
-                onReject={rejectSuggestion}
-                onRefresh={refreshSuggestions}
-                onAutoImprove={autoImprove}
-              />
+
+              {/* Desktop : panneau latéral */}
+              {!isMobile && (
+                <SuggestionsPanel
+                  insights={insights}
+                  loading={suggestionsLoading}
+                  improving={improving}
+                  onAccept={acceptSuggestion}
+                  onReject={rejectSuggestion}
+                  onRefresh={refreshSuggestions}
+                  onAutoImprove={autoImprove}
+                />
+              )}
+
+              {/* Mobile : bouton flottant + Sheet */}
+              {isMobile && (
+                <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+                  <SheetTrigger asChild>
+                    <button
+                      type="button"
+                      className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
+                      aria-label="Ouvrir l'agent IA"
+                    >
+                      <Sparkles className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-2xl">
+                    <div className="h-full pt-2">
+                      <SuggestionsPanel
+                        insights={insights}
+                        loading={suggestionsLoading}
+                        improving={improving}
+                        onAccept={(s) => { acceptSuggestion(s); }}
+                        onReject={rejectSuggestion}
+                        onRefresh={refreshSuggestions}
+                        onAutoImprove={autoImprove}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
             </div>
           </div>
         )}

@@ -1098,11 +1098,12 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   return (
     <div className="relative h-full w-full bg-gradient-board">
       {/* Top toolbar */}
-      <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-xl border border-border bg-background/90 p-1.5 shadow-elegant backdrop-blur">
+      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border border-border bg-background/90 p-1 sm:p-1.5 shadow-elegant backdrop-blur">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90">
-              <Plus className="mr-1 h-4 w-4" /> Ajouter une forme
+            <Button size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Ajouter une forme</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
@@ -1122,16 +1123,27 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           variant="outline"
           onClick={relayout}
           title="Réorganiser le board"
+          className="px-2 sm:px-3"
         >
-          <LayoutGrid className="mr-1 h-4 w-4" /> Réorganiser
+          <LayoutGrid className="h-4 w-4 sm:mr-1" />
+          <span className="hidden sm:inline">Réorganiser</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => fitView({ padding: 0.18, duration: 400 })}
+          title="Adapter à l'écran"
+          className="px-2 sm:hidden"
+        >
+          <Maximize2 className="h-4 w-4" />
         </Button>
         <div className="hidden md:block px-2 text-xs text-muted-foreground">
           Double-clic : éditer · Clic droit : menu · Shift-clic : multi-sélection · ⌘Z / ⌘Y · ⌘D
         </div>
       </div>
 
-      {/* Legend (bottom-left) */}
-      <div className="absolute bottom-3 left-3 z-10 rounded-xl border border-border bg-background/90 p-3 shadow-elegant backdrop-blur text-xs space-y-2 max-w-[220px]">
+      {/* Legend (bottom-left) — masquée sur mobile pour laisser de la place */}
+      <div className="hidden md:block absolute bottom-3 left-3 z-10 rounded-xl border border-border bg-background/90 p-3 shadow-elegant backdrop-blur text-xs space-y-2 max-w-[220px]">
         <div className="flex items-center gap-1.5 font-semibold text-foreground">
           <Info className="h-3.5 w-3.5" /> Légende
         </div>
