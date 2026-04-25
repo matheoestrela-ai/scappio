@@ -903,20 +903,13 @@ const buildInitial = (data: BoardData) => {
     .filter((n) => n.parent)
     .map((n) => {
       const labelText = (n as any).edgeLabel as string | undefined;
+      const base = buildEdgeStyle(n.level, "arrow");
       return {
         id: `e-${n.parent}-${n.id}`,
         source: n.parent as string,
         target: n.id,
-        label: labelText,
-        labelStyle: labelText
-          ? { fill: "#475569", fontSize: 11, fontWeight: 600 }
-          : undefined,
-        labelBgStyle: labelText
-          ? { fill: "#FFFFFF", fillOpacity: 0.9 }
-          : undefined,
-        labelBgPadding: [4, 6] as [number, number],
-        labelBgBorderRadius: 4,
-        ...buildEdgeStyle(n.level),
+        type: base.type,
+        data: { ...base.data, label: labelText },
       };
     });
   return { nodes, edges };
