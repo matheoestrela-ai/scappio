@@ -520,61 +520,66 @@ const Dashboard = () => {
                 {board.nodes.filter((n) => n.level === 3).length} détails
               </span>
             </div>
-            <div className="relative flex h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] w-full gap-4">
+            <div
+              className={
+                panelFullscreen && !isMobile
+                  ? "fixed inset-0 z-40 flex w-full gap-0 bg-background"
+                  : "relative flex h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] w-full gap-4"
+              }
+            >
               <div
                 ref={boardRef}
-                className="flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden"
+                className={
+                  panelFullscreen && !isMobile
+                    ? "relative flex-1 min-w-0 overflow-hidden"
+                    : "relative flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden"
+                }
               >
                 <TldrawBoard data={board} apiRef={boardApiRef} />
-              </div>
 
-              {/* Desktop : panneau latéral OU mode bulle (board en grand) */}
-              {!isMobile && !panelFullscreen && (
-                <div className="relative flex">
+                {/* Bouton agrandir / réduire — ancré dans le board, en haut à droite */}
+                {!isMobile && (
                   <button
                     type="button"
-                    onClick={() => setPanelFullscreen(true)}
-                    className="absolute -left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background border border-border shadow-sm hover:bg-accent transition"
-                    aria-label="Mettre le board en grand"
-                    title="Mettre le board en grand"
+                    onClick={() => setPanelFullscreen((v) => !v)}
+                    className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-background/95 backdrop-blur border border-border shadow-md hover:bg-accent transition"
+                    aria-label={panelFullscreen ? "Réduire le board" : "Agrandir le board"}
+                    title={panelFullscreen ? "Réduire le board" : "Agrandir le board"}
                   >
-                    <Maximize2 className="h-3.5 w-3.5" />
+                    {panelFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
                   </button>
-                  <SuggestionsPanel
-                    insights={insights}
-                    loading={suggestionsLoading}
-                    improving={improving}
-                    onAccept={acceptSuggestion}
-                    onReject={rejectSuggestion}
-                    onRefresh={refreshSuggestions}
-                    onAutoImprove={autoImprove}
-                  />
-                </div>
+                )}
+              </div>
+
+              {/* Desktop : panneau latéral (mode normal) */}
+              {!isMobile && !panelFullscreen && (
+                <SuggestionsPanel
+                  insights={insights}
+                  loading={suggestionsLoading}
+                  improving={improving}
+                  onAccept={acceptSuggestion}
+                  onReject={rejectSuggestion}
+                  onRefresh={refreshSuggestions}
+                  onAutoImprove={autoImprove}
+                />
               )}
 
-              {/* Desktop : mode bulle quand le board est en grand */}
+              {/* Desktop : agent en bulle quand le board est en plein écran */}
               {!isMobile && panelFullscreen && (
                 <Sheet open={bubbleOpen} onOpenChange={setBubbleOpen}>
-                  <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
+                  <SheetTrigger asChild>
                     <button
                       type="button"
-                      onClick={() => setPanelFullscreen(false)}
-                      className="flex h-9 px-3 items-center gap-1.5 rounded-full bg-background border border-border shadow-sm hover:bg-accent text-xs font-medium transition"
-                      title="Réafficher le panneau latéral"
+                      className="absolute bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105 active:scale-95"
+                      aria-label="Ouvrir l'agent IA"
                     >
-                      <Minimize2 className="h-3.5 w-3.5" />
-                      Réduire le board
+                      <Sparkles className="h-6 w-6" />
                     </button>
-                    <SheetTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105 active:scale-95"
-                        aria-label="Ouvrir l'agent IA"
-                      >
-                        <Sparkles className="h-6 w-6" />
-                      </button>
-                    </SheetTrigger>
-                  </div>
+                  </SheetTrigger>
                   <SheetContent side="right" className="w-full sm:max-w-md p-0">
                     <div className="h-full pt-2">
                       <SuggestionsPanel
