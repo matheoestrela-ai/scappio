@@ -85,6 +85,7 @@ const parseBoardData = (input: unknown): BoardData | null => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [authChecked, setAuthChecked] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -93,6 +94,7 @@ const Dashboard = () => {
   const [improving, setImproving] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
