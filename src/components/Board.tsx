@@ -1368,8 +1368,32 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         >
           <Maximize2 className="h-4 w-4" />
         </Button>
+
+        {/* Sélecteur de style de flèche par défaut */}
+        <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
+          {([
+            { v: "arrow", icon: ArrowRight, title: "Flèche simple" },
+            { v: "double", icon: MoveHorizontal, title: "Flèche double" },
+            { v: "line", icon: Minus, title: "Ligne sans flèche" },
+          ] as const).map(({ v, icon: Icon, title }) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setArrowVariant(v)}
+              title={title}
+              className={`flex h-7 w-7 items-center justify-center rounded transition ${
+                arrowVariant === v
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+
         <div className="hidden md:block px-2 text-xs text-muted-foreground">
-          Double-clic : éditer · Clic droit : menu · Shift-clic : multi-sélection · ⌘Z / ⌘Y · ⌘D
+          Double-clic : éditer · Clic droit : menu · Double-clic sur flèche : label
         </div>
       </div>
 
