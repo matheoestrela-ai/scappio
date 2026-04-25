@@ -528,38 +528,96 @@ const Dashboard = () => {
                 <TldrawBoard data={board} apiRef={boardApiRef} />
               </div>
 
-              {/* Agent IA : bouton flottant + Sheet (desktop & mobile) */}
-              <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
-                <SheetTrigger asChild>
+              {/* Desktop : panneau latéral OU mode bulle (board en grand) */}
+              {!isMobile && !panelFullscreen && (
+                <div className="relative flex">
                   <button
                     type="button"
-                    className="absolute bottom-4 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105 active:scale-95"
-                    aria-label="Ouvrir l'agent IA"
+                    onClick={() => setPanelFullscreen(true)}
+                    className="absolute -left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background border border-border shadow-sm hover:bg-accent transition"
+                    aria-label="Mettre le board en grand"
+                    title="Mettre le board en grand"
                   >
-                    <Sparkles className="h-6 w-6" />
+                    <Maximize2 className="h-3.5 w-3.5" />
                   </button>
-                </SheetTrigger>
-                <SheetContent
-                  side={isMobile ? "bottom" : "right"}
-                  className={
-                    isMobile
-                      ? "h-[85vh] p-0 rounded-t-2xl"
-                      : "w-full sm:max-w-md p-0"
-                  }
-                >
-                  <div className="h-full pt-2">
-                    <SuggestionsPanel
-                      insights={insights}
-                      loading={suggestionsLoading}
-                      improving={improving}
-                      onAccept={acceptSuggestion}
-                      onReject={rejectSuggestion}
-                      onRefresh={refreshSuggestions}
-                      onAutoImprove={autoImprove}
-                    />
+                  <SuggestionsPanel
+                    insights={insights}
+                    loading={suggestionsLoading}
+                    improving={improving}
+                    onAccept={acceptSuggestion}
+                    onReject={rejectSuggestion}
+                    onRefresh={refreshSuggestions}
+                    onAutoImprove={autoImprove}
+                  />
+                </div>
+              )}
+
+              {/* Desktop : mode bulle quand le board est en grand */}
+              {!isMobile && panelFullscreen && (
+                <Sheet open={bubbleOpen} onOpenChange={setBubbleOpen}>
+                  <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPanelFullscreen(false)}
+                      className="flex h-9 px-3 items-center gap-1.5 rounded-full bg-background border border-border shadow-sm hover:bg-accent text-xs font-medium transition"
+                      title="Réafficher le panneau latéral"
+                    >
+                      <Minimize2 className="h-3.5 w-3.5" />
+                      Réduire le board
+                    </button>
+                    <SheetTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105 active:scale-95"
+                        aria-label="Ouvrir l'agent IA"
+                      >
+                        <Sparkles className="h-6 w-6" />
+                      </button>
+                    </SheetTrigger>
                   </div>
-                </SheetContent>
-              </Sheet>
+                  <SheetContent side="right" className="w-full sm:max-w-md p-0">
+                    <div className="h-full pt-2">
+                      <SuggestionsPanel
+                        insights={insights}
+                        loading={suggestionsLoading}
+                        improving={improving}
+                        onAccept={acceptSuggestion}
+                        onReject={rejectSuggestion}
+                        onRefresh={refreshSuggestions}
+                        onAutoImprove={autoImprove}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+
+              {/* Mobile : bouton flottant + bottom sheet */}
+              {isMobile && (
+                <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+                  <SheetTrigger asChild>
+                    <button
+                      type="button"
+                      className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
+                      aria-label="Ouvrir l'agent IA"
+                    >
+                      <Sparkles className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-2xl">
+                    <div className="h-full pt-2">
+                      <SuggestionsPanel
+                        insights={insights}
+                        loading={suggestionsLoading}
+                        improving={improving}
+                        onAccept={acceptSuggestion}
+                        onReject={rejectSuggestion}
+                        onRefresh={refreshSuggestions}
+                        onAutoImprove={autoImprove}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
             </div>
           </div>
         )}
