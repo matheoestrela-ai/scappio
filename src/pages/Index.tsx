@@ -112,9 +112,8 @@ const Index = () => {
           </span>
           <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en 10 secondes</span>
         </h1>
-        <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground inline-flex items-center justify-center gap-2 flex-wrap">
-          <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-          <span>Suggestion IA : ajouter <span className="font-semibold text-foreground">"Partage public"</span></span>
+        <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
+          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>, puis l'IA fait le reste.
         </p>
         <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-primary shadow-glow hover:opacity-90">
