@@ -15,15 +15,16 @@ import {
   Layers,
   Frown,
   Zap,
+  Mic,
   Image as ImageIcon,
   PenLine,
   MousePointerClick,
   Wand2,
   Download,
   Quote,
+  Lightbulb,
 } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/logo.png";
 
 const Index = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,11 +41,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-hero pb-24 md:pb-0">
+    <div className="relative min-h-screen bg-hero pb-24 md:pb-0">
+      {/* Dotted background pattern (like the board) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          backgroundImage: "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+          maskImage: "linear-gradient(180deg, black, black 85%, transparent)",
+          WebkitMaskImage: "linear-gradient(180deg, black, black 85%, transparent)",
+        }}
+      />
+      <div className="relative z-10">
       {/* Nav */}
       <header className="container flex items-center justify-between py-5 md:py-6">
-        <Link to="/" className="flex items-center" onClick={() => setMenuOpen(false)} aria-label="Accueil">
-          <img src={logo} alt="Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
+        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
+          <span className="text-xl md:text-2xl font-bold tracking-tight">gribouille</span>
         </Link>
 
         {/* Desktop nav */}
@@ -98,7 +111,8 @@ const Index = () => {
           en board visuel en 10 secondes
         </h1>
         <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-          Photographie tes gribouillis. L'IA extrait les idées, les priorités et les connexions.
+          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
+          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
           Tu obtiens un mindmap propre et éditable, sans rien retaper.
         </p>
         <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -115,18 +129,28 @@ const Index = () => {
         {/* Mockup transformation */}
         <div className="mx-auto mt-12 md:mt-20 max-w-5xl rounded-2xl md:rounded-3xl border border-border bg-gradient-card p-2 md:p-3 shadow-elegant">
           <div className="rounded-xl md:rounded-2xl bg-gradient-board p-4 md:p-10">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6 md:gap-8">
-              {/* Notes côté gauche */}
-              <div className="rounded-2xl bg-card border border-border p-5 md:p-6 text-left shadow-node">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
-                  <ImageIcon className="h-3.5 w-3.5" /> Tes notes
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1.4fr] items-center gap-6 md:gap-8">
+              {/* Inputs côté gauche : voix + photo */}
+              <div className="flex flex-col gap-3">
+                <div className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
+                    <Mic className="h-3.5 w-3.5 text-primary" /> Note vocale · 0:08
+                  </div>
+                  <div className="flex items-end gap-1 h-8">
+                    {[6, 12, 20, 14, 28, 22, 16, 24, 10, 18, 26, 14, 8, 20, 12].map((h, i) => (
+                      <span key={i} className="w-1.5 rounded-full bg-gradient-to-t from-primary to-secondary" style={{ height: `${h}px` }} />
+                    ))}
+                  </div>
                 </div>
-                <div className="font-handwritten space-y-2 text-sm md:text-base text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
-                  <p>→ Lancer beta</p>
-                  <p>· landing fr</p>
-                  <p>· waitlist email</p>
-                  <p>· 3 témoins</p>
-                  <p>+ partage public ?</p>
+                <div className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
+                    <ImageIcon className="h-3.5 w-3.5 text-primary" /> Photo de tes notes
+                  </div>
+                  <div className="space-y-1 text-sm text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
+                    <p>→ Lancer beta</p>
+                    <p>· landing fr</p>
+                    <p>· waitlist · témoins</p>
+                  </div>
                 </div>
               </div>
 
@@ -135,28 +159,41 @@ const Index = () => {
                 <ArrowRight className="h-5 w-5 md:rotate-90" />
               </div>
 
-              {/* Board côté droit */}
-              <div className="flex flex-col items-center gap-5 md:gap-6">
-                <div className="rounded-2xl px-5 py-3 text-white text-sm md:text-base font-semibold shadow-node"
+              {/* Board côté droit — hiérarchie claire */}
+              <div className="flex flex-col items-center gap-4 md:gap-5">
+                {/* Niveau 1 : sujet principal */}
+                <div className="rounded-2xl px-6 py-3 text-white text-sm md:text-lg font-semibold shadow-node"
                   style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
                   Lancer la beta
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6">
-                  <div className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-full text-white text-xs md:text-sm font-semibold text-center px-2 shadow-node"
+                {/* Connecteurs */}
+                <div className="flex gap-10 md:gap-16 -my-1">
+                  <span className="block h-4 w-px bg-primary/40" />
+                  <span className="block h-4 w-px bg-primary/40" />
+                  <span className="block h-4 w-px bg-primary/40" />
+                </div>
+                {/* Niveau 2 : idées secondaires */}
+                <div className="flex items-center justify-center gap-3 md:gap-5">
+                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
                     style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
                     Landing FR
                   </div>
-                  <div className="relative h-20 w-20 md:h-24 md:w-24">
-                    <div className="absolute inset-2 rounded-xl shadow-node"
+                  <div className="relative h-16 w-16 md:h-20 md:w-20">
+                    <div className="absolute inset-1.5 rounded-xl shadow-node"
                       style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
+                    <div className="absolute inset-0 flex items-center justify-center text-white text-[11px] md:text-sm font-semibold">
                       Waitlist
                     </div>
                   </div>
-                  <div className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-full text-white text-xs md:text-sm font-semibold text-center px-2 shadow-node"
+                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
                     style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
                     Témoins
                   </div>
+                </div>
+                {/* Suggestion IA */}
+                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs text-primary">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  Suggestion IA : ajouter "Partage public"
                 </div>
               </div>
             </div>
@@ -182,7 +219,7 @@ const Index = () => {
             <div className="flex w-max animate-marquee gap-12 text-muted-foreground/70 text-base md:text-lg font-semibold tracking-wide whitespace-nowrap">
               {Array.from({ length: 2 }).map((_, dup) => (
                 <div key={dup} className="flex items-center gap-12 pr-12" aria-hidden={dup === 1}>
-                  {["Miro", "Notion", "Figma", "Linear", "Slack", "FigJam", "Whimsical", "Trello", "Asana"].map((name) => (
+                  {["Notion", "Figma", "Linear", "Slack", "FigJam", "Whimsical", "Trello", "Asana"].map((name) => (
                     <span key={`${dup}-${name}`} className="flex items-center gap-12">
                       {name}
                       <span className="text-muted-foreground/40">•</span>
@@ -197,16 +234,24 @@ const Index = () => {
 
       {/* How it works */}
       <section id="how" className="container py-16 md:py-24">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
-        <p className="mt-3 text-center text-muted-foreground">Trois étapes, zéro friction.</p>
-        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
+        <div className="text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+            <Workflow className="h-3.5 w-3.5 text-primary" /> Le process
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
+          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+            Capture en vocal ou en photo. L'IA structure. Tu gardes la main.
+          </p>
+        </div>
+        <div className="mt-10 md:mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Camera, title: "1. Photo", desc: "Prends ou importe une photo de tes notes manuscrites — JPG ou PNG." },
-            { icon: Workflow, title: "2. IA", desc: "L'IA Vision détecte titres, idées, priorités, flèches et annotations." },
-            { icon: FileDown, title: "3. Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF." },
+            { icon: Mic, title: "1. Vocal", desc: "Dicte tes idées à voix haute. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
+            { icon: Camera, title: "2. Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
+            { icon: Workflow, title: "3. IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
+            { icon: FileDown, title: "4. Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
           ].map((f, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div key={i} className="relative rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
                 <f.icon className="h-5 w-5" />
               </div>
               <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
@@ -220,18 +265,17 @@ const Index = () => {
       <section id="problem" className="container py-16 md:py-24">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Miro est trop complexe.<br />
             Retaper tes notes te fait <span className="text-gradient">perdre du temps</span>.
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-            Tes meilleures idées naissent sur papier. Mais entre la photo et un board propre, tout le monde abandonne.
+            Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
           </p>
         </div>
         <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
-            { icon: Clock, title: "30 minutes perdues", desc: "Recopier chaque note dans Miro ou Notion à la main, c'est une demi-heure à chaque réunion." },
-            { icon: Layers, title: "Outils trop lourds", desc: "Miro, FigJam, Whimsical : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
-            { icon: Frown, title: "Les idées disparaissent", desc: "Les carnets s'empilent, les photos restent dans la galerie. Personne n'y revient." },
+            { icon: Clock, title: "30 minutes perdues", desc: "Recopier chaque note dans un outil de mindmap à la main, c'est une demi-heure à chaque réunion." },
+            { icon: Layers, title: "Outils trop lourds", desc: "Les whiteboards classiques : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
+            { icon: Frown, title: "Les idées disparaissent", desc: "Les carnets s'empilent, les mémos vocaux et les photos restent dans le téléphone. Personne n'y revient." },
           ].map((f, i) => (
             <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-elegant">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
@@ -250,12 +294,14 @@ const Index = () => {
         <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
         <div className="mt-10 md:mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[
+            { icon: Mic, title: "Capture vocale", desc: "Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute." },
             { icon: Sparkles, title: "IA Vision avancée", desc: "Détecte mots, flèches et hiérarchie même sur une écriture brouillonne." },
+            { icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
             { icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
             { icon: PenLine, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
             { icon: MousePointerClick, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
             { icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
-            { icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la photo et un mindmap propre, prêt à présenter." },
+            { icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
           ].map((f, i) => (
             <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -353,6 +399,7 @@ const Index = () => {
             Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
+      </div>
       </div>
     </div>
   );
