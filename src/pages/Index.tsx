@@ -294,12 +294,14 @@ const Index = () => {
         <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
         <div className="mt-10 md:mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[
+            { icon: Mic, title: "Capture vocale", desc: "Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute." },
             { icon: Sparkles, title: "IA Vision avancée", desc: "Détecte mots, flèches et hiérarchie même sur une écriture brouillonne." },
+            { icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
             { icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
             { icon: PenLine, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
             { icon: MousePointerClick, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
             { icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
-            { icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la photo et un mindmap propre, prêt à présenter." },
+            { icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
           ].map((f, i) => (
             <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
