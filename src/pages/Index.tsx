@@ -15,15 +15,16 @@ import {
   Layers,
   Frown,
   Zap,
+  Mic,
   Image as ImageIcon,
   PenLine,
   MousePointerClick,
   Wand2,
   Download,
   Quote,
+  Lightbulb,
 } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/logo.png";
 
 const Index = () => {
   const [menuOpen, setMenuOpen] = useState(false);
