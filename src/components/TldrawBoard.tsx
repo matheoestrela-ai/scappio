@@ -27,11 +27,11 @@ const LEVEL_SIZE: Record<BoardLevel, { w: number; h: number }> = {
 };
 
 // tldraw color names (limited palette)
-const LEVEL_COLOR: Record<BoardLevel, string> = {
+const LEVEL_COLOR = {
   1: "violet",
   2: "light-violet",
   3: "grey",
-};
+} as const;
 
 const LEVEL_GEO: Record<BoardLevel, "rectangle" | "ellipse"> = {
   1: "rectangle",
@@ -143,27 +143,24 @@ const renderBoardInEditor = (editor: Editor, data: BoardData) => {
   }
 
   // Create node shapes
-  const shapesToCreate = positioned.map((p) => {
-    const geo = SHAPE_TO_GEO[p.shape ?? "rect"] ?? LEVEL_GEO[p.level];
-    return {
-      id: sid(p.id),
-      type: "geo" as const,
-      x: p._x,
-      y: p._y,
-      props: {
-        geo,
-        w: p._w,
-        h: p._h,
-        color: LEVEL_COLOR[p.level],
-        fill: p.level === 1 ? "solid" : p.level === 2 ? "semi" : "none",
-        size: p.level === 1 ? "l" : p.level === 2 ? "m" : "s",
-        font: "sans",
-        align: "middle" as const,
-        verticalAlign: "middle" as const,
-        richText: toRichText(p.label),
-      },
-    };
-  });
+  const shapesToCreate = positioned.map((p) => ({
+    id: sid(p.id),
+    type: "geo" as const,
+    x: p._x,
+    y: p._y,
+    props: {
+      geo: (SHAPE_TO_GEO[p.shape ?? "rect"] ?? LEVEL_GEO[p.level]) as "rectangle" | "ellipse" | "diamond",
+      w: p._w,
+      h: p._h,
+      color: LEVEL_COLOR[p.level],
+      fill: (p.level === 1 ? "solid" : p.level === 2 ? "semi" : "none") as "solid" | "semi" | "none",
+      size: (p.level === 1 ? "l" : p.level === 2 ? "m" : "s") as "l" | "m" | "s",
+      font: "sans" as const,
+      align: "middle" as const,
+      verticalAlign: "middle" as const,
+      richText: toRichText(p.label),
+    },
+  }));
 
   if (shapesToCreate.length) {
     editor.createShapes(shapesToCreate);
