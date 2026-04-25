@@ -415,10 +415,10 @@ const renderBoardInEditor = (editor: Editor, data: BoardData) => {
     });
   }
 
-  // Frame the view on the new content
+  // Frame the view on the new content with generous padding
   setTimeout(() => {
-    editor.zoomToFit({ animation: { duration: 400 } });
-  }, 50);
+    editor.zoomToFit({ animation: { duration: 500 }, inset: BOARD_PADDING });
+  }, 80);
 };
 
 // ============================================================
