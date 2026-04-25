@@ -312,19 +312,21 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-hero flex flex-col">
       <header className="border-b border-border/60 backdrop-blur bg-background/70 sticky top-0 z-10">
-        <div className="container flex items-center justify-between py-4">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="container flex items-center justify-between py-3 sm:py-4 gap-2">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="h-7 w-7 rounded-lg bg-gradient-primary shadow-glow" />
             <span className="font-semibold tracking-tight">gribouille</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {board && (
               <>
-                <Button variant="outline" size="sm" onClick={reset}>
-                  <RefreshCcw className="mr-2 h-4 w-4" /> Nouvelle photo
+                <Button variant="outline" size="sm" onClick={reset} className="px-2 sm:px-3">
+                  <RefreshCcw className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouvelle photo</span>
                 </Button>
-                <Button size="sm" onClick={exportPDF} className="bg-gradient-primary shadow-glow hover:opacity-90">
-                  <FileDown className="mr-2 h-4 w-4" /> Exporter PDF
+                <Button size="sm" onClick={exportPDF} className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
+                  <FileDown className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Exporter PDF</span>
                 </Button>
               </>
             )}
@@ -335,7 +337,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container py-4 sm:py-8">
         {!board && !processing && (
           <div className="mx-auto max-w-2xl">
             <h1 className="text-3xl font-bold tracking-tight">Upload tes notes</h1>
