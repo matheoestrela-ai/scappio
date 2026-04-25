@@ -399,29 +399,63 @@ const Dashboard = () => {
         )}
 
         {board && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ImageIcon className="h-4 w-4" />
-              {board.nodes.length} nœuds ·{" "}
-              {board.nodes.filter((n) => n.level === 2).length} idées principales ·{" "}
-              {board.nodes.filter((n) => n.level === 3).length} détails
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <ImageIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {board.nodes.length} nœuds ·{" "}
+                {board.nodes.filter((n) => n.level === 2).length} idées ·{" "}
+                {board.nodes.filter((n) => n.level === 3).length} détails
+              </span>
             </div>
-            <div className="flex h-[calc(100vh-220px)] w-full gap-4">
+            <div className="relative flex h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] w-full gap-4">
               <div
                 ref={boardRef}
-                className="flex-1 rounded-2xl border border-border shadow-elegant overflow-hidden"
+                className="flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden"
               >
                 <Board data={board} apiRef={boardApiRef} />
               </div>
-              <SuggestionsPanel
-                insights={insights}
-                loading={suggestionsLoading}
-                improving={improving}
-                onAccept={acceptSuggestion}
-                onReject={rejectSuggestion}
-                onRefresh={refreshSuggestions}
-                onAutoImprove={autoImprove}
-              />
+
+              {/* Desktop : panneau latéral */}
+              {!isMobile && (
+                <SuggestionsPanel
+                  insights={insights}
+                  loading={suggestionsLoading}
+                  improving={improving}
+                  onAccept={acceptSuggestion}
+                  onReject={rejectSuggestion}
+                  onRefresh={refreshSuggestions}
+                  onAutoImprove={autoImprove}
+                />
+              )}
+
+              {/* Mobile : bouton flottant + Sheet */}
+              {isMobile && (
+                <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+                  <SheetTrigger asChild>
+                    <button
+                      type="button"
+                      className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
+                      aria-label="Ouvrir l'agent IA"
+                    >
+                      <Sparkles className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-2xl">
+                    <div className="h-full pt-2">
+                      <SuggestionsPanel
+                        insights={insights}
+                        loading={suggestionsLoading}
+                        improving={improving}
+                        onAccept={(s) => { acceptSuggestion(s); }}
+                        onReject={rejectSuggestion}
+                        onRefresh={refreshSuggestions}
+                        onAutoImprove={autoImprove}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
             </div>
           </div>
         )}
