@@ -415,6 +415,23 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
   const minW = SHAPE_DEFAULTS[shape].minW;
   const minH = SHAPE_DEFAULTS[shape].minH;
 
+  // Track Shift pour permettre le redimensionnement libre/contraint à la volée.
+  // - Rectangle : libre par défaut, Shift = ratio préservé
+  // - Cercle / Diamond : toujours ratio préservé (forme par nature)
+  const [shiftHeld, setShiftHeld] = useState(false);
+  useEffect(() => {
+    if (!selected) return;
+    const down = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(true); };
+    const up = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(false); };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [selected]);
+  const keepRatio = shape === "rect" ? shiftHeld : true;
+
   // Auto-fit when label/style changes (and the user hasn't resized smaller than required)
   const lastAuto = useRef<{ w: number; h: number; key: string }>({ w: 0, h: 0, key: "" });
   useLayoutEffect(() => {
