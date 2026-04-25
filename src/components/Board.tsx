@@ -16,7 +16,7 @@ import ReactFlow, {
   EdgeLabelRenderer,
   getBezierPath,
   Handle,
-  MarkerType,
+  
   NodeResizer,
   NodeToolbar,
   Position,
