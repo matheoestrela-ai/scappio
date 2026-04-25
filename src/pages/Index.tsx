@@ -71,14 +71,19 @@ const Index = () => {
           </Button>
         </nav>
 
-        {/* Mobile menu button */}
-        <button
-          aria-label="Menu"
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card"
-          onClick={() => setMenuOpen((v) => !v)}
-        >
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        {/* Mobile actions */}
+        <div className="md:hidden flex items-center gap-2">
+          <Button asChild size="sm" variant="outline" className="h-10">
+            <Link to="/auth">Connexion</Link>
+          </Button>
+          <button
+            aria-label="Menu"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </header>
 
       {/* Mobile menu drawer */}
