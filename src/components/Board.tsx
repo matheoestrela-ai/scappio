@@ -10,10 +10,13 @@ import ReactFlow, {
   addEdge,
   Background,
   BackgroundVariant,
+  BaseEdge,
   ControlButton,
   Controls,
+  EdgeLabelRenderer,
+  getBezierPath,
   Handle,
-  MarkerType,
+  
   NodeResizer,
   NodeToolbar,
   Position,
@@ -24,6 +27,7 @@ import ReactFlow, {
   type Connection,
   type Edge,
   type EdgeChange,
+  type EdgeProps,
   type Node,
   type NodeChange,
   type NodeProps,
@@ -45,6 +49,10 @@ import {
   Sparkles as SparklesIcon,
   LayoutGrid,
   Info,
+  ArrowRight,
+  MoveHorizontal,
+  Minus,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -108,9 +116,9 @@ const SHAPE_DEFAULTS: Record<
   BoardShape,
   { w: number; h: number; minW: number; minH: number; color: string; textColor: string }
 > = {
-  rect:    { w: 280, h: 110, minW: 160, minH: 80,  color: "#4F46E5", textColor: "#FFFFFF" },
-  circle:  { w: 220, h: 220, minW: 140, minH: 140, color: "#7C3AED", textColor: "#FFFFFF" },
-  diamond: { w: 200, h: 200, minW: 140, minH: 140, color: "#F59E0B", textColor: "#FFFFFF" },
+  rect:    { w: 300, h: 120, minW: 180, minH: 84,  color: "#312E81", textColor: "#FFFFFF" },
+  circle:  { w: 230, h: 230, minW: 150, minH: 150, color: "#7C3AED", textColor: "#FFFFFF" },
+  diamond: { w: 210, h: 210, minW: 150, minH: 150, color: "#F59E0B", textColor: "#FFFFFF" },
 };
 
 const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
@@ -120,27 +128,37 @@ const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
 };
 
 // Distinct color per hierarchy level — instantly readable hierarchy.
+// Indigo foncé → Violet → Lavande
 const LEVEL_COLOR: Record<BoardLevel, string> = {
-  1: "#4F46E5", // indigo — main topic
-  2: "#7C3AED", // violet — secondary ideas
-  3: "#10B981", // emerald — details
+  1: "#312E81", // indigo-900 — sujet principal, dense et profond
+  2: "#7C3AED", // violet-600 — idées clés
+  3: "#C4B5FD", // lavande (violet-300) — détails
+};
+
+// Texte par niveau : niveau 3 (lavande clair) doit avoir du texte sombre
+const LEVEL_TEXT: Record<BoardLevel, string> = {
+  1: "#FFFFFF",
+  2: "#FFFFFF",
+  3: "#1E1B4B", // indigo-950 sur fond lavande
 };
 
 const LEVEL_DEFAULT_SIZE: Record<BoardLevel, { w: number; h: number }> = {
-  1: { w: 360, h: 120 },
-  2: { w: 220, h: 110 },
-  3: { w: 200, h: 90 },
+  1: { w: 380, h: 130 },
+  2: { w: 240, h: 120 },
+  3: { w: 210, h: 96 },
 };
 
 const LEVEL_FONT: Record<BoardLevel, { size: string; weight: number }> = {
-  1: { size: "1.45rem", weight: 800 },
-  2: { size: "1.05rem", weight: 700 },
-  3: { size: "0.92rem", weight: 500 },
+  1: { size: "1.5rem", weight: 800 },
+  2: { size: "1.1rem", weight: 700 },
+  3: { size: "0.95rem", weight: 600 },
 };
 
 const PALETTE = [
-  "#4F46E5", // indigo
-  "#7C3AED", // violet
+  "#312E81", // indigo-900
+  "#4F46E5", // indigo-600
+  "#7C3AED", // violet-600
+  "#C4B5FD", // lavender
   "#F59E0B", // amber
   "#10B981", // emerald
   "#EF4444", // red
@@ -263,8 +281,19 @@ const EditableLabel = ({
 
   const font = LEVEL_FONT[data.level];
   const color = textColorFor(data.color);
+
+  // Scale font with the node's current size, so resizing the box visibly
+  // grows/shrinks the text — without ever overflowing.
+  const def = LEVEL_DEFAULT_SIZE[data.level];
+  const scale = Math.max(
+    0.7,
+    Math.min(2.4, Math.sqrt((data.width * data.height) / (def.w * def.h))),
+  );
+  const baseSizeRem = parseFloat(font.size); // values are "Xrem"
+  const scaledFontSize = `${(baseSizeRem * scale).toFixed(3)}rem`;
+
   const fontStyle: React.CSSProperties = {
-    fontSize: font.size,
+    fontSize: scaledFontSize,
     fontWeight: data.bold ? 800 : font.weight,
     fontStyle: data.italic ? "italic" : "normal",
     color,
@@ -397,6 +426,23 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
   const minW = SHAPE_DEFAULTS[shape].minW;
   const minH = SHAPE_DEFAULTS[shape].minH;
 
+  // Track Shift pour permettre le redimensionnement libre/contraint à la volée.
+  // - Rectangle : libre par défaut, Shift = ratio préservé
+  // - Cercle / Diamond : toujours ratio préservé (forme par nature)
+  const [shiftHeld, setShiftHeld] = useState(false);
+  useEffect(() => {
+    if (!selected) return;
+    const down = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(true); };
+    const up = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(false); };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [selected]);
+  const keepRatio = shape === "rect" ? shiftHeld : true;
+
   // Auto-fit when label/style changes (and the user hasn't resized smaller than required)
   const lastAuto = useRef<{ w: number; h: number; key: string }>({ w: 0, h: 0, key: "" });
   useLayoutEffect(() => {
@@ -415,11 +461,15 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
     height,
     background: shape === "diamond" ? "transparent" : color,
     boxShadow: selected
-      ? `0 0 0 2px white, 0 0 0 4px ${color}, 0 12px 30px -10px rgba(15,23,42,0.25)`
-      : "0 8px 22px -10px rgba(15,23,42,0.25)",
+      ? `0 0 0 2px white, 0 0 0 4px ${color}, 0 24px 48px -16px rgba(49,46,129,0.45), 0 8px 16px -8px rgba(49,46,129,0.35)`
+      : "0 18px 36px -14px rgba(49,46,129,0.35), 0 6px 12px -6px rgba(15,23,42,0.18)",
     borderRadius:
-      shape === "rect" ? 14 : shape === "circle" ? 9999 : 0,
+      shape === "rect" ? 16 : shape === "circle" ? 9999 : 0,
     position: "relative",
+    // Bords parfaitement nets sur tous les écrans
+    transform: "translateZ(0)",
+    backfaceVisibility: "hidden",
+    WebkitFontSmoothing: "antialiased",
   };
 
   const innerWrap: React.CSSProperties = {
@@ -428,7 +478,7 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: shape === "rect" ? "12px 18px" : shape === "circle" ? "20px" : "24px",
+    padding: shape === "rect" ? "16px 22px" : shape === "circle" ? "26px" : "30px",
     boxSizing: "border-box",
     overflow: "hidden",
   };
@@ -439,14 +489,15 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
         isVisible={selected}
         minWidth={minW}
         minHeight={minH}
-        keepAspectRatio={shape !== "rect"}
-        lineStyle={{ borderColor: color, opacity: 0.4 }}
+        keepAspectRatio={keepRatio}
+        lineStyle={{ borderColor: color, opacity: 0.5, borderWidth: 1.5 }}
         handleStyle={{
-          width: 10,
-          height: 10,
+          width: 12,
+          height: 12,
           borderRadius: 3,
           background: "white",
           border: `2px solid ${color}`,
+          boxShadow: "0 2px 6px -1px rgba(15,23,42,0.25)",
         }}
         onResize={(_e, params) =>
           data.onPatch(id, { width: params.width, height: params.height })
@@ -462,15 +513,17 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
 
       {shape === "diamond" ? (
         // Diamond: a rotated square with un-rotated content centered in it
-        <div style={containerStyle}>
+        <div style={{ ...containerStyle, boxShadow: "none", background: "transparent" }}>
           <div
             style={{
               position: "absolute",
               inset: 0,
               transform: "rotate(45deg)",
               background: color,
-              borderRadius: 12,
-              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.18)",
+              borderRadius: 14,
+              boxShadow: selected
+                ? `0 0 0 2px white, 0 0 0 4px ${color}, 0 24px 48px -16px rgba(49,46,129,0.45)`
+                : "0 18px 36px -14px rgba(49,46,129,0.35), 0 6px 12px -6px rgba(15,23,42,0.18)",
             }}
           />
           <div
@@ -502,11 +555,11 @@ const nodeTypes = { shape: ShapeNode };
 // ============================================================
 
 const LAYOUT = {
-  rowGap: 220,        // vertical gap between levels
-  siblingGap: 80,     // min horizontal gap between siblings of same parent
-  branchGap: 140,     // min horizontal gap between different branches
-  marginX: 80,
-  marginY: 80,
+  rowGap: 260,        // vertical gap between levels — généreux
+  siblingGap: 110,    // min horizontal gap between siblings of same parent
+  branchGap: 180,     // min horizontal gap between different branches
+  marginX: 100,
+  marginY: 100,
 };
 
 const sizeOf = (n: BoardNode) => {
@@ -598,26 +651,235 @@ const computeLayout = (nodes: BoardNode[]): Map<string, { x: number; y: number }
   return positions;
 };
 
-const buildEdgeStyle = (level: BoardLevel) => {
-  // Edge thickness reflects importance: connection TO a level-2 node is "main"
-  const isMain = level === 2;
-  const stroke = isMain ? "#4F46E5" : "#94A3B8";
+// ============================================================
+//  Edges — Bézier propre, 3 styles (arrow, double, line), hover delete + label
+// ============================================================
+
+export type EdgeStyleVariant = "arrow" | "double" | "line";
+
+type EditorEdgeData = {
+  variant: EdgeStyleVariant;
+  importance: "main" | "secondary";
+  label?: string;
+};
+
+const EDGE_COLOR_MAIN = "#4F46E5";
+const EDGE_COLOR_SECONDARY = "#94A3B8";
+
+const edgeVisualFor = (variant: EdgeStyleVariant, importance: "main" | "secondary") => {
+  const isMain = importance === "main";
+  const stroke = isMain ? EDGE_COLOR_MAIN : EDGE_COLOR_SECONDARY;
+  const strokeWidth = isMain ? 2.8 : 1.6;
+  const opacity = isMain ? 0.92 : 0.72;
+  const arrowSize = isMain ? 20 : 16;
+  return { stroke, strokeWidth, opacity, arrowSize };
+};
+
+const buildEdgeStyle = (level: BoardLevel, variant: EdgeStyleVariant = "arrow") => {
+  const importance: "main" | "secondary" = level === 2 ? "main" : "secondary";
   return {
-    type: "default" as const, // bezier curve
-    animated: false,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: isMain ? 18 : 14,
-      height: isMain ? 18 : 14,
-      color: stroke,
-    },
-    style: {
-      stroke,
-      strokeWidth: isMain ? 2.6 : 1.5,
-      opacity: isMain ? 0.85 : 0.6,
-    },
+    type: "smart" as const,
+    data: { variant, importance } as EditorEdgeData,
   };
 };
+
+// Custom Bézier edge with hover halo + delete button + inline label editing
+const SmartEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  selected,
+  data,
+}: EdgeProps<EditorEdgeData>) => {
+  const variant = data?.variant ?? "arrow";
+  const importance = data?.importance ?? "secondary";
+  const { stroke, strokeWidth, opacity, arrowSize } = edgeVisualFor(variant, importance);
+
+  const [path, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    curvature: 0.28,
+  });
+
+  const [hovered, setHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(data?.label ?? "");
+  const flow = useReactFlow();
+
+  useEffect(() => setLabel(data?.label ?? ""), [data?.label]);
+
+  const showOverlay = hovered || selected || editing;
+
+  // Unique marker IDs per edge to allow per-edge color/size variations
+  const markerEndId = `m-end-${id}`;
+  const markerStartId = `m-start-${id}`;
+
+  const commitLabel = () => {
+    setEditing(false);
+    flow.setEdges((eds) =>
+      eds.map((e) =>
+        e.id === id
+          ? { ...e, data: { ...(e.data as EditorEdgeData), label: label.trim() || undefined } }
+          : e,
+      ),
+    );
+  };
+
+  const removeEdge = () => {
+    flow.setEdges((eds) => eds.filter((e) => e.id !== id));
+  };
+
+  return (
+    <>
+      <defs>
+        <marker
+          id={markerEndId}
+          viewBox="0 0 12 12"
+          refX="10"
+          refY="6"
+          markerWidth={arrowSize / 2}
+          markerHeight={arrowSize / 2}
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 12 6 L 0 12 z" fill={stroke} />
+        </marker>
+        {variant === "double" && (
+          <marker
+            id={markerStartId}
+            viewBox="0 0 12 12"
+            refX="10"
+            refY="6"
+            markerWidth={arrowSize / 2}
+            markerHeight={arrowSize / 2}
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 12 6 L 0 12 z" fill={stroke} />
+          </marker>
+        )}
+      </defs>
+
+      {/* Halo on hover/selection */}
+      {showOverlay && (
+        <path
+          d={path}
+          fill="none"
+          stroke={stroke}
+          strokeOpacity={0.18}
+          strokeWidth={strokeWidth + 8}
+          strokeLinecap="round"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+
+      {/* Visible edge */}
+      <BaseEdge
+        id={id}
+        path={path}
+        style={{
+          stroke,
+          strokeWidth,
+          opacity: showOverlay ? 1 : opacity,
+          transition: "opacity 120ms ease, stroke-width 120ms ease",
+          strokeLinecap: "round",
+        }}
+        markerEnd={variant === "line" ? undefined : `url(#${markerEndId})`}
+        markerStart={variant === "double" ? `url(#${markerStartId})` : undefined}
+      />
+
+      {/* Wide invisible hit area for hover + double-click */}
+      <path
+        d={path}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={20}
+        style={{ cursor: "pointer", pointerEvents: "stroke" }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+      />
+
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: "absolute",
+            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+            pointerEvents: "all",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+          className="nodrag nopan"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          {editing ? (
+            <input
+              autoFocus
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              onBlur={commitLabel}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitLabel();
+                if (e.key === "Escape") {
+                  setLabel(data?.label ?? "");
+                  setEditing(false);
+                }
+              }}
+              className="rounded-md border border-border bg-background px-2 py-0.5 text-xs font-semibold text-foreground shadow-sm outline-none ring-2 ring-primary/30"
+              style={{ minWidth: 80 }}
+            />
+          ) : data?.label ? (
+            <button
+              type="button"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setEditing(true);
+              }}
+              className="rounded-md border border-border bg-background/95 px-2 py-0.5 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
+              title="Double-clic pour modifier"
+            >
+              {data.label}
+            </button>
+          ) : showOverlay ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-md border border-dashed border-border bg-background/90 px-2 py-0.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur"
+              title="Ajouter un label"
+            >
+              + label
+            </button>
+          ) : null}
+
+          {showOverlay && (
+            <button
+              type="button"
+              onClick={removeEdge}
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-destructive shadow-sm transition hover:bg-destructive hover:text-white"
+              title="Supprimer la connexion"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
+
+const edgeTypes = { smart: SmartEdge };
+
 
 const toFlowNode = (n: BoardNode, pos?: { x: number; y: number }): Node<EditorNodeData> => {
   const shape: BoardShape = n.shape ?? LEVEL_TO_SHAPE[n.level];
@@ -670,20 +932,13 @@ const buildInitial = (data: BoardData) => {
     .filter((n) => n.parent)
     .map((n) => {
       const labelText = (n as any).edgeLabel as string | undefined;
+      const base = buildEdgeStyle(n.level, "arrow");
       return {
         id: `e-${n.parent}-${n.id}`,
         source: n.parent as string,
         target: n.id,
-        label: labelText,
-        labelStyle: labelText
-          ? { fill: "#475569", fontSize: 11, fontWeight: 600 }
-          : undefined,
-        labelBgStyle: labelText
-          ? { fill: "#FFFFFF", fillOpacity: 0.9 }
-          : undefined,
-        labelBgPadding: [4, 6] as [number, number],
-        labelBgBorderRadius: 4,
-        ...buildEdgeStyle(n.level),
+        type: base.type,
+        data: { ...base.data, label: labelText },
       };
     });
   return { nodes, edges };
@@ -754,6 +1009,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [edges, setEdges] = useState<Edge[]>(initial.edges);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
@@ -905,18 +1161,20 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
     (conn: Connection) => {
       if (!conn.source || !conn.target) return;
       pushHistory(nodes, edges);
+      const base = buildEdgeStyle(2, arrowVariant);
       setEdges((eds) =>
         addEdge(
           {
             ...conn,
             id: `e-${conn.source}-${conn.target}-${Date.now()}`,
-            ...buildEdgeStyle(2),
+            type: base.type,
+            data: base.data,
           },
           eds,
         ),
       );
     },
-    [nodes, edges, pushHistory],
+    [nodes, edges, pushHistory, arrowVariant],
   );
 
   // ------- Add node -------
@@ -996,13 +1254,15 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
       setNodes((nds) => [...nds, newNode]);
 
       if (parent) {
+        const base = buildEdgeStyle(s.level, "arrow");
         setEdges((eds) => [
           ...eds,
           {
             id: `e-${parent.id}-${id}`,
             source: parent.id,
             target: id,
-            ...buildEdgeStyle(s.level),
+            type: base.type,
+            data: base.data,
           },
         ]);
       }
@@ -1137,8 +1397,32 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         >
           <Maximize2 className="h-4 w-4" />
         </Button>
+
+        {/* Sélecteur de style de flèche par défaut */}
+        <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
+          {([
+            { v: "arrow", icon: ArrowRight, title: "Flèche simple" },
+            { v: "double", icon: MoveHorizontal, title: "Flèche double" },
+            { v: "line", icon: Minus, title: "Ligne sans flèche" },
+          ] as const).map(({ v, icon: Icon, title }) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setArrowVariant(v)}
+              title={title}
+              className={`flex h-7 w-7 items-center justify-center rounded transition ${
+                arrowVariant === v
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+
         <div className="hidden md:block px-2 text-xs text-muted-foreground">
-          Double-clic : éditer · Clic droit : menu · Shift-clic : multi-sélection · ⌘Z / ⌘Y · ⌘D
+          Double-clic : éditer · Clic droit : menu · Double-clic sur flèche : label
         </div>
       </div>
 
@@ -1177,6 +1461,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         nodes={enrichedNodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
