@@ -102,7 +102,7 @@ const Index = () => {
         </div>
         <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.2] font-bold tracking-tight sm:text-5xl md:text-7xl">
           Transforme tes{" "}
-          <span className="inline-flex items-center justify-center align-middle mx-2 my-3 md:my-5 h-[1.2em] md:h-[1.4em] px-1">
+          <span className="inline-flex items-center justify-center align-middle ml-0 mr-3 md:mr-5 my-3 md:my-5 h-[1.2em] md:h-[1.4em] px-1 -translate-x-1 md:-translate-x-2">
             <span
               className="inline-block font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 text-[1.5em] md:text-[1.6em]"
               style={{ fontFamily: "'Caveat', cursive" }}
