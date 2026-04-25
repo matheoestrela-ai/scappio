@@ -100,13 +100,15 @@ const Index = () => {
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           Propulsé par l'IA Vision
         </div>
-        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.7] font-bold tracking-tight sm:text-5xl md:text-7xl md:leading-[1.55]">
+        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.2] font-bold tracking-tight sm:text-5xl md:text-7xl">
           Transforme tes{" "}
-          <span
-            className="inline-block align-middle font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 text-[1.1em] mx-1"
-            style={{ fontFamily: "'Caveat', cursive" }}
-          >
-            idées
+          <span className="inline-flex items-center justify-center align-middle mx-2 my-3 md:my-5 h-[1.2em] md:h-[1.4em] px-1">
+            <span
+              className="inline-block font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 text-[1.5em] md:text-[1.6em]"
+              style={{ fontFamily: "'Caveat', cursive" }}
+            >
+              idées
+            </span>
           </span>{" "}
           en board visuel en 10 secondes
         </h1>
