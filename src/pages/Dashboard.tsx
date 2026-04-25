@@ -454,6 +454,10 @@ const Dashboard = () => {
               />
             </div>
 
+            <div className="mt-4">
+              <VoiceRecorder onRecorded={handleVoiceRecorded} disabled={processing} />
+            </div>
+
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
