@@ -195,21 +195,44 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { image } = await req.json();
-    if (!image || typeof image !== "string" || !image.startsWith("data:image/")) {
-      return new Response(JSON.stringify({ error: "Invalid image payload" }), {
+    const body = await req.json();
+    const { image, text, pdf } = body ?? {};
+
+    let userContent: any[] | null = null;
+    let userPrompt = "";
+
+    if (typeof image === "string" && image.startsWith("data:image/")) {
+      const mimeMatch = image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+      const mimeType = mimeMatch?.[1]?.toLowerCase() ?? "";
+      if (!["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"].includes(mimeType)) {
+        return new Response(
+          JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      userPrompt =
+        "Analyze these handwritten notes EXHAUSTIVELY. Capture every word, arrow and annotation. Then call extract_board with the strict 3-level hierarchy AND the insights (summary, suggestions, warning).";
+      userContent = [
+        { type: "text", text: userPrompt },
+        { type: "image_url", image_url: { url: image } },
+      ];
+    } else if (typeof text === "string" && text.trim().length > 0) {
+      userPrompt =
+        "Analyze the following text EXHAUSTIVELY. Capture every idea and relationship. Then call extract_board with the strict 3-level hierarchy AND the insights (summary, suggestions, warning).\n\nTEXT:\n" +
+        text.trim().slice(0, 20000);
+      userContent = [{ type: "text", text: userPrompt }];
+    } else if (typeof pdf === "string" && pdf.startsWith("data:application/pdf")) {
+      userPrompt =
+        "Analyze this PDF document EXHAUSTIVELY. Capture every idea, section and relationship. Then call extract_board with the strict 3-level hierarchy AND the insights (summary, suggestions, warning).";
+      userContent = [
+        { type: "text", text: userPrompt },
+        { type: "image_url", image_url: { url: pdf } },
+      ];
+    } else {
+      return new Response(JSON.stringify({ error: "Invalid payload: provide image, text or pdf" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    const mimeMatch = image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
-    const mimeType = mimeMatch?.[1]?.toLowerCase() ?? "";
-    if (!["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"].includes(mimeType)) {
-      return new Response(
-        JSON.stringify({ error: "Unsupported image format. Please upload JPG or PNG." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -222,17 +245,7 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text:
-                  "Analyze these handwritten notes EXHAUSTIVELY. Capture every word, arrow and annotation. Then call extract_board with the strict 3-level hierarchy AND the insights (summary, suggestions, warning).",
-              },
-              { type: "image_url", image_url: { url: image } },
-            ],
-          },
+          { role: "user", content: userContent },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "extract_board" } },
