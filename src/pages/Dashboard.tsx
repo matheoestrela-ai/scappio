@@ -3,7 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { type BoardData, type BoardApi } from "@/components/Board";
 import TldrawBoard from "@/components/TldrawBoard";
 import SuggestionsPanel, {
