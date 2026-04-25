@@ -103,7 +103,7 @@ const Index = () => {
         <h1 className="font-display mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-normal tracking-[-0.024em] sm:text-6xl md:text-7xl lg:text-[88px]">
           Transforme tes{" "}
           <span
-            className="bg-clip-text text-transparent"
+            className="inline-block bg-clip-text text-transparent leading-[1.2] pb-1"
             style={{ backgroundImage: "linear-gradient(to left, #6366f1, #a855f7, #fcd34d)" }}
           >
             idées
