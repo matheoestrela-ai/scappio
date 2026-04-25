@@ -228,25 +228,13 @@ const Dashboard = () => {
       r.readAsDataURL(file);
     });
 
-  const handleFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
-      toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
-      return;
-    }
-    if (file.size > MAX_SIZE) {
-      toast.error("Image trop lourde (max 25 MB).");
-      return;
-    }
+  const runAnalysis = useCallback(async (payload: { image?: string; text?: string; pdf?: string }) => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
     try {
-      const normalizedFile = await normalizeImageFile(file);
-      const dataUrl = await fileToBase64(normalizedFile);
-      setPreview(dataUrl);
-
       const { data, error } = await supabase.functions.invoke("analyze-notes", {
-        body: { image: dataUrl },
+        body: payload,
       });
 
       if (error) {
@@ -262,15 +250,13 @@ const Dashboard = () => {
       const parsedBoard = parseBoardData(data);
 
       if (!parsedBoard) {
-        toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie une photo plus nette.");
+        toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie un contenu plus clair.");
         return;
       }
 
       setBoard(parsedBoard);
       setInsights(null);
-
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
-      // Auto-fetch suggestions for the freshly generated board
       setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
@@ -278,6 +264,55 @@ const Dashboard = () => {
       setProcessing(false);
     }
   }, [refreshSuggestions]);
+
+  const handleFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+      toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error("Image trop lourde (max 25 MB).");
+      return;
+    }
+    try {
+      const normalizedFile = await normalizeImageFile(file);
+      const dataUrl = await fileToBase64(normalizedFile);
+      setPreview(dataUrl);
+      await runAnalysis({ image: dataUrl });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+    }
+  }, [runAnalysis]);
+
+  const handlePdfFile = useCallback(async (file: File) => {
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+      toast.error("Format non supporté. Choisis un fichier PDF.");
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error("PDF trop lourd (max 25 MB).");
+      return;
+    }
+    try {
+      setPreview(null);
+      const dataUrl = await fileToBase64(file);
+      await runAnalysis({ pdf: dataUrl });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+    }
+  }, [runAnalysis]);
+
+  const handleTextSubmit = useCallback(async () => {
+    const value = textInput.trim();
+    if (!value) {
+      toast.error("Écris un peu de texte d'abord.");
+      return;
+    }
+    setTextDialogOpen(false);
+    setPreview(null);
+    await runAnalysis({ text: value });
+    setTextInput("");
+  }, [runAnalysis, textInput]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
