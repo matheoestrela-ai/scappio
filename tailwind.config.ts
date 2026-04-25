@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Geist Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['General Sans', 'Geist Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
