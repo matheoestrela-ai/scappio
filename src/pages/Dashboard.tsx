@@ -317,6 +317,37 @@ const Dashboard = () => {
     setTextInput("");
   }, [runAnalysis, textInput]);
 
+  const handleVoiceRecorded = useCallback(async (audioDataUrl: string) => {
+    setProcessing(true);
+    setBoard(null);
+    setInsights(null);
+    setPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("transcribe-audio", {
+        body: { audio: audioDataUrl },
+      });
+      if (error) {
+        const msg = (error as any)?.message ?? "Erreur de transcription";
+        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
+        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        else toast.error(msg);
+        setProcessing(false);
+        return;
+      }
+      const transcript = (data as any)?.transcript;
+      if (typeof transcript !== "string" || !transcript.trim()) {
+        toast.error("Aucun texte détecté dans l'audio.");
+        setProcessing(false);
+        return;
+      }
+      toast.success("Transcription terminée, analyse en cours…");
+      await runAnalysis({ text: transcript });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur inattendue");
+      setProcessing(false);
+    }
+  }, [runAnalysis]);
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
