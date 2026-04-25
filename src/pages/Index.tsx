@@ -265,18 +265,17 @@ const Index = () => {
       <section id="problem" className="container py-16 md:py-24">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Miro est trop complexe.<br />
             Retaper tes notes te fait <span className="text-gradient">perdre du temps</span>.
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-            Tes meilleures idées naissent sur papier. Mais entre la photo et un board propre, tout le monde abandonne.
+            Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
           </p>
         </div>
         <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
-            { icon: Clock, title: "30 minutes perdues", desc: "Recopier chaque note dans Miro ou Notion à la main, c'est une demi-heure à chaque réunion." },
-            { icon: Layers, title: "Outils trop lourds", desc: "Miro, FigJam, Whimsical : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
-            { icon: Frown, title: "Les idées disparaissent", desc: "Les carnets s'empilent, les photos restent dans la galerie. Personne n'y revient." },
+            { icon: Clock, title: "30 minutes perdues", desc: "Recopier chaque note dans un outil de mindmap à la main, c'est une demi-heure à chaque réunion." },
+            { icon: Layers, title: "Outils trop lourds", desc: "Les whiteboards classiques : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
+            { icon: Frown, title: "Les idées disparaissent", desc: "Les carnets s'empilent, les mémos vocaux et les photos restent dans le téléphone. Personne n'y revient." },
           ].map((f, i) => (
             <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-elegant">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
