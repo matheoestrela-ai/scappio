@@ -23,6 +23,7 @@ import {
   Quote,
 } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/assets/logo.png";
 
 const Index = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,9 +43,8 @@ const Index = () => {
     <div className="min-h-screen bg-hero pb-24 md:pb-0">
       {/* Nav */}
       <header className="container flex items-center justify-between py-5 md:py-6">
-        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
-          <div className="h-8 w-8 rounded-lg bg-gradient-primary shadow-glow" />
-          <span className="text-xl font-semibold tracking-tight">gribouille</span>
+        <Link to="/" className="flex items-center" onClick={() => setMenuOpen(false)} aria-label="Accueil">
+          <img src={logo} alt="Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
         </Link>
 
         {/* Desktop nav */}
