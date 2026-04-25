@@ -100,11 +100,11 @@ const Index = () => {
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           Propulsé par l'IA Vision
         </div>
-        <h1 className="font-display mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-normal tracking-[-0.024em] sm:text-6xl md:text-7xl lg:text-[88px]">
+        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.15] font-bold tracking-tight sm:text-5xl md:text-7xl">
           Transforme tes{" "}
           <span
-            className="inline-block bg-clip-text text-transparent leading-[1.2] pb-1"
-            style={{ backgroundImage: "linear-gradient(to left, #6366f1, #a855f7, #fcd34d)" }}
+            className="inline-block align-baseline font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 translate-y-[0.08em] text-[1.35em] mx-1"
+            style={{ fontFamily: "'Caveat', cursive" }}
           >
             idées
           </span>{" "}
