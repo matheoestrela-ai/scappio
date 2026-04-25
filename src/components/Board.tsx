@@ -49,6 +49,10 @@ import {
   Sparkles as SparklesIcon,
   LayoutGrid,
   Info,
+  ArrowRight,
+  MoveHorizontal,
+  Minus,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
