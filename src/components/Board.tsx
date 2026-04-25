@@ -425,11 +425,15 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
     height,
     background: shape === "diamond" ? "transparent" : color,
     boxShadow: selected
-      ? `0 0 0 2px white, 0 0 0 4px ${color}, 0 12px 30px -10px rgba(15,23,42,0.25)`
-      : "0 8px 22px -10px rgba(15,23,42,0.25)",
+      ? `0 0 0 2px white, 0 0 0 4px ${color}, 0 24px 48px -16px rgba(49,46,129,0.45), 0 8px 16px -8px rgba(49,46,129,0.35)`
+      : "0 18px 36px -14px rgba(49,46,129,0.35), 0 6px 12px -6px rgba(15,23,42,0.18)",
     borderRadius:
-      shape === "rect" ? 14 : shape === "circle" ? 9999 : 0,
+      shape === "rect" ? 16 : shape === "circle" ? 9999 : 0,
     position: "relative",
+    // Bords parfaitement nets sur tous les écrans
+    transform: "translateZ(0)",
+    backfaceVisibility: "hidden",
+    WebkitFontSmoothing: "antialiased",
   };
 
   const innerWrap: React.CSSProperties = {
@@ -438,7 +442,7 @@ const ShapeNode = ({ id, data, selected }: NodeProps<EditorNodeData>) => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: shape === "rect" ? "12px 18px" : shape === "circle" ? "20px" : "24px",
+    padding: shape === "rect" ? "16px 22px" : shape === "circle" ? "26px" : "30px",
     boxSizing: "border-box",
     overflow: "hidden",
   };
