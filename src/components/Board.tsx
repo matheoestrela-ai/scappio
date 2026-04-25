@@ -980,6 +980,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [edges, setEdges] = useState<Edge[]>(initial.edges);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
