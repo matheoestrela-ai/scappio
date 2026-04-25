@@ -512,11 +512,11 @@ const nodeTypes = { shape: ShapeNode };
 // ============================================================
 
 const LAYOUT = {
-  rowGap: 220,        // vertical gap between levels
-  siblingGap: 80,     // min horizontal gap between siblings of same parent
-  branchGap: 140,     // min horizontal gap between different branches
-  marginX: 80,
-  marginY: 80,
+  rowGap: 260,        // vertical gap between levels — généreux
+  siblingGap: 110,    // min horizontal gap between siblings of same parent
+  branchGap: 180,     // min horizontal gap between different branches
+  marginX: 100,
+  marginY: 100,
 };
 
 const sizeOf = (n: BoardNode) => {
