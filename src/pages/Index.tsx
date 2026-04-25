@@ -87,11 +87,11 @@ const Index = () => {
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           Propulsé par l'IA Vision
         </div>
-        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.1] font-bold tracking-tight sm:text-5xl md:text-7xl">
+        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.15] font-bold tracking-tight sm:text-5xl md:text-7xl">
           Transforme tes{" "}
           <span
-            className="font-handwritten font-normal text-[hsl(265_85%_70%)] italic"
-            style={{ fontFamily: "'Caveat', 'Shadows Into Light', cursive" }}
+            className="inline-block align-baseline font-normal italic text-[hsl(265_85%_70%)] leading-none -rotate-2 translate-y-[0.08em] text-[1.35em] mx-1"
+            style={{ fontFamily: "'Caveat', cursive" }}
           >
             idées
           </span>{" "}
