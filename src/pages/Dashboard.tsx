@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles } from "lucide-react";
-import Board, { type BoardData, type BoardApi } from "@/components/Board";
+import { type BoardData, type BoardApi } from "@/components/Board";
+import TldrawBoard from "@/components/TldrawBoard";
 import SuggestionsPanel, {
   type Insights,
   type Suggestion,
@@ -413,7 +414,7 @@ const Dashboard = () => {
                 ref={boardRef}
                 className="flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden"
               >
-                <Board data={board} apiRef={boardApiRef} />
+                <TldrawBoard data={board} apiRef={boardApiRef} />
               </div>
 
               {/* Desktop : panneau latéral */}
