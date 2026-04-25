@@ -281,8 +281,19 @@ const EditableLabel = ({
 
   const font = LEVEL_FONT[data.level];
   const color = textColorFor(data.color);
+
+  // Scale font with the node's current size, so resizing the box visibly
+  // grows/shrinks the text — without ever overflowing.
+  const def = LEVEL_DEFAULT_SIZE[data.level];
+  const scale = Math.max(
+    0.7,
+    Math.min(2.4, Math.sqrt((data.width * data.height) / (def.w * def.h))),
+  );
+  const baseSizeRem = parseFloat(font.size); // values are "Xrem"
+  const scaledFontSize = `${(baseSizeRem * scale).toFixed(3)}rem`;
+
   const fontStyle: React.CSSProperties = {
-    fontSize: font.size,
+    fontSize: scaledFontSize,
     fontWeight: data.bold ? 800 : font.weight,
     fontStyle: data.italic ? "italic" : "normal",
     color,
