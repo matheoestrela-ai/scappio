@@ -45,7 +45,7 @@ const Auth = () => {
           options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
-        toast.success("Compte créé ! Tu peux te connecter.");
+        toast.success("Compte créé !");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: parsed.data.email,
