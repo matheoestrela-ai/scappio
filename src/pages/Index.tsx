@@ -166,22 +166,32 @@ const Index = () => {
 
       {/* Social proof */}
       <section className="container pb-16 md:pb-20">
-        <div className="rounded-2xl border border-border bg-card/60 backdrop-blur px-6 py-6 md:py-7 text-center shadow-elegant">
-          <p className="text-sm md:text-base text-muted-foreground">
-            Déjà <span className="font-semibold text-foreground">2 481 personnes</span> sur la waitlist
+        <div className="rounded-2xl border border-border bg-card/60 backdrop-blur py-6 md:py-7 text-center shadow-elegant overflow-hidden">
+          <p className="px-6 text-xs md:text-sm uppercase tracking-widest text-muted-foreground">
+            Utilisé par des équipes qui viennent de
           </p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-muted-foreground/70 text-sm font-semibold tracking-wide">
-            <span>Miro</span>
-            <span className="hidden sm:inline">•</span>
-            <span>Notion</span>
-            <span className="hidden sm:inline">•</span>
-            <span>Figma</span>
-            <span className="hidden sm:inline">•</span>
-            <span>Linear</span>
-            <span className="hidden sm:inline">•</span>
-            <span>Slack</span>
+          <div
+            className="mt-5 relative w-full overflow-hidden"
+            style={{
+              maskImage:
+                "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+              WebkitMaskImage:
+                "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+            }}
+          >
+            <div className="flex w-max animate-marquee gap-12 text-muted-foreground/70 text-base md:text-lg font-semibold tracking-wide whitespace-nowrap">
+              {Array.from({ length: 2 }).map((_, dup) => (
+                <div key={dup} className="flex items-center gap-12 pr-12" aria-hidden={dup === 1}>
+                  {["Miro", "Notion", "Figma", "Linear", "Slack", "FigJam", "Whimsical", "Trello", "Asana"].map((name) => (
+                    <span key={`${dup}-${name}`} className="flex items-center gap-12">
+                      {name}
+                      <span className="text-muted-foreground/40">•</span>
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Utilisé par des équipes qui viennent de ces outils.</p>
         </div>
       </section>
 
