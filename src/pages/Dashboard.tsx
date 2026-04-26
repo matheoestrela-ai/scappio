@@ -321,7 +321,7 @@ const Dashboard = () => {
       const normalizedFile = await normalizeImageFile(file);
       const dataUrl = await fileToBase64(normalizedFile);
       setPreview(dataUrl);
-      await runAnalysis({ image: dataUrl });
+      await runAnalysis({ image: dataUrl }, "photo");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     }
@@ -339,7 +339,7 @@ const Dashboard = () => {
     try {
       setPreview(null);
       const dataUrl = await fileToBase64(file);
-      await runAnalysis({ pdf: dataUrl });
+      await runAnalysis({ pdf: dataUrl }, "pdf");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     }
@@ -353,7 +353,7 @@ const Dashboard = () => {
     }
     setTextDialogOpen(false);
     setPreview(null);
-    await runAnalysis({ text: value });
+    await runAnalysis({ text: value }, "text");
     setTextInput("");
   }, [runAnalysis, textInput]);
 
@@ -381,7 +381,7 @@ const Dashboard = () => {
         return;
       }
       toast.success("Transcription terminée, analyse en cours…");
-      await runAnalysis({ text: transcript });
+      await runAnalysis({ text: transcript }, "voice");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
       setProcessing(false);
