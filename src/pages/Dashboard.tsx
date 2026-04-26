@@ -409,6 +409,15 @@ const Dashboard = () => {
               <Camera className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Studio</span>
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/recordings")}
+              className="px-2 sm:px-3"
+            >
+              <Video className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Mes enregistrements</span>
+            </Button>
             {board && (
               <>
                 <Button variant="outline" size="sm" onClick={reset} className="px-2 sm:px-3">
