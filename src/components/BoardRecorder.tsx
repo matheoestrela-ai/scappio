@@ -49,6 +49,8 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
   const compositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
+  const snapIntervalRef = useRef<number | null>(null);
+  const stoppedRef = useRef<(() => void) | null>(null);
   const cornerRef = useRef<Corner>("br");
   const startTimeRef = useRef<number>(0);
 
