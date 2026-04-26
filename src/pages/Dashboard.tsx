@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera, Video } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera, Video, History as HistoryIcon, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
+import {
+  createBoard,
+  getBoard,
+  updateBoard,
+  titleFromBoard,
+  type BoardMethod,
+} from "@/lib/boards-history";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
@@ -114,6 +121,17 @@ const Dashboard = () => {
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
+
+  // ---- Auto-save state ----
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [currentBoardId, setCurrentBoardId] = useState<string | null>(null);
+  const [creationMethod, setCreationMethod] = useState<BoardMethod>("manual");
+  const [savedFlash, setSavedFlash] = useState(false);
+  const lastSerializedRef = useRef<string>("");
+  const lastVersionAtRef = useRef<number>(0);
+  const debounceRef = useRef<number | null>(null);
+  const periodicRef = useRef<number | null>(null);
+  const watcherRef = useRef<number | null>(null);
 
   const refreshSuggestions = useCallback(async () => {
     const api = boardApiRef.current;
@@ -224,6 +242,100 @@ const Dashboard = () => {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
+  // ---- Generate small thumbnail of the board (PNG data URL) ----
+  const generateThumbnail = useCallback(async (): Promise<string | null> => {
+    if (!boardRef.current) return null;
+    try {
+      const url = await toPng(boardRef.current, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 0.5,
+      });
+      return url;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // ---- Save current board now ----
+  const saveNow = useCallback(async (snapshotVersion = false) => {
+    const id = currentBoardId;
+    const api = boardApiRef.current;
+    if (!id || !api) return;
+    const data = api.getBoardData();
+    const serialized = JSON.stringify(data);
+    if (serialized === lastSerializedRef.current && !snapshotVersion) return;
+    try {
+      const thumbnail = await generateThumbnail();
+      await updateBoard({
+        id,
+        data,
+        title: titleFromBoard(data),
+        thumbnail,
+        snapshotVersion,
+      });
+      lastSerializedRef.current = serialized;
+      if (snapshotVersion) lastVersionAtRef.current = Date.now();
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1600);
+    } catch (e: any) {
+      console.warn("Auto-save échouée:", e?.message);
+    }
+  }, [currentBoardId, generateThumbnail]);
+
+  // ---- Load board from URL (?board=<id>) ----
+  useEffect(() => {
+    const id = searchParams.get("board");
+    if (!id || id === currentBoardId || !authChecked) return;
+    (async () => {
+      try {
+        const row = await getBoard(id);
+        if (!row) {
+          toast.error("Tableau introuvable");
+          setSearchParams({}, { replace: true });
+          return;
+        }
+        setBoard(row.data);
+        setCurrentBoardId(row.id);
+        setCreationMethod(row.method);
+        setInsights(null);
+        lastSerializedRef.current = JSON.stringify(row.data);
+      } catch (e: any) {
+        toast.error("Impossible d'ouvrir ce tableau");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, authChecked]);
+
+  // ---- Auto-save: watcher + debounce + periodic ----
+  useEffect(() => {
+    if (!currentBoardId || !board) return;
+
+    // Watch the live board every 1s; if changes, schedule a 3s debounced save.
+    watcherRef.current = window.setInterval(() => {
+      const api = boardApiRef.current;
+      if (!api) return;
+      const serialized = JSON.stringify(api.getBoardData());
+      if (serialized !== lastSerializedRef.current) {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = window.setTimeout(() => {
+          // snapshot a version once per 5 minutes of activity
+          const snap = Date.now() - lastVersionAtRef.current > 5 * 60 * 1000;
+          saveNow(snap);
+        }, 3000);
+      }
+    }, 1000);
+
+    // Periodic forced save every 30s
+    periodicRef.current = window.setInterval(() => saveNow(false), 30000);
+
+    return () => {
+      if (watcherRef.current) clearInterval(watcherRef.current);
+      if (periodicRef.current) clearInterval(periodicRef.current);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [currentBoardId, board, saveNow]);
+
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -232,10 +344,15 @@ const Dashboard = () => {
       r.readAsDataURL(file);
     });
 
-  const runAnalysis = useCallback(async (payload: { image?: string; text?: string; pdf?: string }) => {
+  const runAnalysis = useCallback(async (
+    payload: { image?: string; text?: string; pdf?: string },
+    method: BoardMethod = "manual",
+  ) => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
+    setCurrentBoardId(null);
+    lastSerializedRef.current = "";
     try {
       const { data, error } = await supabase.functions.invoke("analyze-notes", {
         body: payload,
@@ -260,6 +377,22 @@ const Dashboard = () => {
 
       setBoard(parsedBoard);
       setInsights(null);
+      setCreationMethod(method);
+
+      // Persist as a new board immediately
+      try {
+        const created = await createBoard({
+          data: parsedBoard,
+          method,
+          title: titleFromBoard(parsedBoard),
+        });
+        setCurrentBoardId(created.id);
+        lastSerializedRef.current = JSON.stringify(parsedBoard);
+        setSearchParams({ board: created.id }, { replace: true });
+      } catch (e: any) {
+        console.warn("Auto-save initial échouée:", e?.message);
+      }
+
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
       setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
@@ -267,7 +400,7 @@ const Dashboard = () => {
     } finally {
       setProcessing(false);
     }
-  }, [refreshSuggestions]);
+  }, [refreshSuggestions, setSearchParams]);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
@@ -282,7 +415,7 @@ const Dashboard = () => {
       const normalizedFile = await normalizeImageFile(file);
       const dataUrl = await fileToBase64(normalizedFile);
       setPreview(dataUrl);
-      await runAnalysis({ image: dataUrl });
+      await runAnalysis({ image: dataUrl }, "photo");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     }
@@ -300,7 +433,7 @@ const Dashboard = () => {
     try {
       setPreview(null);
       const dataUrl = await fileToBase64(file);
-      await runAnalysis({ pdf: dataUrl });
+      await runAnalysis({ pdf: dataUrl }, "pdf");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     }
@@ -314,7 +447,7 @@ const Dashboard = () => {
     }
     setTextDialogOpen(false);
     setPreview(null);
-    await runAnalysis({ text: value });
+    await runAnalysis({ text: value }, "text");
     setTextInput("");
   }, [runAnalysis, textInput]);
 
@@ -342,7 +475,7 @@ const Dashboard = () => {
         return;
       }
       toast.success("Transcription terminée, analyse en cours…");
-      await runAnalysis({ text: transcript });
+      await runAnalysis({ text: transcript }, "voice");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
       setProcessing(false);
@@ -377,6 +510,9 @@ const Dashboard = () => {
     setBoard(null);
     setInsights(null);
     setPreview(null);
+    setCurrentBoardId(null);
+    lastSerializedRef.current = "";
+    if (searchParams.get("board")) setSearchParams({}, { replace: true });
   };
 
   const signOut = async () => {
@@ -400,6 +536,20 @@ const Dashboard = () => {
             <span className="font-semibold tracking-tight">gribouille</span>
           </Link>
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {savedFlash && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 animate-fade-in">
+                <Check className="h-3.5 w-3.5" /> Sauvegardé
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/history")}
+              className="px-2 sm:px-3"
+            >
+              <HistoryIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Historique</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"

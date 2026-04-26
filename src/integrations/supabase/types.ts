@@ -14,7 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      board_versions: {
+        Row: {
+          board_id: string
+          created_at: string
+          data: Json
+          edges: Json
+          id: string
+          thumbnail: string | null
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          data: Json
+          edges?: Json
+          id?: string
+          thumbnail?: string | null
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          data?: Json
+          edges?: Json
+          id?: string
+          thumbnail?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_versions_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boards: {
+        Row: {
+          created_at: string
+          data: Json
+          edges: Json
+          id: string
+          method: Database["public"]["Enums"]["board_method"]
+          thumbnail: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          edges?: Json
+          id?: string
+          method?: Database["public"]["Enums"]["board_method"]
+          thumbnail?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          edges?: Json
+          id?: string
+          method?: Database["public"]["Enums"]["board_method"]
+          thumbnail?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +96,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      board_method: "photo" | "voice" | "text" | "pdf" | "manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +223,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      board_method: ["photo", "voice", "text", "pdf", "manual"],
+    },
   },
 } as const
