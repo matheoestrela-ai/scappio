@@ -118,7 +118,8 @@ const Studio = () => {
     navigator.mediaDevices?.enumerateDevices?.().then((devs) => {
       const mics = devs.filter((d) => d.kind === "audioinput");
       setMicDevices(mics);
-      if (mics[0] && !micId) setMicId(mics[0].deviceId);
+      const first = mics.find((m) => m.deviceId);
+      if (first && !micId) setMicId(first.deviceId);
     });
   }, [micId]);
 
@@ -537,11 +538,13 @@ const Studio = () => {
                       <SelectValue placeholder="Choisir un micro" />
                     </SelectTrigger>
                     <SelectContent>
-                      {micDevices.map((d) => (
-                        <SelectItem key={d.deviceId} value={d.deviceId}>
-                          {d.label || `Micro ${d.deviceId.slice(0, 6)}`}
-                        </SelectItem>
-                      ))}
+                      {micDevices
+                        .filter((d) => d.deviceId)
+                        .map((d) => (
+                          <SelectItem key={d.deviceId} value={d.deviceId}>
+                            {d.label || `Micro ${d.deviceId.slice(0, 6)}`}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
