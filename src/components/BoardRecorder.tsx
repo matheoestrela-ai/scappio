@@ -50,7 +50,6 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
   const compositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
-  const snapIntervalRef = useRef<number | null>(null);
   const stoppedRef = useRef<(() => void) | null>(null);
   const cornerRef = useRef<Corner>("br");
   const startTimeRef = useRef<number>(0);
@@ -71,11 +70,9 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
   const cleanup = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
-    if (snapIntervalRef.current) clearInterval(snapIntervalRef.current);
     stoppedRef.current?.();
     rafRef.current = null;
     timerRef.current = null;
-    snapIntervalRef.current = null;
     stoppedRef.current = null;
     stopAllStreams();
     setPreviewActive(false);
@@ -98,15 +95,14 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
 
     try {
       screenStream = await navigator.mediaDevices.getDisplayMedia({
+        preferCurrentTab: true,
         video: {
           width: { ideal: 1920 },
           height: { ideal: 1080 },
           frameRate: { ideal: 30, max: 30 },
-          // Non-standard but supported in Chromium-based browsers.
-          preferCurrentTab: true,
-        } as MediaTrackConstraints & { preferCurrentTab?: boolean },
+        },
         audio: false,
-      });
+      } as DisplayMediaStreamOptions & { preferCurrentTab?: boolean });
     } catch {
       toast.error("Partage d'écran refusé ou indisponible.");
       return;
