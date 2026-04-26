@@ -68,8 +68,12 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
   const cleanup = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
+    if (snapIntervalRef.current) clearInterval(snapIntervalRef.current);
+    stoppedRef.current?.();
     rafRef.current = null;
     timerRef.current = null;
+    snapIntervalRef.current = null;
+    stoppedRef.current = null;
     stopAllStreams();
     setPreviewActive(false);
     setHasCamera(false);
