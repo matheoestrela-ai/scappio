@@ -537,11 +537,13 @@ const Studio = () => {
                       <SelectValue placeholder="Choisir un micro" />
                     </SelectTrigger>
                     <SelectContent>
-                      {micDevices.map((d) => (
-                        <SelectItem key={d.deviceId} value={d.deviceId}>
-                          {d.label || `Micro ${d.deviceId.slice(0, 6)}`}
-                        </SelectItem>
-                      ))}
+                      {micDevices
+                        .filter((d) => d.deviceId)
+                        .map((d) => (
+                          <SelectItem key={d.deviceId} value={d.deviceId}>
+                            {d.label || `Micro ${d.deviceId.slice(0, 6)}`}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
