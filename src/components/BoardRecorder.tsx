@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Square } from "lucide-react";
 import { toast } from "sonner";
+import { toPng } from "html-to-image";
 import { cn } from "@/lib/utils";
 import { saveRecording, type Recording } from "@/lib/recordings-db";
 
