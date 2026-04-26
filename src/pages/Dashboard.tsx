@@ -122,6 +122,17 @@ const Dashboard = () => {
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
 
+  // ---- Auto-save state ----
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [currentBoardId, setCurrentBoardId] = useState<string | null>(null);
+  const [creationMethod, setCreationMethod] = useState<BoardMethod>("manual");
+  const [savedFlash, setSavedFlash] = useState(false);
+  const lastSerializedRef = useRef<string>("");
+  const lastVersionAtRef = useRef<number>(0);
+  const debounceRef = useRef<number | null>(null);
+  const periodicRef = useRef<number | null>(null);
+  const watcherRef = useRef<number | null>(null);
+
   const refreshSuggestions = useCallback(async () => {
     const api = boardApiRef.current;
     if (!api) return;
