@@ -84,28 +84,33 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
 
   useEffect(() => () => cleanup(), []);
 
-  const findBoardElement = (): HTMLElement | null => {
-    const root = containerRef.current;
-    if (!root) return null;
-    // Prefer the tldraw root for cleaner snapshots
-    return (root.querySelector(".tl-container") as HTMLElement) || root;
-  };
-
   const startRecording = useCallback(async () => {
-    if (!("MediaRecorder" in window)) {
+    if (!("MediaRecorder" in window) || !navigator.mediaDevices?.getDisplayMedia) {
       toast.error("Ton navigateur ne supporte pas l'enregistrement vidéo.");
       return;
     }
 
-    const boardEl = findBoardElement();
-    if (!boardEl) {
-      toast.error("Impossible de trouver le tableau.");
-      return;
-    }
+    toast.message("Sélectionne cet onglet pour enregistrer ton tableau");
 
-    // Try to get camera + mic. Fall back gracefully if denied.
+    let screenStream: MediaStream | null = null;
     let camStream: MediaStream | null = null;
     let micStream: MediaStream | null = null;
+
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 30, max: 30 },
+          // Non-standard but supported in Chromium-based browsers.
+          preferCurrentTab: true,
+        } as MediaTrackConstraints & { preferCurrentTab?: boolean },
+        audio: false,
+      });
+    } catch {
+      toast.error("Partage d'écran refusé ou indisponible.");
+      return;
+    }
 
     try {
       camStream = await navigator.mediaDevices.getUserMedia({
@@ -122,8 +127,16 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       toast.warning("Micro refusé — enregistrement sans audio.");
     }
 
+    screenStreamRef.current = screenStream;
     camStreamRef.current = camStream;
     micStreamRef.current = micStream;
+
+    const screenVideo = document.createElement("video");
+    screenVideo.srcObject = screenStream;
+    screenVideo.muted = true;
+    screenVideo.playsInline = true;
+    await screenVideo.play().catch(() => {});
+    screenVideoRef.current = screenVideo;
 
     // Wire camera preview (visible bubble) AND a hidden video for the compositor.
     if (camStream) {
@@ -143,10 +156,10 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       camVideoRef.current = hidden;
     }
 
-    // Compositor canvas — match the displayed board size.
-    const rect = boardEl.getBoundingClientRect();
-    const w = Math.max(640, Math.round(rect.width));
-    const h = Math.max(360, Math.round(rect.height));
+    const screenTrack = screenStream.getVideoTracks()[0];
+    const settings = screenTrack?.getSettings?.() ?? {};
+    const w = Math.max(1280, Math.round(settings.width ?? window.screen.width ?? 1280));
+    const h = Math.max(720, Math.round(settings.height ?? window.screen.height ?? 720));
     const composite = document.createElement("canvas");
     composite.width = w;
     composite.height = h;
@@ -158,49 +171,20 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       return;
     }
 
-    const bubblePx = Math.round(Math.min(w, h) * 0.18);
-    const pad = Math.round(bubblePx * 0.12);
-
-    // --- Async board snapshot loop (html-to-image is too slow for 30fps; we
-    //     refresh the snapshot ~5x per second and reuse the latest one in the
-    //     compositor draw loop running at requestAnimationFrame). ---
-    let latestBoardImg: HTMLImageElement | null = null;
-    let snapshotting = false;
-    let stopped = false;
-
-    const refreshSnapshot = async () => {
-      if (snapshotting || stopped) return;
-      snapshotting = true;
-      try {
-        const dataUrl = await toPng(boardEl, {
-          cacheBust: false,
-          pixelRatio: 1,
-          width: w,
-          height: h,
-          skipFonts: true,
-        });
-        const img = new Image();
-        img.src = dataUrl;
-        await img.decode().catch(() => {});
-        if (!stopped) latestBoardImg = img;
-      } catch {
-        /* keep previous frame */
-      } finally {
-        snapshotting = false;
-      }
-    };
-
-    // First snapshot before starting the loop, then refresh on an interval.
-    await refreshSnapshot();
-    const snapInterval = window.setInterval(refreshSnapshot, 200);
+    const bubblePx = 140;
+    const pad = 24;
 
     const drawFrame = () => {
-      // Background fill in case snapshot isn't ready yet
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, w, h);
 
-      if (latestBoardImg) {
-        try { ctx.drawImage(latestBoardImg, 0, 0, w, h); } catch { /* noop */ }
+      const sv = screenVideoRef.current;
+      if (sv && sv.readyState >= 2) {
+        try {
+          ctx.drawImage(sv, 0, 0, w, h);
+        } catch {
+          /* noop */
+        }
       }
 
       const cv = camVideoRef.current;
@@ -235,9 +219,16 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     };
     rafRef.current = requestAnimationFrame(drawFrame);
 
-    // Stash the interval id on the ref-cleanup path
-    snapIntervalRef.current = snapInterval;
-    stoppedRef.current = () => { stopped = true; };
+    const handleScreenEnded = () => {
+      const rec = recorderRef.current;
+      if (rec && rec.state !== "inactive") rec.stop();
+    };
+    screenTrack?.addEventListener("ended", handleScreenEnded);
+    stoppedRef.current = () => {
+      screenTrack?.removeEventListener("ended", handleScreenEnded);
+      screenVideoRef.current = null;
+      camVideoRef.current = null;
+    };
 
 
     // Build the recording stream.
