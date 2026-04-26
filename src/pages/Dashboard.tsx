@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera, Video } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera, Video, History as HistoryIcon, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import heic2any from "heic2any";
+import {
+  createBoard,
+  getBoard,
+  updateBoard,
+  titleFromBoard,
+  type BoardMethod,
+} from "@/lib/boards-history";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
