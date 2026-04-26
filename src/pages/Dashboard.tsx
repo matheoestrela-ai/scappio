@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera, Video } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import VoiceRecorder from "@/components/VoiceRecorder";
+import BoardRecorder from "@/components/BoardRecorder";
 import { type BoardData, type BoardApi } from "@/components/Board";
 import TldrawBoard from "@/components/TldrawBoard";
 import SuggestionsPanel, {
@@ -408,6 +409,15 @@ const Dashboard = () => {
               <Camera className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Studio</span>
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/recordings")}
+              className="px-2 sm:px-3"
+            >
+              <Video className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Mes enregistrements</span>
+            </Button>
             {board && (
               <>
                 <Button variant="outline" size="sm" onClick={reset} className="px-2 sm:px-3">
@@ -597,6 +607,11 @@ const Dashboard = () => {
                       <Maximize2 className="h-4 w-4" />
                     )}
                   </button>
+                )}
+
+                {/* Bouton d'enregistrement du tableau — visible uniquement en plein écran */}
+                {!isMobile && panelFullscreen && (
+                  <BoardRecorder containerRef={boardRef} />
                 )}
               </div>
 
