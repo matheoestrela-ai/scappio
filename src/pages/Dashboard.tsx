@@ -242,6 +242,100 @@ const Dashboard = () => {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
+  // ---- Generate small thumbnail of the board (PNG data URL) ----
+  const generateThumbnail = useCallback(async (): Promise<string | null> => {
+    if (!boardRef.current) return null;
+    try {
+      const url = await toPng(boardRef.current, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 0.5,
+      });
+      return url;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // ---- Save current board now ----
+  const saveNow = useCallback(async (snapshotVersion = false) => {
+    const id = currentBoardId;
+    const api = boardApiRef.current;
+    if (!id || !api) return;
+    const data = api.getBoardData();
+    const serialized = JSON.stringify(data);
+    if (serialized === lastSerializedRef.current && !snapshotVersion) return;
+    try {
+      const thumbnail = await generateThumbnail();
+      await updateBoard({
+        id,
+        data,
+        title: titleFromBoard(data),
+        thumbnail,
+        snapshotVersion,
+      });
+      lastSerializedRef.current = serialized;
+      if (snapshotVersion) lastVersionAtRef.current = Date.now();
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1600);
+    } catch (e: any) {
+      console.warn("Auto-save échouée:", e?.message);
+    }
+  }, [currentBoardId, generateThumbnail]);
+
+  // ---- Load board from URL (?board=<id>) ----
+  useEffect(() => {
+    const id = searchParams.get("board");
+    if (!id || id === currentBoardId || !authChecked) return;
+    (async () => {
+      try {
+        const row = await getBoard(id);
+        if (!row) {
+          toast.error("Tableau introuvable");
+          setSearchParams({}, { replace: true });
+          return;
+        }
+        setBoard(row.data);
+        setCurrentBoardId(row.id);
+        setCreationMethod(row.method);
+        setInsights(null);
+        lastSerializedRef.current = JSON.stringify(row.data);
+      } catch (e: any) {
+        toast.error("Impossible d'ouvrir ce tableau");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, authChecked]);
+
+  // ---- Auto-save: watcher + debounce + periodic ----
+  useEffect(() => {
+    if (!currentBoardId || !board) return;
+
+    // Watch the live board every 1s; if changes, schedule a 3s debounced save.
+    watcherRef.current = window.setInterval(() => {
+      const api = boardApiRef.current;
+      if (!api) return;
+      const serialized = JSON.stringify(api.getBoardData());
+      if (serialized !== lastSerializedRef.current) {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = window.setTimeout(() => {
+          // snapshot a version once per 5 minutes of activity
+          const snap = Date.now() - lastVersionAtRef.current > 5 * 60 * 1000;
+          saveNow(snap);
+        }, 3000);
+      }
+    }, 1000);
+
+    // Periodic forced save every 30s
+    periodicRef.current = window.setInterval(() => saveNow(false), 30000);
+
+    return () => {
+      if (watcherRef.current) clearInterval(watcherRef.current);
+      if (periodicRef.current) clearInterval(periodicRef.current);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [currentBoardId, board, saveNow]);
+
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const r = new FileReader();
