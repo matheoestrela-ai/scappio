@@ -75,14 +75,11 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
 
   useEffect(() => () => cleanup(), []);
 
-  const findBoardCanvas = (): HTMLCanvasElement | null => {
+  const findBoardElement = (): HTMLElement | null => {
     const root = containerRef.current;
     if (!root) return null;
-    // tldraw renders multiple canvases (background grid + main). Take the largest one.
-    const canvases = Array.from(root.querySelectorAll("canvas")) as HTMLCanvasElement[];
-    if (!canvases.length) return null;
-    canvases.sort((a, b) => b.width * b.height - a.width * a.height);
-    return canvases[0];
+    // Prefer the tldraw root for cleaner snapshots
+    return (root.querySelector(".tl-container") as HTMLElement) || root;
   };
 
   const startRecording = useCallback(async () => {
@@ -91,9 +88,9 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       return;
     }
 
-    const boardCanvas = findBoardCanvas();
-    if (!boardCanvas) {
-      toast.error("Impossible de trouver le canvas du tableau.");
+    const boardEl = findBoardElement();
+    if (!boardEl) {
+      toast.error("Impossible de trouver le tableau.");
       return;
     }
 
@@ -123,7 +120,6 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     if (camStream) {
       setHasCamera(true);
       setPreviewActive(true);
-      // attach to preview after render
       requestAnimationFrame(() => {
         if (previewVideoRef.current) {
           previewVideoRef.current.srcObject = camStream;
@@ -138,9 +134,10 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       camVideoRef.current = hidden;
     }
 
-    // Compositor canvas — same dimensions as the board canvas.
-    const w = boardCanvas.width || 1280;
-    const h = boardCanvas.height || 720;
+    // Compositor canvas — match the displayed board size.
+    const rect = boardEl.getBoundingClientRect();
+    const w = Math.max(640, Math.round(rect.width));
+    const h = Math.max(360, Math.round(rect.height));
     const composite = document.createElement("canvas");
     composite.width = w;
     composite.height = h;
@@ -152,16 +149,51 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       return;
     }
 
-    const bubblePx = Math.round(Math.min(w, h) * 0.18); // ~18% of shortest dim
+    const bubblePx = Math.round(Math.min(w, h) * 0.18);
     const pad = Math.round(bubblePx * 0.12);
 
-    const drawFrame = () => {
-      const bc = findBoardCanvas() || boardCanvas;
+    // --- Async board snapshot loop (html-to-image is too slow for 30fps; we
+    //     refresh the snapshot ~5x per second and reuse the latest one in the
+    //     compositor draw loop running at requestAnimationFrame). ---
+    let latestBoardImg: HTMLImageElement | null = null;
+    let snapshotting = false;
+    let stopped = false;
+
+    const refreshSnapshot = async () => {
+      if (snapshotting || stopped) return;
+      snapshotting = true;
       try {
-        ctx.drawImage(bc, 0, 0, w, h);
+        const dataUrl = await toPng(boardEl, {
+          cacheBust: false,
+          pixelRatio: 1,
+          width: w,
+          height: h,
+          skipFonts: true,
+        });
+        const img = new Image();
+        img.src = dataUrl;
+        await img.decode().catch(() => {});
+        if (!stopped) latestBoardImg = img;
       } catch {
-        /* tldraw canvas can briefly be unavailable */
+        /* keep previous frame */
+      } finally {
+        snapshotting = false;
       }
+    };
+
+    // First snapshot before starting the loop, then refresh on an interval.
+    await refreshSnapshot();
+    const snapInterval = window.setInterval(refreshSnapshot, 200);
+
+    const drawFrame = () => {
+      // Background fill in case snapshot isn't ready yet
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+
+      if (latestBoardImg) {
+        try { ctx.drawImage(latestBoardImg, 0, 0, w, h); } catch { /* noop */ }
+      }
+
       const cv = camVideoRef.current;
       if (cv && cv.readyState >= 2) {
         const c = cornerRef.current;
@@ -177,7 +209,6 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
         ctx.fillStyle = "#000";
         ctx.fill();
         ctx.clip();
-        // cover-fit
         const vw = cv.videoWidth || 1;
         const vh = cv.videoHeight || 1;
         const scale = Math.max(bubblePx / vw, bubblePx / vh);
@@ -194,6 +225,11 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       rafRef.current = requestAnimationFrame(drawFrame);
     };
     rafRef.current = requestAnimationFrame(drawFrame);
+
+    // Stash the interval id on the ref-cleanup path
+    snapIntervalRef.current = snapInterval;
+    stoppedRef.current = () => { stopped = true; };
+
 
     // Build the recording stream.
     const videoStream = (composite as any).captureStream(30) as MediaStream;
