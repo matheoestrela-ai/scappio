@@ -98,7 +98,12 @@ export const updateBoard = async (params: {
     }
   }
 
-  const patch: Record<string, any> = {
+  const patch: {
+    data: any;
+    edges: any;
+    title?: string;
+    thumbnail?: string | null;
+  } = {
     data: params.data as any,
     edges: (params.edges ?? []) as any,
   };
