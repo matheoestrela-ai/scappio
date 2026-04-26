@@ -118,7 +118,8 @@ const Studio = () => {
     navigator.mediaDevices?.enumerateDevices?.().then((devs) => {
       const mics = devs.filter((d) => d.kind === "audioinput");
       setMicDevices(mics);
-      if (mics[0] && !micId) setMicId(mics[0].deviceId);
+      const first = mics.find((m) => m.deviceId);
+      if (first && !micId) setMicId(first.deviceId);
     });
   }, [micId]);
 
