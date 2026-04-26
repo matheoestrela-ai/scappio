@@ -510,6 +510,9 @@ const Dashboard = () => {
     setBoard(null);
     setInsights(null);
     setPreview(null);
+    setCurrentBoardId(null);
+    lastSerializedRef.current = "";
+    if (searchParams.get("board")) setSearchParams({}, { replace: true });
   };
 
   const signOut = async () => {
@@ -533,6 +536,20 @@ const Dashboard = () => {
             <span className="font-semibold tracking-tight">gribouille</span>
           </Link>
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {savedFlash && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 animate-fade-in">
+                <Check className="h-3.5 w-3.5" /> Sauvegardé
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/history")}
+              className="px-2 sm:px-3"
+            >
+              <HistoryIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Historique</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
