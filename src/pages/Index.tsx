@@ -336,7 +336,7 @@ const Index = () => {
             {
               name: "Thomas R.",
               role: "Fondateur, Lyon",
-              text: "J'ai testé tous les outils de mindmap. gribouille c'est le seul qui comprend mon écriture pourrie. Bluffant.",
+              text: "J'ai testé tous les outils de mindmap. scappio c'est le seul qui comprend mon écriture pourrie. Bluffant.",
             },
             {
               name: "Sarah M.",
@@ -398,7 +398,7 @@ const Index = () => {
       </section>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} gribouille — Construit avec Lovable
+        © {new Date().getFullYear()} scappio — Construit avec Lovable
       </footer>
 
       {/* Sticky mobile CTA */}
