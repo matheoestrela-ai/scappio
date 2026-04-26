@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import VoiceRecorder from "@/components/VoiceRecorder";
+import BoardRecorder from "@/components/BoardRecorder";
 import { type BoardData, type BoardApi } from "@/components/Board";
 import TldrawBoard from "@/components/TldrawBoard";
 import SuggestionsPanel, {
@@ -597,6 +598,11 @@ const Dashboard = () => {
                       <Maximize2 className="h-4 w-4" />
                     )}
                   </button>
+                )}
+
+                {/* Bouton d'enregistrement du tableau — visible uniquement en plein écran */}
+                {!isMobile && panelFullscreen && (
+                  <BoardRecorder containerRef={boardRef} />
                 )}
               </div>
 
