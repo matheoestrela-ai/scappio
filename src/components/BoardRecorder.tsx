@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Square } from "lucide-react";
 import { toast } from "sonner";
-import { toPng } from "html-to-image";
 import { cn } from "@/lib/utils";
 import { saveRecording, type Recording } from "@/lib/recordings-db";
 
@@ -40,9 +39,11 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
   const [hasCamera, setHasCamera] = useState(false);
   const [previewActive, setPreviewActive] = useState(false);
 
+  const screenStreamRef = useRef<MediaStream | null>(null);
   const camStreamRef = useRef<MediaStream | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const previewVideoRef = useRef<HTMLVideoElement>(null);
+  const screenVideoRef = useRef<HTMLVideoElement | null>(null);
   const camVideoRef = useRef<HTMLVideoElement | null>(null); // hidden video used by compositor
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -59,8 +60,10 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
   }, [corner]);
 
   const stopAllStreams = () => {
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     camStreamRef.current?.getTracks().forEach((t) => t.stop());
     micStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
     camStreamRef.current = null;
     micStreamRef.current = null;
   };
