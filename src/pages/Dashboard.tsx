@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2 } from "lucide-react";
+import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -399,6 +399,15 @@ const Dashboard = () => {
             <span className="font-semibold tracking-tight">gribouille</span>
           </Link>
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/studio")}
+              className="px-2 sm:px-3"
+            >
+              <Camera className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Studio</span>
+            </Button>
             {board && (
               <>
                 <Button variant="outline" size="sm" onClick={reset} className="px-2 sm:px-3">
