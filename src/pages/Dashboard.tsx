@@ -250,10 +250,15 @@ const Dashboard = () => {
       r.readAsDataURL(file);
     });
 
-  const runAnalysis = useCallback(async (payload: { image?: string; text?: string; pdf?: string }) => {
+  const runAnalysis = useCallback(async (
+    payload: { image?: string; text?: string; pdf?: string },
+    method: BoardMethod = "manual",
+  ) => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
+    setCurrentBoardId(null);
+    lastSerializedRef.current = "";
     try {
       const { data, error } = await supabase.functions.invoke("analyze-notes", {
         body: payload,
@@ -278,6 +283,22 @@ const Dashboard = () => {
 
       setBoard(parsedBoard);
       setInsights(null);
+      setCreationMethod(method);
+
+      // Persist as a new board immediately
+      try {
+        const created = await createBoard({
+          data: parsedBoard,
+          method,
+          title: titleFromBoard(parsedBoard),
+        });
+        setCurrentBoardId(created.id);
+        lastSerializedRef.current = JSON.stringify(parsedBoard);
+        setSearchParams({ board: created.id }, { replace: true });
+      } catch (e: any) {
+        console.warn("Auto-save initial échouée:", e?.message);
+      }
+
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
       setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
@@ -285,7 +306,7 @@ const Dashboard = () => {
     } finally {
       setProcessing(false);
     }
-  }, [refreshSuggestions]);
+  }, [refreshSuggestions, setSearchParams]);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
