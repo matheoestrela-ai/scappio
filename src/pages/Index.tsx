@@ -379,7 +379,7 @@ const Index = () => {
                 className="flex md:flex-col items-center justify-center gap-2 text-primary"
               >
                 <Sparkles className="h-5 w-5 animate-sparkle-spin" />
-                <ArrowRight className="h-5 w-5 md:rotate-90" />
+                <ArrowRight className="h-5 w-5" />
               </motion.div>
 
               <motion.div
