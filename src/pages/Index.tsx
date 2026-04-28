@@ -487,8 +487,6 @@ const Index = () => {
         </div>
 
         <div className="relative mt-12 md:mt-16">
-          {/* Horizontal connecting line (desktop only) */}
-          <div className="hidden md:block absolute top-8 left-[12%] right-[12%] h-px bg-primary/40" />
           <motion.div
             {...inViewProps}
             variants={gridContainer}
