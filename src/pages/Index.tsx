@@ -631,7 +631,7 @@ const Index = () => {
       </motion.section>
 
       {/* Testimonials */}
-      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
         <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de retaper</h2>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
