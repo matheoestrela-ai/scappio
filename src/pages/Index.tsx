@@ -12,6 +12,12 @@ import {
   Image as ImageIcon,
   PenLine,
   Quote,
+  Lightbulb,
+  Wand2,
+  Pencil,
+  MousePointer2,
+  Download,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -249,9 +255,12 @@ const Index = () => {
       <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
           {/* Pill kept ONLY in hero */}
-          <motion.div variants={fadeUp} className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-primary animate-sparkle-spin" />
-            Propulsé par l'IA Vision
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium"
+            style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
+          >
+            ⚡ Photo, vocal ou texte → board en 10 secondes
           </motion.div>
           <motion.h1 variants={fadeUp} className="mx-auto mt-6 max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
             <span className="block">
@@ -280,7 +289,7 @@ const Index = () => {
                 </svg>
               </span>
             </span>
-            <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en 10 secondes</span>
+            <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en <span style={{ color: "#e8732a", fontWeight: 900 }}>10 secondes</span></span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
             Parle, prends une photo, ou colle tes notes, puis l'IA fait le reste.
@@ -324,6 +333,10 @@ const Index = () => {
               <a href="#how">Voir comment ça marche</a>
             </Button>
           </motion.div>
+
+          <motion.p variants={fadeUp} className="mt-5 text-center text-xs md:text-sm text-muted-foreground">
+            📸 Photo → Board  ·  🎙️ Vocal → Board  ·  📝 PDF → Board  ·  ✨ Direct
+          </motion.p>
         </motion.div>
 
         {/* Mockup transformation */}
@@ -471,17 +484,15 @@ const Index = () => {
       </motion.section>
 
       {/* How it works — horizontal stepper timeline */}
-      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Capture en vocal ou en photo. L'IA structure. Tu gardes la main.
+            Tu parles, tu photographes, tu colles. L'IA structure en 10 secondes — tu gardes la main.
           </p>
         </div>
 
         <div className="relative mt-12 md:mt-16">
-          {/* Horizontal connecting line (desktop only) */}
-          <div className="hidden md:block absolute top-8 left-[12%] right-[12%] h-px bg-primary/40" />
           <motion.div
             {...inViewProps}
             variants={gridContainer}
@@ -494,17 +505,13 @@ const Index = () => {
               { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
             ].map((step, i) => (
               <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
-                <div className="flex md:block items-center gap-4 md:gap-0">
-                  <div
-                    className="text-5xl md:text-6xl font-bold leading-none select-none"
-                    style={{ color: "hsl(var(--primary) / 0.25)" }}
-                  >
-                    {step.num}
-                  </div>
-                  <div className="md:mt-3">
-                    <h3 className="text-lg font-bold text-foreground">{step.title}</h3>
-                  </div>
+                <div
+                  className="font-bold leading-none select-none"
+                  style={{ color: "#e8732a", fontSize: "48px" }}
+                >
+                  {step.num}
                 </div>
+                <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
                 <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">{step.desc}</p>
               </motion.div>
             ))}
@@ -513,11 +520,14 @@ const Index = () => {
       </motion.section>
 
       {/* Problem — emojis instead of icon squares */}
-      <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             Retaper tes notes te fait <span className="text-primary">perdre du temps</span>.
           </h2>
+          <p className="mt-3 text-base text-muted-foreground" style={{ fontSize: "16px" }}>
+            Des heures perdues. Chaque semaine. Pour rien.
+          </p>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
             Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
           </p>
@@ -533,7 +543,7 @@ const Index = () => {
               variants={cardItem}
               className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
             >
-              <div className="card-icon text-4xl leading-none">{f.emoji}</div>
+              <div className="card-icon leading-none" style={{ fontSize: "32px" }}>{f.emoji}</div>
               <h3 className="mt-4 text-lg font-semibold text-foreground">{f.title}</h3>
               <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
             </motion.div>
@@ -542,25 +552,31 @@ const Index = () => {
       </motion.section>
 
       {/* Features — bento asymmetric grid, dark grey icons */}
-      <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
         <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut. Rien de plus.</h2>
         <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
 
         <motion.div
           {...inViewProps}
           variants={gridContainer}
-          className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3 auto-rows-fr"
+          className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
         >
-          {/* Featured card - 2 columns wide */}
+          {/* Row 1: Featured (2/3) + small (1/3) */}
           <motion.div
             variants={cardItem}
-            className="card-lift md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
+            className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
           >
+            <span
+              className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
+              style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
+            >
+              UNIQUE
+            </span>
             <div>
-              <div className="card-icon text-3xl" style={{ color: "#333" }}>✨</div>
-              <h3 className="mt-4 text-2xl font-bold text-foreground">IA Vision avancée</h3>
+              <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+              <h3 className="mt-4 text-2xl font-bold text-foreground">Capture vocale → Board</h3>
               <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                Détecte mots, flèches et hiérarchie même sur une écriture brouillonne. L'IA comprend ton intention, pas juste tes mots.
+                Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute. Aucun outil ne fait ça aussi vite.
               </p>
             </div>
             <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
@@ -568,30 +584,54 @@ const Index = () => {
             </div>
           </motion.div>
 
+          {/* Row 1: small card */}
+          <motion.div
+            variants={cardItem}
+            className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
+          >
+            <Sparkles className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">IA Vision avancée</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">Détecte mots, flèches et hiérarchie même sur une écriture brouillonne.</p>
+          </motion.div>
+
+          {/* Row 2: 3 equal cards */}
           {[
-            { emoji: "🎙️", title: "Capture vocale", desc: "Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute." },
-            { emoji: "💡", title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
-            { emoji: "🪄", title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
-            { emoji: "✏️", title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
-            { emoji: "🖱️", title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { emoji: "⬇️", title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
-            { emoji: "⚡", title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
-          ].map((f, i) => (
+            { Icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
+            { Icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
+            { Icon: Pencil, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
+          ].map(({ Icon, title, desc }, i) => (
             <motion.div
               key={i}
               variants={cardItem}
               className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
             >
-              <div className="card-icon text-3xl" style={{ color: "#333" }}>{f.emoji}</div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">{f.title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
+              <Icon className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+              <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{desc}</p>
+            </motion.div>
+          ))}
+
+          {/* Row 3: remaining cards */}
+          {[
+            { Icon: MousePointer2, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
+            { Icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
+            { Icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
+          ].map(({ Icon, title, desc }, i) => (
+            <motion.div
+              key={`r3-${i}`}
+              variants={cardItem}
+              className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
+            >
+              <Icon className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+              <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{desc}</p>
             </motion.div>
           ))}
         </motion.div>
       </motion.section>
 
       {/* Testimonials */}
-      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
         <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de retaper</h2>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
@@ -617,14 +657,14 @@ const Index = () => {
       </motion.section>
 
       {/* Final CTA */}
-      <motion.section {...inViewProps} variants={sectionFade} className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} className="container py-16 md:py-20">
         <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             Arrête de retaper.<br />
             <span className="text-primary">Commence à penser.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Rejoins la beta gratuite. Crée ton premier board en moins d'une minute.
+            Ton premier board en 10 secondes. Sans carte bancaire. Sans installation.
           </p>
           <form
             onSubmit={handleSubmit}
@@ -668,7 +708,7 @@ const Index = () => {
             <a href="mailto:hello@scappio.com" className="text-muted-foreground hover:text-foreground transition">Contact</a>
           </nav>
           <div className="text-sm text-muted-foreground md:text-right">
-            © {new Date().getFullYear()} scappio
+            © 2026 scappio · <a href="/privacy" className="hover:text-foreground transition">Confidentialité</a> · <a href="/terms" className="hover:text-foreground transition">CGU</a>
           </div>
         </div>
       </footer>
