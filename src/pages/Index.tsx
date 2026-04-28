@@ -478,11 +478,11 @@ const Index = () => {
       </motion.section>
 
       {/* How it works — horizontal stepper timeline */}
-      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Capture en vocal ou en photo. L'IA structure. Tu gardes la main.
+            Tu parles, tu photographes, tu colles. L'IA structure en 10 secondes — tu gardes la main.
           </p>
         </div>
 
