@@ -249,9 +249,12 @@ const Index = () => {
       <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
           {/* Pill kept ONLY in hero */}
-          <motion.div variants={fadeUp} className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-primary animate-sparkle-spin" />
-            Propulsé par l'IA Vision
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium"
+            style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
+          >
+            ⚡ Photo, vocal ou texte → board en 10 secondes
           </motion.div>
           <motion.h1 variants={fadeUp} className="mx-auto mt-6 max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
             <span className="block">
