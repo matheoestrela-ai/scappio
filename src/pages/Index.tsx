@@ -327,6 +327,10 @@ const Index = () => {
               <a href="#how">Voir comment ça marche</a>
             </Button>
           </motion.div>
+
+          <motion.p variants={fadeUp} className="mt-5 text-center text-xs md:text-sm text-muted-foreground">
+            📸 Photo → Board  ·  🎙️ Vocal → Board  ·  📝 PDF → Board  ·  ✨ Direct
+          </motion.p>
         </motion.div>
 
         {/* Mockup transformation */}
