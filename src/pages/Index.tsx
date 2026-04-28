@@ -552,25 +552,31 @@ const Index = () => {
       </motion.section>
 
       {/* Features — bento asymmetric grid, dark grey icons */}
-      <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
         <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut. Rien de plus.</h2>
         <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
 
         <motion.div
           {...inViewProps}
           variants={gridContainer}
-          className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3 auto-rows-fr"
+          className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
         >
-          {/* Featured card - 2 columns wide */}
+          {/* Row 1: Featured (2/3) + small (1/3) */}
           <motion.div
             variants={cardItem}
-            className="card-lift md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
+            className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
           >
+            <span
+              className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
+              style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
+            >
+              UNIQUE
+            </span>
             <div>
-              <div className="card-icon text-3xl" style={{ color: "#333" }}>✨</div>
-              <h3 className="mt-4 text-2xl font-bold text-foreground">IA Vision avancée</h3>
+              <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+              <h3 className="mt-4 text-2xl font-bold text-foreground">Capture vocale → Board</h3>
               <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                Détecte mots, flèches et hiérarchie même sur une écriture brouillonne. L'IA comprend ton intention, pas juste tes mots.
+                Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute. Aucun outil ne fait ça aussi vite.
               </p>
             </div>
             <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
@@ -578,23 +584,47 @@ const Index = () => {
             </div>
           </motion.div>
 
+          {/* Row 1: small card */}
+          <motion.div
+            variants={cardItem}
+            className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
+          >
+            <Sparkles className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">IA Vision avancée</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">Détecte mots, flèches et hiérarchie même sur une écriture brouillonne.</p>
+          </motion.div>
+
+          {/* Row 2: 3 equal cards */}
           {[
-            { emoji: "🎙️", title: "Capture vocale", desc: "Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute." },
-            { emoji: "💡", title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
-            { emoji: "🪄", title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
-            { emoji: "✏️", title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
-            { emoji: "🖱️", title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { emoji: "⬇️", title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
-            { emoji: "⚡", title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
-          ].map((f, i) => (
+            { Icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
+            { Icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
+            { Icon: Pencil, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
+          ].map(({ Icon, title, desc }, i) => (
             <motion.div
               key={i}
               variants={cardItem}
               className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
             >
-              <div className="card-icon text-3xl" style={{ color: "#333" }}>{f.emoji}</div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">{f.title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
+              <Icon className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+              <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{desc}</p>
+            </motion.div>
+          ))}
+
+          {/* Row 3: remaining cards */}
+          {[
+            { Icon: MousePointer2, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
+            { Icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
+            { Icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
+          ].map(({ Icon, title, desc }, i) => (
+            <motion.div
+              key={`r3-${i}`}
+              variants={cardItem}
+              className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
+            >
+              <Icon className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+              <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">{desc}</p>
             </motion.div>
           ))}
         </motion.div>
