@@ -501,7 +501,17 @@ const Index = () => {
                   {step.num}
                 </div>
                 <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">{step.desc}</p>
+                <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">
+                  {step.desc.split(/(__HIGHLIGHT__.*?__END__)/g).map((part, idx) => {
+                    const m = part.match(/^__HIGHLIGHT__(.*)__END__$/);
+                    if (m) {
+                      return (
+                        <span key={idx} style={{ color: "#e8732a", fontWeight: 600 }}>{m[1]}</span>
+                      );
+                    }
+                    return <span key={idx}>{part}</span>;
+                  })}
+                </p>
               </motion.div>
             ))}
           </motion.div>
