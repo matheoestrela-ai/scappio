@@ -61,12 +61,12 @@
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 25% 12%;
-    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary: 24 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 40% 96%;
+    --sidebar-accent: 24 30% 96%;
     --sidebar-accent-foreground: 240 25% 12%;
-    --sidebar-border: 250 30% 91%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-border: 24 30% 91%;
+    --sidebar-ring: 24 95% 53%;
   }
 }
 
@@ -80,17 +80,16 @@
 
 @layer utilities {
   .bg-hero { background: var(--gradient-hero); }
-  .bg-gradient-primary { background: var(--gradient-primary); }
+  .bg-gradient-primary { background: hsl(var(--primary)); }
   .bg-gradient-card { background: var(--gradient-card); }
   .bg-gradient-board { background: var(--gradient-board); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-node { box-shadow: var(--shadow-node); }
   .text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: hsl(var(--primary));
+    background: none;
+    -webkit-text-fill-color: hsl(var(--primary));
   }
 }
 
