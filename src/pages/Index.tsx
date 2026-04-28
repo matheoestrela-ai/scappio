@@ -501,17 +501,13 @@ const Index = () => {
               { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
             ].map((step, i) => (
               <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
-                <div className="flex md:block items-center gap-4 md:gap-0">
-                  <div
-                    className="text-5xl md:text-6xl font-bold leading-none select-none"
-                    style={{ color: "hsl(var(--primary) / 0.25)" }}
-                  >
-                    {step.num}
-                  </div>
-                  <div className="md:mt-3">
-                    <h3 className="text-lg font-bold text-foreground">{step.title}</h3>
-                  </div>
+                <div
+                  className="font-bold leading-none select-none"
+                  style={{ color: "#e8732a", fontSize: "48px" }}
+                >
+                  {step.num}
                 </div>
+                <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
                 <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">{step.desc}</p>
               </motion.div>
             ))}
