@@ -28,16 +28,9 @@ const MIN_W = 180;
 const MIN_H = 70;
 const MAX_W = 360;
 
-// tldraw color names — closest match to the requested hex palette.
-// tldraw doesn't accept arbitrary hex; we map each level to its closest preset.
-//   #4F46E5 indigo  → "violet"
-//   #7C3AED violet  → "light-violet"
-//   #A78BFA lavande → "light-violet" (lighter via fill="none")
-//   #E5E7EB gris    → "grey"
-const colorForLevel = (level: number): "violet" | "light-violet" | "grey" => {
-  if (level <= 1) return "violet";
-  if (level === 2) return "light-violet";
-  if (level === 3) return "light-violet";
+// tldraw color names — orange pur partout
+const colorForLevel = (level: number): "orange" | "grey" => {
+  if (level <= 3) return "orange";
   return "grey";
 };
 

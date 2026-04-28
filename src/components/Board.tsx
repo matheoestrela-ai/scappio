@@ -116,9 +116,9 @@ const SHAPE_DEFAULTS: Record<
   BoardShape,
   { w: number; h: number; minW: number; minH: number; color: string; textColor: string }
 > = {
-  rect:    { w: 300, h: 120, minW: 180, minH: 84,  color: "#312E81", textColor: "#FFFFFF" },
+  rect:    { w: 300, h: 120, minW: 180, minH: 84,  color: "#F97316", textColor: "#FFFFFF" },
   circle:  { w: 230, h: 230, minW: 150, minH: 150, color: "#F97316", textColor: "#FFFFFF" },
-  diamond: { w: 210, h: 210, minW: 150, minH: 150, color: "#F59E0B", textColor: "#FFFFFF" },
+  diamond: { w: 210, h: 210, minW: 150, minH: 150, color: "#F97316", textColor: "#FFFFFF" },
 };
 
 const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
@@ -130,7 +130,7 @@ const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
 // Distinct color per hierarchy level — instantly readable hierarchy.
 // Indigo foncé → Violet → Lavande
 const LEVEL_COLOR: Record<BoardLevel, string> = {
-  1: "#312E81", // indigo-900 — sujet principal, dense et profond
+  1: "#F97316", // indigo-900 — sujet principal, dense et profond
   2: "#F97316", // violet-600 — idées clés
   3: "#FDBA74", // lavande (violet-300) — détails
 };
@@ -139,7 +139,7 @@ const LEVEL_COLOR: Record<BoardLevel, string> = {
 const LEVEL_TEXT: Record<BoardLevel, string> = {
   1: "#FFFFFF",
   2: "#FFFFFF",
-  3: "#1E1B4B", // indigo-950 sur fond lavande
+  3: "#7C2D12", // indigo-950 sur fond lavande
 };
 
 const LEVEL_DEFAULT_SIZE: Record<BoardLevel, { w: number; h: number }> = {
@@ -155,11 +155,11 @@ const LEVEL_FONT: Record<BoardLevel, { size: string; weight: number }> = {
 };
 
 const PALETTE = [
-  "#312E81", // indigo-900
-  "#4F46E5", // indigo-600
+  "#F97316", // indigo-900
+  "#F97316", // indigo-600
   "#F97316", // violet-600
   "#FDBA74", // lavender
-  "#F59E0B", // amber
+  "#F97316", // amber
   "#10B981", // emerald
   "#EF4444", // red
   "#0EA5E9", // sky
@@ -663,7 +663,7 @@ type EditorEdgeData = {
   label?: string;
 };
 
-const EDGE_COLOR_MAIN = "#4F46E5";
+const EDGE_COLOR_MAIN = "#F97316";
 const EDGE_COLOR_SECONDARY = "#94A3B8";
 
 const edgeVisualFor = (variant: EdgeStyleVariant, importance: "main" | "secondary") => {
@@ -1368,13 +1368,13 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={() => addNode("rect")}>
-              <Square className="mr-2 h-4 w-4 text-[#4F46E5]" /> Rectangle
+              <Square className="mr-2 h-4 w-4 text-[#F97316]" /> Rectangle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addNode("circle")}>
               <CircleIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Cercle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addNode("diamond")}>
-              <DiamondIcon className="mr-2 h-4 w-4 text-[#F59E0B]" /> Diamant
+              <DiamondIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Diamant
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1447,7 +1447,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         </div>
         <div className="pt-1 border-t border-border space-y-1 text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span className="inline-block h-[3px] w-6 rounded" style={{ background: "#4F46E5" }} />
+            <span className="inline-block h-[3px] w-6 rounded" style={{ background: "#F97316" }} />
             <span>Lien principal</span>
           </div>
           <div className="flex items-center gap-2">
