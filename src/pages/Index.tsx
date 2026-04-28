@@ -537,7 +537,7 @@ const Index = () => {
               variants={cardItem}
               className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
             >
-              <div className="card-icon text-4xl leading-none">{f.emoji}</div>
+              <div className="card-icon leading-none" style={{ fontSize: "32px" }}>{f.emoji}</div>
               <h3 className="mt-4 text-lg font-semibold text-foreground">{f.title}</h3>
               <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
             </motion.div>
