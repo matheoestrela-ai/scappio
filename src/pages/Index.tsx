@@ -196,7 +196,7 @@ const Index = () => {
               <div className="flex flex-col items-center gap-4 md:gap-5">
                 {/* Niveau 1 : sujet principal */}
                 <div className="rounded-2xl px-6 py-3 text-white text-sm md:text-lg font-semibold shadow-node"
-                  style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
+                  style={{ background: "linear-gradient(135deg, #F97316, #F97316)" }}>
                   Lancer la beta
                 </div>
                 {/* Connecteurs */}
@@ -213,7 +213,7 @@ const Index = () => {
                   </div>
                   <div className="relative h-16 w-16 md:h-20 md:w-20">
                     <div className="absolute inset-1.5 rounded-xl shadow-node"
-                      style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
+                      style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F97316, #FB923C)" }} />
                     <div className="absolute inset-0 flex items-center justify-center text-white text-[11px] md:text-sm font-semibold">
                       Waitlist
                     </div>

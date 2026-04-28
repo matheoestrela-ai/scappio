@@ -45,7 +45,7 @@ const CATEGORY_META: Record<
   missing_idea: {
     title: "Idées manquantes",
     icon: Lightbulb,
-    color: "text-[#4F46E5]",
+    color: "text-[#F97316]",
     bg: "bg-[#EEF2FF]",
   },
   connection: {
