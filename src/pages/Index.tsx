@@ -254,15 +254,7 @@ const Index = () => {
       {/* Hero */}
       <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
-          {/* Pill kept ONLY in hero */}
-          <motion.div
-            variants={fadeUp}
-            className="mx-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium"
-            style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
-          >
-            ⚡ Photo, vocal ou texte → board en 10 secondes
-          </motion.div>
-          <motion.h1 variants={fadeUp} className="mx-auto mt-6 max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
+          <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
             <span className="block">
               Transforme tes{" "}
               <span className="relative inline-block">
@@ -334,9 +326,6 @@ const Index = () => {
             </Button>
           </motion.div>
 
-          <motion.p variants={fadeUp} className="mt-5 text-center text-xs md:text-sm text-muted-foreground">
-            📸 Photo → Board  ·  🎙️ Vocal → Board  ·  📝 PDF → Board  ·  ✨ Direct
-          </motion.p>
         </motion.div>
 
         {/* Mockup transformation */}
@@ -390,7 +379,7 @@ const Index = () => {
                 className="flex md:flex-col items-center justify-center gap-2 text-primary"
               >
                 <Sparkles className="h-5 w-5 animate-sparkle-spin" />
-                <ArrowRight className="h-5 w-5 md:rotate-90" />
+                <ArrowRight className="h-5 w-5" />
               </motion.div>
 
               <motion.div
@@ -499,10 +488,10 @@ const Index = () => {
             className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
           >
             {[
-              { num: "01", title: "Vocal", desc: "Dicte tes idées à voix haute. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
+              { num: "01", title: "Vocal et texte", desc: "Dicte tes idées à voix haute ou écris-les. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
               { num: "02", title: "Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
               { num: "03", title: "IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
-              { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
+              { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG, __HIGHLIGHT__et ensuite la possibilité de l'enregistrer sous format YouTube ou TikTok pour l'envoyer à ton équipe ou même créer du contenu__END__, __HIGHLIGHT__ou enregistre-toi en train de le présenter__END__." },
             ].map((step, i) => (
               <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
                 <div
@@ -512,7 +501,17 @@ const Index = () => {
                   {step.num}
                 </div>
                 <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">{step.desc}</p>
+                <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">
+                  {step.desc.split(/(__HIGHLIGHT__.*?__END__)/g).map((part, idx) => {
+                    const m = part.match(/^__HIGHLIGHT__(.*)__END__$/);
+                    if (m) {
+                      return (
+                        <span key={idx} style={{ color: "#e8732a", fontWeight: 600 }}>{m[1]}</span>
+                      );
+                    }
+                    return <span key={idx}>{part}</span>;
+                  })}
+                </p>
               </motion.div>
             ))}
           </motion.div>
