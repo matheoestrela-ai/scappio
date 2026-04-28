@@ -283,7 +283,7 @@ const Index = () => {
                 </svg>
               </span>
             </span>
-            <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en 10 secondes</span>
+            <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en <span style={{ color: "#e8732a", fontWeight: 900 }}>10 secondes</span></span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
             Parle, prends une photo, ou colle tes notes, puis l'IA fait le reste.
