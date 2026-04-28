@@ -117,7 +117,7 @@ const SHAPE_DEFAULTS: Record<
   { w: number; h: number; minW: number; minH: number; color: string; textColor: string }
 > = {
   rect:    { w: 300, h: 120, minW: 180, minH: 84,  color: "#312E81", textColor: "#FFFFFF" },
-  circle:  { w: 230, h: 230, minW: 150, minH: 150, color: "#7C3AED", textColor: "#FFFFFF" },
+  circle:  { w: 230, h: 230, minW: 150, minH: 150, color: "#F97316", textColor: "#FFFFFF" },
   diamond: { w: 210, h: 210, minW: 150, minH: 150, color: "#F59E0B", textColor: "#FFFFFF" },
 };
 
@@ -131,8 +131,8 @@ const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
 // Indigo foncé → Violet → Lavande
 const LEVEL_COLOR: Record<BoardLevel, string> = {
   1: "#312E81", // indigo-900 — sujet principal, dense et profond
-  2: "#7C3AED", // violet-600 — idées clés
-  3: "#C4B5FD", // lavande (violet-300) — détails
+  2: "#F97316", // violet-600 — idées clés
+  3: "#FDBA74", // lavande (violet-300) — détails
 };
 
 // Texte par niveau : niveau 3 (lavande clair) doit avoir du texte sombre
@@ -157,8 +157,8 @@ const LEVEL_FONT: Record<BoardLevel, { size: string; weight: number }> = {
 const PALETTE = [
   "#312E81", // indigo-900
   "#4F46E5", // indigo-600
-  "#7C3AED", // violet-600
-  "#C4B5FD", // lavender
+  "#F97316", // violet-600
+  "#FDBA74", // lavender
   "#F59E0B", // amber
   "#10B981", // emerald
   "#EF4444", // red
@@ -171,7 +171,7 @@ const handleStyle = {
   width: 10,
   height: 10,
   border: "2px solid white",
-  background: "#7C3AED",
+  background: "#F97316",
 };
 
 // ============================================================
@@ -1371,7 +1371,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
               <Square className="mr-2 h-4 w-4 text-[#4F46E5]" /> Rectangle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addNode("circle")}>
-              <CircleIcon className="mr-2 h-4 w-4 text-[#7C3AED]" /> Cercle
+              <CircleIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Cercle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addNode("diamond")}>
               <DiamondIcon className="mr-2 h-4 w-4 text-[#F59E0B]" /> Diamant
@@ -1480,7 +1480,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         minZoom={0.2}
         maxZoom={2.5}
       >
-        <Background variant={BackgroundVariant.Dots} color="#C4B5FD" gap={28} size={1.5} />
+        <Background variant={BackgroundVariant.Dots} color="#FDBA74" gap={28} size={1.5} />
         <Controls
           showZoom={false}
           showFitView={false}
