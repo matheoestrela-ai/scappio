@@ -514,11 +514,14 @@ const Index = () => {
       </motion.section>
 
       {/* Problem — emojis instead of icon squares */}
-      <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-20">
+      <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             Retaper tes notes te fait <span className="text-primary">perdre du temps</span>.
           </h2>
+          <p className="mt-3 text-base text-muted-foreground" style={{ fontSize: "16px" }}>
+            Des heures perdues. Chaque semaine. Pour rien.
+          </p>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
             Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
           </p>
