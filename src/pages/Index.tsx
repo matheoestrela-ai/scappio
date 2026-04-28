@@ -488,10 +488,10 @@ const Index = () => {
             className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
           >
             {[
-              { num: "01", title: "Vocal", desc: "Dicte tes idées à voix haute. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
+              { num: "01", title: "Vocal et texte", desc: "Dicte tes idées à voix haute ou écris-les. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
               { num: "02", title: "Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
               { num: "03", title: "IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
-              { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
+              { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG, __HIGHLIGHT__et ensuite la possibilité de l'enregistrer sous format YouTube ou TikTok pour l'envoyer à ton équipe ou même créer du contenu__END__, __HIGHLIGHT__ou enregistre-toi en train de le présenter__END__." },
             ].map((step, i) => (
               <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
                 <div
