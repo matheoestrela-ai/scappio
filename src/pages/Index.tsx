@@ -1,415 +1,348 @@
-import { Link } from "react-router-dom";
-import { useState, FormEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Camera,
-  Sparkles,
-  Share2,
-  ArrowRight,
-  Workflow,
-  FileDown,
-  Menu,
-  X,
-  Clock,
-  Layers,
-  Frown,
-  Zap,
-  Mic,
-  Image as ImageIcon,
-  PenLine,
-  MousePointerClick,
-  Wand2,
-  Download,
-  Quote,
-  Lightbulb,
-} from "lucide-react";
-import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, FormEvent } from "react";
+import { Mic, ArrowRight, Loader2 } from "lucide-react";
+
+const EXAMPLE_PROMPTS = [
+  "Mon idée de business sur la livraison locale...",
+  "Les notes de ma réunion avec mon client ce matin...",
+  "Mon plan de contenu pour les 30 prochains jours...",
+  "J'ai une idée de startup mais je sais pas par où commencer...",
+  "Le résumé de la conférence à laquelle j'ai assisté...",
+];
+
+const HEADLINE_LINE_1 = ["Transforme", "tes"];
+const HEADLINE_LINE_3 = ["en", "board", "visuel", "en", "10", "secondes"];
+
+const AVATAR_COLORS = [
+  "from-orange-400 to-red-500",
+  "from-amber-300 to-orange-500",
+  "from-rose-400 to-orange-400",
+  "from-yellow-300 to-orange-400",
+];
 
 const Index = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+  const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [exampleIdx, setExampleIdx] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Rotate example prompts every 3s
+  useEffect(() => {
+    const id = setInterval(() => {
+      setExampleIdx((i) => (i + 1) % EXAMPLE_PROMPTS.length);
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Scroll detection for navbar
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@")) {
-      toast.error("Entre un email valide");
+    const value = prompt.trim();
+    if (!value) {
+      inputRef.current?.focus();
       return;
     }
-    toast.success("Inscription confirmée — on te tient au courant !");
-    setEmail("");
+    setLoading(true);
+    try {
+      localStorage.setItem("scappio_initial_prompt", value);
+    } catch {}
+    setTimeout(() => navigate("/auth"), 300);
   };
 
   return (
-    <div className="relative min-h-screen bg-hero pb-24 md:pb-0">
-      {/* Dotted background pattern (like the board) */}
+    <div className="relative min-h-screen overflow-hidden bg-[#0D0D0D] text-[#FAFAF0] font-[Inter,sans-serif]">
+      {/* Animated radial background */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-0 -z-10 animate-bg-shift"
         style={{
-          backgroundImage: "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-          maskImage: "linear-gradient(180deg, black, black 85%, transparent)",
-          WebkitMaskImage: "linear-gradient(180deg, black, black 85%, transparent)",
+          background:
+            "radial-gradient(ellipse at 30% 20%, #100800 0%, #0D0D0D 55%), radial-gradient(ellipse at 70% 80%, #1a0a00 0%, transparent 60%)",
         }}
       />
-      <div className="relative z-10">
-      {/* Nav */}
-      <header className="container flex items-center justify-between py-5 md:py-6">
-        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
-          <span className="text-xl md:text-2xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
-        </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-3">
-          <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">Comment ça marche</a>
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Fonctionnalités</a>
-          <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Témoignages</a>
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition">Connexion</Link>
-          <Button asChild size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90">
-            <Link to="/auth">Commencer gratuitement</Link>
-          </Button>
-        </nav>
+      {/* Floating particles */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        {Array.from({ length: 18 }).map((_, i) => (
+          <span
+            key={i}
+            className="absolute rounded-full bg-[#F97316] opacity-[0.05] animate-float"
+            style={{
+              width: `${1 + Math.random() * 1.5}px`,
+              height: `${1 + Math.random() * 1.5}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDuration: `${15 + Math.random() * 20}s`,
+              animationDelay: `${Math.random() * 10}s`,
+            }}
+          />
+        ))}
+      </div>
 
-        {/* Mobile actions */}
-        <div className="md:hidden flex items-center gap-2">
-          <Button asChild size="sm" variant="outline" className="h-10">
-            <Link to="/auth">Connexion</Link>
-          </Button>
-          <button
-            aria-label="Menu"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card"
-            onClick={() => setMenuOpen((v) => !v)}
+      {/* NAVBAR */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 opacity-0 animate-nav-in ${
+          scrolled
+            ? "backdrop-blur-xl bg-[#0D0D0D]/70 border-b border-[#2A2A2A]"
+            : "bg-transparent"
+        }`}
+      >
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
+          <Link
+            to="/"
+            className="text-[16px] font-medium text-[#FAFAF0] tracking-tight"
           >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
+            Scappio
+          </Link>
+          <div className="flex items-center gap-3 md:gap-5">
+            <Link
+              to="/auth"
+              className="hidden sm:inline-block text-sm text-[#6B7280] hover:text-[#FAFAF0] transition-colors story-underline"
+            >
+              Se connecter
+            </Link>
+            <Link
+              to="/auth"
+              className="rounded-lg bg-[#F97316] px-4 py-2.5 text-sm font-medium text-black hover:brightness-110 transition-all hover:-translate-y-px"
+            >
+              Commencer gratuitement
+            </Link>
+          </div>
+        </nav>
       </header>
 
-      {/* Mobile menu drawer */}
-      {menuOpen && (
-        <div className="md:hidden container pb-4">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-elegant flex flex-col gap-1 text-base">
-            <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Comment ça marche</a>
-            <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Le problème</a>
-            <a href="#features" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Fonctionnalités</a>
-            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Témoignages</a>
-            <Link to="/auth" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Connexion</Link>
-          </div>
+      {/* MAIN */}
+      <main className="relative mx-auto flex min-h-[calc(100vh-72px)] max-w-5xl flex-col items-center justify-center px-4 py-8 text-center md:py-12">
+        {/* Badge */}
+        <div className="opacity-0 animate-fade-up" style={{ animationDelay: "0.3s" }}>
+          <span
+            className="inline-flex items-center rounded-full border border-[#F97316]/40 bg-[#1A0A00] px-4 py-1.5 text-[12px] font-medium tracking-[1px] text-[#F97316]"
+          >
+            ✨ PROPULSÉ PAR L'IA VISION
+          </span>
         </div>
-      )}
 
-      {/* Hero */}
-      <section className="container pt-8 md:pt-16 pb-16 md:pb-24 text-center">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          Propulsé par l'IA Vision
-        </div>
-        <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
-          <span className="block">
-            Transforme tes{" "}
+        {/* Headline */}
+        <h1
+          className="mt-8 font-[\'Playfair_Display\',serif] font-semibold leading-[1.05] tracking-tight"
+          style={{ wordSpacing: "0.05em" }}
+        >
+          {/* Line 1 */}
+          <div className="text-[36px] md:text-[64px] text-[#FAFAF0]">
+            {HEADLINE_LINE_1.map((w, i) => (
+              <span
+                key={`l1-${i}`}
+                className="inline-block opacity-0 animate-word-rise mr-[0.25em]"
+                style={{ animationDelay: `${0.5 + i * 0.08}s` }}
+              >
+                {w}
+              </span>
+            ))}
+          </div>
+          {/* Line 2 — handwritten "idées" */}
+          <div className="my-1 md:my-2">
             <span
-              className="inline-flex whitespace-nowrap align-baseline text-primary font-medium italic leading-none -rotate-[4deg] translate-y-[0.08em] text-[1.16em] sm:text-[1.14em] md:text-[1.18em]"
-              style={{ fontFamily: "'Bradley Hand', 'Segoe Print', 'Comic Sans MS', 'Caveat', cursive" }}
+              className="inline-block opacity-0 animate-idees text-[#F97316]"
+              style={{
+                animationDelay: `${0.5 + HEADLINE_LINE_1.length * 0.08}s`,
+                fontFamily: "'Caveat', cursive",
+                fontSize: "clamp(42px, 9vw, 72px)",
+                transform: "rotate(-2deg)",
+                lineHeight: 1,
+              }}
             >
               idées
             </span>
-          </span>
-          <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en 10 secondes</span>
-        </h1>
-        <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>, puis l'IA fait le reste.
-        </p>
-        <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-primary shadow-glow hover:opacity-90">
-            <Link to="/auth">
-              Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-            <a href="#how">Voir comment ça marche</a>
-          </Button>
-        </div>
-
-        {/* Mockup transformation */}
-        <div className="mx-auto mt-12 md:mt-20 max-w-5xl rounded-2xl md:rounded-3xl border border-border bg-gradient-card p-2 md:p-3 shadow-elegant">
-          <div className="rounded-xl md:rounded-2xl bg-gradient-board p-4 md:p-10">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1.4fr] items-center gap-6 md:gap-8">
-              {/* Inputs côté gauche : voix + photo */}
-              <div className="flex flex-col gap-3">
-                <div className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
-                    <Mic className="h-3.5 w-3.5 text-primary" /> Note vocale · 0:08
-                  </div>
-                  <div className="flex items-end gap-1 h-8">
-                    {[6, 12, 20, 14, 28, 22, 16, 24, 10, 18, 26, 14, 8, 20, 12].map((h, i) => (
-                      <span key={i} className="w-1.5 rounded-full bg-gradient-to-t from-primary to-secondary" style={{ height: `${h}px` }} />
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
-                    <ImageIcon className="h-3.5 w-3.5 text-primary" /> Photo de tes notes
-                  </div>
-                  <div className="space-y-1 text-sm text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
-                    <p>→ Lancer beta</p>
-                    <p>· landing fr</p>
-                    <p>· waitlist · témoins</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex md:flex-col items-center justify-center gap-2 text-primary">
-                <Sparkles className="h-5 w-5 animate-brand-pulse" />
-                <ArrowRight className="h-5 w-5 md:rotate-90" />
-              </div>
-
-              {/* Board côté droit — hiérarchie claire */}
-              <div className="flex flex-col items-center gap-4 md:gap-5">
-                {/* Niveau 1 : sujet principal */}
-                <div className="rounded-2xl px-6 py-3 text-white text-sm md:text-lg font-semibold shadow-node"
-                  style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
-                  Lancer la beta
-                </div>
-                {/* Connecteurs */}
-                <div className="flex gap-10 md:gap-16 -my-1">
-                  <span className="block h-4 w-px bg-primary/40" />
-                  <span className="block h-4 w-px bg-primary/40" />
-                  <span className="block h-4 w-px bg-primary/40" />
-                </div>
-                {/* Niveau 2 : idées secondaires */}
-                <div className="flex items-center justify-center gap-3 md:gap-5">
-                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
-                    style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
-                    Landing FR
-                  </div>
-                  <div className="relative h-16 w-16 md:h-20 md:w-20">
-                    <div className="absolute inset-1.5 rounded-xl shadow-node"
-                      style={{ transform: "rotate(45deg)", background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center text-white text-[11px] md:text-sm font-semibold">
-                      Waitlist
-                    </div>
-                  </div>
-                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
-                    style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
-                    Témoins
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
-        </div>
-      </section>
+          {/* Line 3 */}
+          <div className="text-[36px] md:text-[64px] text-[#FAFAF0]">
+            {HEADLINE_LINE_3.map((w, i) => (
+              <span
+                key={`l3-${i}`}
+                className="inline-block opacity-0 animate-word-rise mr-[0.25em]"
+                style={{
+                  animationDelay: `${
+                    0.5 + (HEADLINE_LINE_1.length + 1 + i) * 0.08
+                  }s`,
+                }}
+              >
+                {w}
+              </span>
+            ))}
+          </div>
+        </h1>
 
-      {/* Description entre le board et la social proof */}
-      <section className="container pb-10 md:pb-14">
-        <p className="mx-auto max-w-2xl text-center text-base md:text-lg text-muted-foreground">
-          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
-          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
-          Tu obtiens un mindmap propre et éditable, sans rien retaper.
+        {/* Subtitle */}
+        <p
+          className="mt-6 max-w-2xl text-[16px] md:text-[18px] font-normal text-[#6B7280] opacity-0 animate-fade-in"
+          style={{ animationDelay: "1.6s" }}
+        >
+          Parle, prends une photo, ou colle tes notes. L'IA comprend et structure tout. Zéro effort.
         </p>
-      </section>
 
-      {/* Social proof */}
-      <section className="container pb-16 md:pb-20">
-        <div className="rounded-2xl border border-border bg-card/60 backdrop-blur py-6 md:py-7 text-center shadow-elegant overflow-hidden">
-          <p className="px-6 text-xs md:text-sm uppercase tracking-widest text-muted-foreground">
-            Utilisé par des équipes qui viennent de
-          </p>
-          <div
-            className="mt-5 relative w-full overflow-hidden"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-              WebkitMaskImage:
-                "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-            }}
-          >
-            <div className="flex w-max animate-marquee gap-12 text-muted-foreground/70 text-base md:text-lg font-semibold tracking-wide whitespace-nowrap">
-              {Array.from({ length: 2 }).map((_, dup) => (
-                <div key={dup} className="flex items-center gap-12 pr-12" aria-hidden={dup === 1}>
-                  {["Notion", "Figma", "Linear", "Slack", "FigJam", "Whimsical", "Trello", "Asana"].map((name) => (
-                    <span key={`${dup}-${name}`} className="flex items-center gap-12">
-                      {name}
-                      <span className="text-muted-foreground/40">•</span>
-                    </span>
-                  ))}
-                </div>
+        {/* Chat bar */}
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 w-full max-w-[680px] opacity-0 animate-bar-in px-0"
+          style={{ animationDelay: "1.9s" }}
+        >
+          <div className="group relative flex h-16 items-center gap-2 rounded-2xl border border-[#2A2A2A] bg-[#1A1A1A] px-3 transition-all duration-200 focus-within:border-[#F97316] focus-within:shadow-[0_0_0_4px_rgba(249,115,22,0.18)]">
+            <button
+              type="button"
+              aria-label="Entrée vocale"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#6B7280] hover:text-[#FAFAF0] hover:bg-white/5 transition-colors"
+            >
+              <Mic size={20} />
+            </button>
+            <input
+              ref={inputRef}
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Décris ton idée, ton projet, ou colle tes notes..."
+              className="h-full flex-1 bg-transparent text-[16px] text-[#FAFAF0] placeholder:text-[#4B5563] outline-none"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              aria-label="Envoyer"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F97316] text-white transition-transform duration-150 hover:scale-105 active:scale-95 disabled:opacity-70"
+            >
+              {loading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <ArrowRight size={18} />
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Rotating example prompts */}
+        <div
+          className="relative mt-4 h-5 w-full max-w-[680px] opacity-0 animate-fade-in"
+          style={{ animationDelay: "2.1s" }}
+        >
+          {EXAMPLE_PROMPTS.map((ex, i) => (
+            <p
+              key={i}
+              className={`absolute inset-0 text-[13px] text-[#4B5563] transition-opacity duration-700 ${
+                i === exampleIdx ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {ex}
+            </p>
+          ))}
+        </div>
+
+        {/* Social proof */}
+        <div
+          className="mt-6 flex flex-col items-center gap-4 opacity-0 animate-fade-in"
+          style={{ animationDelay: "2.3s" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {AVATAR_COLORS.map((c, i) => (
+                <div
+                  key={i}
+                  className={`h-7 w-7 rounded-full border-2 border-[#0D0D0D] bg-gradient-to-br ${c}`}
+                />
               ))}
             </div>
+            <span className="text-[13px] text-[#6B7280]">
+              +847 créateurs et entrepreneurs ont déjà rejoint
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[12px] text-[#6B7280]">
+            <span className="rounded-full border border-[#2A2A2A] bg-[#1A1A1A] px-3 py-1 transition-transform duration-150 hover:-translate-y-0.5">
+              ✏️ Plus simple que Miro
+            </span>
+            <span className="text-[#2A2A2A]">•</span>
+            <span className="rounded-full border border-[#2A2A2A] bg-[#1A1A1A] px-3 py-1 transition-transform duration-150 hover:-translate-y-0.5">
+              ⚡ Plus rapide que tout
+            </span>
+            <span className="text-[#2A2A2A]">•</span>
+            <span className="rounded-full border border-[#2A2A2A] bg-[#1A1A1A] px-3 py-1 transition-transform duration-150 hover:-translate-y-0.5">
+              🧠 Propulsé par l'IA
+            </span>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* How it works */}
-      <section id="how" className="container py-16 md:py-24">
-        <div className="text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-            <Workflow className="h-3.5 w-3.5 text-primary" /> Le process
-          </span>
-          <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
-          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Capture en vocal ou en photo. L'IA structure. Tu gardes la main.
-          </p>
-        </div>
-        <div className="mt-10 md:mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {[
-            { icon: Mic, title: "1. Vocal", desc: "Dicte tes idées à voix haute. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
-            { icon: Camera, title: "2. Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
-            { icon: Workflow, title: "3. IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
-            { icon: FileDown, title: "4. Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG." },
-          ].map((f, i) => (
-            <div key={i} className="relative rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Problem */}
-      <section id="problem" className="container py-16 md:py-24">
-        <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Retaper tes notes te fait <span className="text-gradient">perdre du temps</span>.
-          </h2>
-          <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-            Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
-          </p>
-        </div>
-        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
-          {[
-            { icon: Clock, title: "30 minutes perdues", desc: "Recopier chaque note dans un outil de mindmap à la main, c'est une demi-heure à chaque réunion." },
-            { icon: Layers, title: "Outils trop lourds", desc: "Les whiteboards classiques : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
-            { icon: Frown, title: "Les idées disparaissent", desc: "Les carnets s'empilent, les mémos vocaux et les photos restent dans le téléphone. Personne n'y revient." },
-          ].map((f, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-elegant">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="container py-16 md:py-24">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut. Rien de plus.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
-        <div className="mt-10 md:mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { icon: Mic, title: "Capture vocale", desc: "Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute." },
-            { icon: Sparkles, title: "IA Vision avancée", desc: "Détecte mots, flèches et hiérarchie même sur une écriture brouillonne." },
-            { icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
-            { icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
-            { icon: PenLine, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
-            { icon: MousePointerClick, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
-            { icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
-          ].map((f, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-gradient-card p-6 shadow-elegant">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="container py-16 md:py-24">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de retaper</h2>
-        <div className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
-          {[
-            {
-              name: "Camille D.",
-              role: "Product Manager, Paris",
-              text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau.",
-            },
-            {
-              name: "Thomas R.",
-              role: "Fondateur, Lyon",
-              text: "J'ai testé tous les outils de mindmap. scappio c'est le seul qui comprend mon écriture pourrie. Bluffant.",
-            },
-            {
-              name: "Sarah M.",
-              role: "Designer UX, Bordeaux",
-              text: "L'auto-improve est dingue. Il rajoute les connexions logiques que j'avais oubliées sur le papier. Comme un co-pilote.",
-            },
-          ].map((t, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-elegant flex flex-col">
-              <Quote className="h-6 w-6 text-primary/60" />
-              <p className="mt-4 text-sm md:text-base text-foreground/90 flex-1">"{t.text}"</p>
-              <div className="mt-5 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-primary text-white flex items-center justify-center text-sm font-semibold shadow-glow">
-                  {t.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="container pb-16 md:pb-24">
-        <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
-          <Share2 className="mx-auto h-8 w-8 text-primary" />
-          <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">
-            Arrête de retaper.<br />
-            <span className="text-gradient">Commence à penser.</span>
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Rejoins la beta gratuite. Crée ton premier board en moins d'une minute.
-          </p>
-          <form
-            onSubmit={handleSubmit}
-            className="mx-auto mt-8 flex flex-col sm:flex-row gap-3 max-w-md"
-          >
-            <Input
-              type="email"
-              required
-              placeholder="ton@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 text-base"
-              aria-label="Adresse email"
-            />
-            <Button
-              type="submit"
-              size="lg"
-              className="h-12 bg-gradient-primary shadow-glow hover:opacity-90 shrink-0"
-            >
-              Commencer gratuitement
-            </Button>
-          </form>
-          <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
-        </div>
-      </section>
-
-      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} scappio — Construit avec Lovable
-      </footer>
-
-      {/* Sticky mobile CTA */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
-        <Button asChild size="lg" className="w-full h-12 bg-gradient-primary shadow-glow hover:opacity-90 text-base">
-          <Link to="/auth">
-            Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
-      </div>
+      {/* Local styles for animations */}
+      <style>{`
+        @keyframes bg-shift {
+          0%, 100% { background-position: 0% 0%, 100% 100%; }
+          50% { background-position: 20% 10%, 80% 90%; }
+        }
+        .animate-bg-shift {
+          background-size: 200% 200%, 200% 200%;
+          animation: bg-shift 10s ease-in-out infinite;
+        }
+        @keyframes float {
+          0% { transform: translate(0,0); }
+          50% { transform: translate(30px, -40px); }
+          100% { transform: translate(-20px, 20px); }
+        }
+        .animate-float { animation: float linear infinite; }
+        @keyframes nav-in {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-nav-in { animation: nav-in 0.4s ease-out 0.2s forwards; }
+        @keyframes word-rise {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+          @keyframes word-rise {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+        }
+        .animate-word-rise { animation: word-rise 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes idees-in {
+          0%   { opacity: 0; transform: rotate(-2deg) scale(0.85); filter: blur(4px); }
+          100% { opacity: 1; transform: rotate(-2deg) scale(1); filter: blur(0); }
+        }
+        .animate-idees { animation: idees-in 0.6s ease-out forwards; }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .animate-fade-in { animation: fade-in 0.6s ease-in forwards; }
+        @keyframes fade-up {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fade-up 0.4s ease-out forwards; }
+        @keyframes bar-in {
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-bar-in { animation: bar-in 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .story-underline {
+          position: relative;
+        }
+        .story-underline::after {
+          content: '';
+          position: absolute;
+          left: 0; bottom: -2px;
+          width: 100%; height: 1px;
+          background: #FAFAF0;
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: transform 200ms ease;
+        }
+        .story-underline:hover::after { transform: scaleX(1); }
+      `}</style>
     </div>
   );
 };
