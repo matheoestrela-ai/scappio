@@ -708,7 +708,7 @@ const Index = () => {
             <a href="mailto:hello@scappio.com" className="text-muted-foreground hover:text-foreground transition">Contact</a>
           </nav>
           <div className="text-sm text-muted-foreground md:text-right">
-            © {new Date().getFullYear()} scappio
+            © 2026 scappio · <a href="/privacy" className="hover:text-foreground transition">Confidentialité</a> · <a href="/terms" className="hover:text-foreground transition">CGU</a>
           </div>
         </div>
       </footer>
