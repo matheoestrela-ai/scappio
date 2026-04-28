@@ -22,8 +22,8 @@
     --primary-foreground: 0 0% 100%;
     --primary-glow: 250 91% 76%;
 
-    /* Violet #7C3AED */
-    --secondary: 262 83% 58%;
+    /* Orange #F97316 */
+    --secondary: 24 95% 53%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 250 40% 96%;
@@ -44,7 +44,7 @@
 
     /* Brand color tokens (raw) */
     --indigo: 243 75% 59%;
-    --violet: 262 83% 58%;
+    --violet: 24 95% 53%;
     --amber: 38 92% 50%;
 
     /* Gradients */

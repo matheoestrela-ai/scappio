@@ -51,7 +51,7 @@ const CATEGORY_META: Record<
   connection: {
     title: "Connexions utiles",
     icon: Link2,
-    color: "text-[#7C3AED]",
+    color: "text-[#F97316]",
     bg: "bg-[#F3E8FF]",
   },
   question: {

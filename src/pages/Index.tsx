@@ -118,9 +118,37 @@ const Index = () => {
           <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en 10 secondes</span>
         </h1>
         <p className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>, puis l'IA fait le reste.
+          Parle, prends une photo, ou colle tes notes, puis l'IA fait le reste.
         </p>
-        <div className="mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+
+        {/* Chat-style prompt bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget as HTMLFormElement);
+            const value = String(fd.get("prompt") || "").trim();
+            if (!value) {
+              toast.error("Écris quelque chose pour commencer");
+              return;
+            }
+            toast.success("On t'emmène créer ton board !");
+            window.location.href = "/auth";
+          }}
+          className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
+        >
+          <PenLine className="ml-2 h-5 w-5 text-muted-foreground shrink-0" />
+          <input
+            name="prompt"
+            type="text"
+            placeholder="Décris ton idée, colle tes notes…"
+            className="flex-1 bg-transparent border-0 outline-none text-base placeholder:text-muted-foreground px-2 py-2"
+          />
+          <Button type="submit" size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90">
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </form>
+
+        <div className="mt-5 md:mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-primary shadow-glow hover:opacity-90">
             <Link to="/auth">
               Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
@@ -180,7 +208,7 @@ const Index = () => {
                 {/* Niveau 2 : idées secondaires */}
                 <div className="flex items-center justify-center gap-3 md:gap-5">
                   <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
-                    style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+                    style={{ background: "linear-gradient(135deg, #F97316, #FB923C)" }}>
                     Landing FR
                   </div>
                   <div className="relative h-16 w-16 md:h-20 md:w-20">
@@ -191,7 +219,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-white text-[11px] md:text-sm font-semibold text-center px-1 shadow-node"
-                    style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+                    style={{ background: "linear-gradient(135deg, #F97316, #FB923C)" }}>
                     Témoins
                   </div>
                 </div>
