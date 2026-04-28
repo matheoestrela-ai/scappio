@@ -12,6 +12,12 @@ import {
   Image as ImageIcon,
   PenLine,
   Quote,
+  Lightbulb,
+  Wand2,
+  Pencil,
+  MousePointer2,
+  Download,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
