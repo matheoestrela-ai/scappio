@@ -423,7 +423,7 @@ const Index = () => {
             className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
           >
             {[
-              { num: "01", title: "Vocal et texte", desc: "Décris ton idée à voix haute, photographie tes notes ou colle un texte. L'IA comprend même le chaos — pas besoin de structure au départ." },
+              { num: "01", title: "Input", desc: "Vocal, texte, pdf, vocal." },
               { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement." },
               { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
               { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée." },
