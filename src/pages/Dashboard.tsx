@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import VoiceRecorder from "@/components/VoiceRecorder";
-import BoardRecorder from "@/components/BoardRecorder";
+
 import { type BoardData, type BoardApi } from "@/components/Board";
 import TldrawBoard from "@/components/TldrawBoard";
 import SuggestionsPanel, {
@@ -759,8 +759,6 @@ const Dashboard = () => {
                   </button>
                 )}
 
-                {/* Bouton d'enregistrement — toujours visible (fixed top-right) */}
-                {!isMobile && <BoardRecorder />}
               </div>
 
               {/* Desktop : panneau latéral (mode normal) */}
