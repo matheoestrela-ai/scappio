@@ -499,7 +499,7 @@ const Dashboard = () => {
       });
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1600, 1000] });
       pdf.addImage(dataUrl, "PNG", 0, 0, 1600, 1000);
-      pdf.save("gribouille-board.pdf");
+      pdf.save("scappio-board.pdf");
       toast.success("PDF exporté !");
     } catch (e: any) {
       toast.error("Erreur d'export: " + e.message);
@@ -533,7 +533,7 @@ const Dashboard = () => {
         <div className="container flex items-center justify-between py-3 sm:py-4 gap-2">
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="h-7 w-7 rounded-lg bg-gradient-primary shadow-glow" />
-            <span className="font-semibold tracking-tight">gribouille</span>
+            <span className="font-semibold tracking-tight">scappio</span>
           </Link>
           <div className="flex items-center gap-1.5 sm:gap-2">
             {savedFlash && (
