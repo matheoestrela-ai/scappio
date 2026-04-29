@@ -439,7 +439,7 @@ const Index = () => {
                 variants={gridContainer}
                 className="relative grid gap-16 md:gap-y-36 md:gap-x-56 md:grid-cols-2 md:grid-rows-3"
               >
-                {/* Spiral arrows overlay */}
+                {/* Flow arrows: 1 → 2 → 3 → 4, dessinées dans les couloirs vides du grid */}
                 <svg
                   aria-hidden="true"
                   className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-0"
@@ -447,16 +447,47 @@ const Index = () => {
                   preserveAspectRatio="none"
                 >
                   <defs>
-                    <marker id="arrowOrange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <marker id="arrowOrange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
+                    <style>{`
+                      @keyframes dashFlow { to { stroke-dashoffset: -20; } }
+                      .flowPath {
+                        stroke-dasharray: 2 2;
+                        animation: dashFlow 2.5s linear infinite;
+                      }
+                    `}</style>
                   </defs>
-                  {/* 1 (haut-droite) -> 2 (milieu-gauche) : large arc qui passe loin à droite */}
-                  <path d="M 78,18 C 110,28 108,52 80,50 C 55,48 30,44 18,52" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 2 (milieu-gauche) -> 3 (milieu-droite) : grand arc qui descend bas */}
-                  <path d="M 22,58 C 25,80 50,82 60,72 C 68,64 75,60 78,58" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 3 (milieu-droite) -> 4 (bas-gauche) : large arc passant loin à droite puis vers le bas-gauche */}
-                  <path d="M 82,68 C 112,78 108,98 78,92 C 55,88 35,90 22,90" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 1 (haut-droite ~ x:75 y:15) → 2 (milieu-gauche ~ x:25 y:50) : arc qui descend en diagonale par le centre-haut */}
+                  <path
+                    className="flowPath"
+                    d="M 70,20 C 55,22 40,30 28,42"
+                    fill="none"
+                    stroke="#e8732a"
+                    strokeWidth="0.6"
+                    strokeLinecap="round"
+                    markerEnd="url(#arrowOrange)"
+                  />
+                  {/* 2 (milieu-gauche ~ x:25 y:50) → 3 (milieu-droite ~ x:75 y:50) : arc horizontal qui passe par le centre */}
+                  <path
+                    className="flowPath"
+                    d="M 32,52 C 45,62 55,62 68,52"
+                    fill="none"
+                    stroke="#e8732a"
+                    strokeWidth="0.6"
+                    strokeLinecap="round"
+                    markerEnd="url(#arrowOrange)"
+                  />
+                  {/* 3 (milieu-droite ~ x:75 y:50) → 4 (bas-gauche ~ x:25 y:85) : arc qui descend en diagonale */}
+                  <path
+                    className="flowPath"
+                    d="M 70,60 C 55,68 40,75 28,82"
+                    fill="none"
+                    stroke="#e8732a"
+                    strokeWidth="0.6"
+                    strokeLinecap="round"
+                    markerEnd="url(#arrowOrange)"
+                  />
                 </svg>
 
                 {steps.map((step, i) => (
