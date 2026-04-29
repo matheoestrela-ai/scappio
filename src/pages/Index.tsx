@@ -451,12 +451,12 @@ const Index = () => {
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
                   </defs>
-                  {/* 1 (top-right) -> 2 (mid-left): spiral curve */}
-                  <path d="M 75,18 C 95,40 5,30 25,52" fill="none" stroke="#e8732a" strokeWidth="0.6" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 2 (mid-left) -> 3 (mid-right): spiral curve */}
-                  <path d="M 25,55 C 50,75 50,35 75,55" fill="none" stroke="#e8732a" strokeWidth="0.6" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 3 (mid-right) -> 4 (bottom-left): spiral curve */}
-                  <path d="M 75,58 C 95,82 5,72 25,90" fill="none" stroke="#e8732a" strokeWidth="0.6" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 1 (haut-droite) -> 2 (milieu-gauche) : spirale qui contourne par la droite puis revient à gauche */}
+                  <path d="M 70,22 C 98,30 98,55 75,40 C 55,30 30,38 22,48" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 2 (milieu-gauche) -> 3 (milieu-droite) : spirale qui descend puis remonte */}
+                  <path d="M 30,55 C 45,72 55,72 50,58 C 48,50 60,52 70,55" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 3 (milieu-droite) -> 4 (bas-gauche) : spirale qui passe par la droite et redescend */}
+                  <path d="M 78,62 C 98,72 98,92 70,82 C 50,75 35,82 25,88" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
                 </svg>
 
                 {steps.map((step, i) => (
