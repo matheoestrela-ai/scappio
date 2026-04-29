@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Square, Monitor, Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
+import { toCanvas } from "html-to-image";
 import { cn } from "@/lib/utils";
 import { saveRecording, type Recording, type RecordingFormat } from "@/lib/recordings-db";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -297,6 +298,9 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     timerRef.current = null;
     stoppedRef.current = null;
     stopAllStreams();
+    if (typeof document !== "undefined") {
+      document.body.classList.remove("recording-active");
+    }
     setPreviewActive(false);
     setHasCamera(false);
   };
@@ -555,26 +559,18 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
 
   // ── TikTok 9:16 recording ──
   const startTikTokRecording = useCallback(async () => {
-    if (!("MediaRecorder" in window) || !navigator.mediaDevices?.getDisplayMedia) {
+    if (!("MediaRecorder" in window)) {
       toast.error("Ton navigateur ne supporte pas l'enregistrement vidéo.");
       return;
     }
-    toast.message("Sélectionne cet onglet pour capturer le tableau");
-
-    let screenStream: MediaStream | null = null;
-    let camStream: MediaStream | null = null;
-    let micStream: MediaStream | null = null;
-
-    try {
-      screenStream = await navigator.mediaDevices.getDisplayMedia({
-        preferCurrentTab: true,
-        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
-        audio: false,
-      } as DisplayMediaStreamOptions & { preferCurrentTab?: boolean });
-    } catch {
-      toast.error("Partage d'écran refusé ou indisponible.");
+    const boardEl = containerRef.current;
+    if (!boardEl) {
+      toast.error("Tableau introuvable.");
       return;
     }
+
+    let camStream: MediaStream | null = null;
+    let micStream: MediaStream | null = null;
 
     try {
       camStream = await navigator.mediaDevices.getUserMedia({
@@ -591,16 +587,8 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       toast.warning("Micro refusé — enregistrement sans audio.");
     }
 
-    screenStreamRef.current = screenStream;
     camStreamRef.current = camStream;
     micStreamRef.current = micStream;
-
-    const screenVideo = document.createElement("video");
-    screenVideo.srcObject = screenStream;
-    screenVideo.muted = true;
-    screenVideo.playsInline = true;
-    await screenVideo.play().catch(() => {});
-    screenVideoRef.current = screenVideo;
 
     if (camStream) {
       setHasCamera(true);
@@ -612,6 +600,9 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       camVideoRef.current = hidden;
     }
 
+    // Hide transcription / overlay UI globally during recording.
+    document.body.classList.add("recording-active");
+
     // 1080×1920 composite canvas
     const composite = document.createElement("canvas");
     composite.width = TIKTOK_W;
@@ -620,12 +611,49 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     const ctx = composite.getContext("2d");
     if (!ctx) {
       toast.error("Erreur de rendu — Canvas indisponible.");
+      document.body.classList.remove("recording-active");
       cleanup();
       return;
     }
 
     const topH = Math.round(TIKTOK_H * TIKTOK_TOP_RATIO); // 768
     const botH = TIKTOK_H - topH; // 1152
+
+    // Board snapshot loop — html-to-image renders the DOM element to a canvas.
+    // We throttle to ~10fps to stay smooth; the result is cached and re-used
+    // every animation frame on the composite canvas.
+    let boardSnap: HTMLCanvasElement | null = null;
+    let snapInFlight = false;
+    let snapStop = false;
+
+    const filterNode = (n: HTMLElement) => {
+      // Exclude any element marked as recorder UI / record-hide.
+      if (!n || !(n as any).getAttribute) return true;
+      if ((n as any).getAttribute?.("data-record-hide") === "true") return false;
+      return true;
+    };
+
+    const snapLoop = async () => {
+      if (snapStop) return;
+      if (!snapInFlight) {
+        snapInFlight = true;
+        try {
+          const c = await toCanvas(boardEl, {
+            cacheBust: true,
+            pixelRatio: 1,
+            filter: filterNode as any,
+            backgroundColor: "#faf7f4",
+          });
+          boardSnap = c;
+        } catch (e) {
+          // Fail silently — keep last snapshot.
+        } finally {
+          snapInFlight = false;
+        }
+      }
+      window.setTimeout(snapLoop, 100); // ~10fps
+    };
+    snapLoop();
 
     const drawFrame = () => {
       // Background
@@ -636,7 +664,6 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       const cv = camVideoRef.current;
       const camRadius = 28;
       ctx.save();
-      // rounded rect path
       const r = camRadius;
       ctx.beginPath();
       ctx.moveTo(r, 0);
@@ -658,14 +685,12 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
         const dh = vh * scale;
         const dx = (TIKTOK_W - dw) / 2;
         const dy = (topH - dh) / 2;
-        // Mirror selfie cam
         ctx.save();
         ctx.translate(TIKTOK_W, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(cv, TIKTOK_W - dx - dw, dy, dw, dh);
         ctx.restore();
       } else {
-        // Placeholder
         ctx.fillStyle = "#1a1a1a";
         ctx.fillRect(0, 0, TIKTOK_W, topH);
         ctx.fillStyle = "#444";
@@ -676,19 +701,18 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       }
       ctx.restore();
 
-      // ── BOTTOM: board, full width, contain (centered) ──
+      // ── BOTTOM: ONLY the board DOM snapshot, contain (centered) ──
       ctx.fillStyle = "#faf7f4";
       ctx.fillRect(0, topH, TIKTOK_W, botH);
-      const sv = screenVideoRef.current;
-      if (sv && sv.readyState >= 2 && sv.videoWidth) {
-        const vw = sv.videoWidth;
-        const vh = sv.videoHeight;
+      if (boardSnap && boardSnap.width && boardSnap.height) {
+        const vw = boardSnap.width;
+        const vh = boardSnap.height;
         const scale = Math.min(TIKTOK_W / vw, botH / vh);
         const dw = vw * scale;
         const dh = vh * scale;
         const dx = (TIKTOK_W - dw) / 2;
         const dy = topH + (botH - dh) / 2;
-        try { ctx.drawImage(sv, dx, dy, dw, dh); } catch {}
+        try { ctx.drawImage(boardSnap, dx, dy, dw, dh); } catch {}
       }
 
       // Subtle divider
@@ -715,16 +739,11 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     };
     previewRafRef.current = requestAnimationFrame(drawPreview);
 
-    const screenTrack = screenStream.getVideoTracks()[0];
-    const handleScreenEnded = () => {
-      const rec = recorderRef.current;
-      if (rec && rec.state !== "inactive") rec.stop();
-    };
-    screenTrack?.addEventListener("ended", handleScreenEnded);
     stoppedRef.current = () => {
-      screenTrack?.removeEventListener("ended", handleScreenEnded);
-      screenVideoRef.current = null;
+      snapStop = true;
+      boardSnap = null;
       camVideoRef.current = null;
+      document.body.classList.remove("recording-active");
     };
 
     const videoStream = (composite as any).captureStream(30) as MediaStream;
@@ -941,12 +960,13 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     <>
       {/* Recording outline */}
       {recording && (
-        <div className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-red-500/80 animate-pulse" />
+        <div data-record-hide="true" className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-red-500/80 animate-pulse" />
       )}
 
       {/* Record / Stop button */}
       <button
         type="button"
+        data-record-hide="true"
         onClick={handleStartClick}
         title={recording ? "Arrêter l'enregistrement" : "Enregistrer le tableau"}
         aria-label={recording ? "Arrêter l'enregistrement" : "Enregistrer le tableau"}
@@ -962,7 +982,7 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
 
       {/* Timer */}
       {recording && (
-        <div className="absolute top-3 right-24 z-30 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/70 text-white text-xs font-mono">
+        <div data-record-hide="true" className="absolute top-3 right-24 z-30 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/70 text-white text-xs font-mono">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
           {formatTime(elapsed)}
         </div>
@@ -971,6 +991,7 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       {/* Standard mode: floating circular cam preview */}
       {previewActive && hasCamera && activeFormat === "standard" && (
         <div
+          data-record-hide="true"
           onPointerDown={onBubbleDown}
           onPointerMove={onBubbleMove}
           onPointerUp={onBubbleUp}
@@ -994,6 +1015,7 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       {/* TikTok mode: vertical preview in corner */}
       {previewActive && activeFormat === "tiktok" && (
         <div
+          data-record-hide="true"
           className="absolute bottom-4 right-4 z-30 rounded-xl overflow-hidden bg-black shadow-2xl border border-white/30"
           style={{ width: 200, height: Math.round(200 * (TIKTOK_H / TIKTOK_W)) }}
         >

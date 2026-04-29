@@ -177,3 +177,14 @@ html { scroll-behavior: smooth; }
 .card-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -16px hsl(24 50% 30% / 0.25); }
 .card-lift .card-icon { transition: transform 0.2s ease; }
 .card-lift:hover .card-icon { transform: scale(1.08); }
+
+/* ── Recording mode: hide transcription / overlay UI from view & captures ── */
+.recording-hidden,
+body.recording-active .recording-hidden,
+body.recording-active [data-record-hide="true"],
+body.recording-active [data-transcription],
+body.recording-active .voice-transcription {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
