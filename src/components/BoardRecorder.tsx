@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Square, Monitor, Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
+import { toCanvas } from "html-to-image";
 import { cn } from "@/lib/utils";
 import { saveRecording, type Recording, type RecordingFormat } from "@/lib/recordings-db";
 import { useIsMobile } from "@/hooks/use-mobile";
