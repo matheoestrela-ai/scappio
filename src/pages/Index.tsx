@@ -334,6 +334,26 @@ const Index = () => {
             </Button>
           </motion.div>
 
+          <motion.p
+            variants={fadeUp}
+            className="mt-5 text-center text-muted-foreground"
+            style={{ fontSize: "14px" }}
+          >
+            🎙️ Vocal → Board · 📸 Photo → Board · 🎬 Script + Vidéo prêt · ✨ Sans Miro. Sans Loom. Sans CapCut.
+          </motion.p>
+
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-8 md:mt-10 w-full max-w-[700px]"
+          >
+            <div
+              className="w-full flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
+              style={{ height: "min(700px, 56vw)", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
+            >
+              Capture d'écran app
+            </div>
+          </motion.div>
+
         </motion.div>
 
         {/* Mockup transformation */}
