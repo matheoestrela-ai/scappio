@@ -254,6 +254,13 @@ const Index = () => {
       {/* Hero */}
       <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
+          <motion.div variants={fadeUp} className="flex justify-center mb-5 md:mb-6">
+            <span
+              className="inline-flex items-center rounded-full border border-border bg-card/80 backdrop-blur px-4 py-1.5 text-xs md:text-sm font-medium text-foreground shadow-elegant"
+            >
+              ⚡ Du contenu illimité. Sans travailler plus.
+            </span>
+          </motion.div>
           <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
             <span className="block">
               Transforme tes{" "}
@@ -280,11 +287,12 @@ const Index = () => {
                   />
                 </svg>
               </span>
+              {" "}en vidéos publiées.
             </span>
-            <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en <span style={{ color: "#e8732a", fontWeight: 900 }}>10 secondes</span></span>
+            <span className="block mt-1 sm:mt-1.5 md:mt-2">En <span style={{ color: "#e8732a", fontWeight: 900 }}>15 minutes</span>.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-            Parle, prends une photo, ou colle tes notes, puis l'IA fait le reste.
+            Tu parles de ton idée. Scappio structure ton board, écrit ton script et prépare ton téléprompter. Tu filmes. Tu exportes. Tu recommences.
           </motion.p>
 
           {/* Chat-style prompt bar */}
