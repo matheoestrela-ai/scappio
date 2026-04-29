@@ -419,19 +419,17 @@ const Index = () => {
         <div className="relative mt-12 md:mt-16">
           {(() => {
             const steps = [
-              { num: "01", title: "Input", desc: "Vocal, texte, pdf, vocal.", pos: "tr" },
-              { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement.", pos: "bl" },
-              { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board.", pos: "br" },
-              { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée.", pos: "bl2" },
+              { num: "01", title: "Capture", desc: "Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction.", pos: "tr" },
+              { num: "02", title: "Structure IA", desc: "En 10 secondes, ton idée devient un board structuré. L'agent IA détecte les angles forts, complète les manques et écrit ton script automatiquement.", pos: "ml" },
+              { num: "03", title: "Enregistre", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board.", pos: "mr" },
+              { num: "04", title: "Publie", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée.", pos: "bc" },
             ];
-            // Grid placement: 1=top-right, 2=bottom-left (row2), 3=bottom-right (row2 — wait user said row3), 4=bottom-left
-            // User: 1 haut droite, 2 bas gauche, 3 bas droite, 4 bas gauche
-            // Interpret as 2x2 with overlap on bas gauche; we use 3 rows: row1: . , 1 ; row2: 2 , 3 ; row3: 4 , .
+            // Circular flow: 01 top-right → 02 left → 03 right → 04 bottom → back to 01
             const placement: Record<string, string> = {
-              tr: "md:col-start-2 md:row-start-1 md:mt-16",
-              bl: "md:col-start-1 md:row-start-2",
-              br: "md:col-start-2 md:row-start-2",
-              bl2: "md:col-start-1 md:row-start-3",
+              tr:  "md:col-start-2 md:row-start-1 md:mt-8",
+              ml:  "md:col-start-1 md:row-start-2",
+              mr:  "md:col-start-2 md:row-start-2",
+              bc:  "md:col-span-2 md:row-start-3 md:justify-self-center md:text-center",
             };
             return (
               <motion.div
@@ -439,7 +437,7 @@ const Index = () => {
                 variants={gridContainer}
                 className="relative grid gap-16 md:gap-y-36 md:gap-x-56 md:grid-cols-2 md:grid-rows-3"
               >
-                {/* Flow arrows: 1 → 2 → 3 → 4, courbées et immobiles */}
+                {/* Circular flow arrows: 01 → 02 → 03 → 04 → 01 */}
                 <svg
                   aria-hidden="true"
                   className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-0"
@@ -451,9 +449,9 @@ const Index = () => {
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
                   </defs>
-                  {/* 1 (haut-droite) → 2 (milieu-gauche) : départ au milieu du bloc 1, arrivée à distance du bloc 2 */}
+                  {/* 01 (haut-droite) → 02 (milieu-gauche) */}
                   <path
-                    d="M 58,24 C 46,18 28,20 15,44"
+                    d="M 58,22 C 42,18 25,28 18,44"
                     fill="none"
                     stroke="#e8732a"
                     strokeWidth="0.7"
@@ -461,9 +459,9 @@ const Index = () => {
                     strokeDasharray="3 3"
                     markerEnd="url(#arrowOrange)"
                   />
-                  {/* 2 (milieu-gauche) → 3 (milieu-droite) : passe plus bas pour ne plus toucher le bloc 3 */}
+                  {/* 02 (milieu-gauche) → 03 (milieu-droite) : passe en bas pour ne rien toucher */}
                   <path
-                    d="M 27,54 C 35,82 58,84 64,62"
+                    d="M 28,56 C 38,72 60,72 70,56"
                     fill="none"
                     stroke="#e8732a"
                     strokeWidth="0.7"
@@ -471,9 +469,19 @@ const Index = () => {
                     strokeDasharray="3 3"
                     markerEnd="url(#arrowOrange)"
                   />
-                  {/* 3 (milieu-droite) → 4 (bas-gauche) : contour plus large côté droit */}
+                  {/* 03 (milieu-droite) → 04 (bas-centre) */}
                   <path
-                    d="M 82,60 C 97,72 84,94 36,88"
+                    d="M 78,60 C 82,76 70,86 54,88"
+                    fill="none"
+                    stroke="#e8732a"
+                    strokeWidth="0.7"
+                    strokeLinecap="round"
+                    strokeDasharray="3 3"
+                    markerEnd="url(#arrowOrange)"
+                  />
+                  {/* 04 (bas-centre) → 01 (haut-droite) : grande boucle par la gauche */}
+                  <path
+                    d="M 42,88 C 6,82 4,20 56,16"
                     fill="none"
                     stroke="#e8732a"
                     strokeWidth="0.7"
