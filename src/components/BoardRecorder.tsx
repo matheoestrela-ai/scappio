@@ -11,7 +11,6 @@ const pickMime = () =>
 
 export default function BoardRecorder({ containerRef }: Props) {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<Mode>("standard");
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -66,8 +65,7 @@ export default function BoardRecorder({ containerRef }: Props) {
       toast.error("Ton navigateur ne supporte pas l'enregistrement");
       return;
     }
-    const source = getBoardCanvas();
-    if (!source) return toast.error("Erreur lors de la capture du tableau");
+    if (!getBoardCanvas()) return toast.error("Erreur lors de la capture du tableau");
 
     let mic: MediaStream | null = null;
     let cam: MediaStream | null = null;
@@ -124,7 +122,6 @@ export default function BoardRecorder({ containerRef }: Props) {
       recorder.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
       recorder.onstop = download;
       recorder.start(1000);
-      setMode(nextMode);
       setOpen(false);
       setElapsed(0);
       setRecording(true);
