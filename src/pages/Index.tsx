@@ -579,20 +579,17 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Retaper tes notes te fait <span className="text-primary">perdre du temps</span>.
+            Tu perds 2h15 par vidéo. <span className="text-primary">Toutes les semaines.</span>
           </h2>
           <p className="mt-3 text-base text-muted-foreground" style={{ fontSize: "16px" }}>
-            Des heures perdues. Chaque semaine. Pour rien.
-          </p>
-          <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-            Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
+            Ce n'est pas un manque d'idées. C'est un problème de production.
           </p>
         </div>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-3">
           {[
-            { emoji: "⏱️", title: "30 minutes perdues", desc: "Recopier chaque note dans un outil de mindmap à la main, c'est une demi-heure à chaque réunion." },
-            { emoji: "🧱", title: "Outils trop lourds", desc: "Les whiteboards classiques : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
-            { emoji: "💨", title: "Les idées disparaissent", desc: "Les carnets s'empilent, les mémos vocaux et les photos restent dans le téléphone. Personne n'y revient." },
+            { emoji: "⏱️", title: "2h15 pour 1 vidéo", desc: "Miro pour structurer. Loom pour filmer. CapCut pour monter. 3 outils. 3 onglets. 3 fois plus de friction — pour chaque vidéo que tu publies." },
+            { emoji: "💨", title: "Des idées qui s'évaporent", desc: "Ton meilleur contenu naît sous la douche ou en voiture. Entre l'idée et l'enregistrement, il disparaît. Pour toujours." },
+            { emoji: "🧱", title: "Le plafond qui bloque ta croissance", desc: "Tu as des idées pour 30 vidéos. Tu en publies 4 par semaine. Pendant ce temps, d'autres créateurs publient 2× plus — avec la moitié de tes idées." },
           ].map((f, i) => (
             <motion.div
               key={i}
