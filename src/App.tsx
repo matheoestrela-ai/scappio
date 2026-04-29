@@ -10,7 +10,6 @@ import Studio from "./pages/Studio.tsx";
 import Recordings from "./pages/Recordings.tsx";
 import History from "./pages/History.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import BoardRecorder from "./components/BoardRecorder";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +18,6 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BoardRecorder />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
