@@ -285,7 +285,7 @@ const Index = () => {
             <span className="block mt-1 sm:mt-1.5 md:mt-2">En <span style={{ color: "#e8732a", fontWeight: 900 }}>15 minutes</span>.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-            Tu parles de ton idée. Scappio structure ton board, écrit ton script et prépare ton téléprompter. Tu filmes. Tu exportes. Tu recommences.
+            Tu parles de ton idée, Scappio structure ton board et s'occupe du reste, tu n'as plus qu'à filmer.
           </motion.p>
 
           {/* Chat-style prompt bar */}
