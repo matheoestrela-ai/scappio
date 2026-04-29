@@ -254,6 +254,13 @@ const Index = () => {
       {/* Hero */}
       <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
+          <motion.div variants={fadeUp} className="flex justify-center mb-5 md:mb-6">
+            <span
+              className="inline-flex items-center rounded-full border border-border bg-card/80 backdrop-blur px-4 py-1.5 text-xs md:text-sm font-medium text-foreground shadow-elegant"
+            >
+              ⚡ Du contenu illimité. Sans travailler plus.
+            </span>
+          </motion.div>
           <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
             <span className="block">
               Transforme tes{" "}
@@ -280,11 +287,12 @@ const Index = () => {
                   />
                 </svg>
               </span>
+              {" "}en vidéos publiées.
             </span>
-            <span className="block mt-1 sm:mt-1.5 md:mt-2">en board visuel en <span style={{ color: "#e8732a", fontWeight: 900 }}>10 secondes</span></span>
+            <span className="block mt-1 sm:mt-1.5 md:mt-2">En <span style={{ color: "#e8732a", fontWeight: 900 }}>15 minutes</span>.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-            Parle, prends une photo, ou colle tes notes, puis l'IA fait le reste.
+            Tu parles de ton idée. Scappio structure ton board, écrit ton script et prépare ton téléprompter. Tu filmes. Tu exportes. Tu recommences.
           </motion.p>
 
           {/* Chat-style prompt bar */}
@@ -324,6 +332,26 @@ const Index = () => {
             <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
               <a href="#how">Voir comment ça marche</a>
             </Button>
+          </motion.div>
+
+          <motion.p
+            variants={fadeUp}
+            className="mt-5 text-center text-muted-foreground"
+            style={{ fontSize: "14px" }}
+          >
+            🎙️ Vocal → Board · 📸 Photo → Board · 🎬 Script + Vidéo prêt · ✨ Sans Miro. Sans Loom. Sans CapCut.
+          </motion.p>
+
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-8 md:mt-10 w-full max-w-[700px]"
+          >
+            <div
+              className="w-full flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
+              style={{ height: "min(700px, 56vw)", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
+            >
+              Capture d'écran app
+            </div>
           </motion.div>
 
         </motion.div>
@@ -475,9 +503,9 @@ const Index = () => {
       {/* How it works — horizontal stepper timeline */}
       <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Tu parles, tu photographes, tu colles. L'IA structure en 10 secondes — tu gardes la main.
+            Tu parles 30 secondes. Scappio fait le reste.
           </p>
         </div>
 
@@ -488,10 +516,10 @@ const Index = () => {
             className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
           >
             {[
-              { num: "01", title: "Vocal et texte", desc: "Dicte tes idées à voix haute ou écris-les. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
-              { num: "02", title: "Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
-              { num: "03", title: "IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
-              { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG, __HIGHLIGHT__et ensuite la possibilité de l'enregistrer sous format YouTube ou TikTok pour l'envoyer à ton équipe ou même créer du contenu__END__, __HIGHLIGHT__ou enregistre-toi en train de le présenter__END__." },
+              { num: "01", title: "Vocal et texte", desc: "Décris ton idée à voix haute, photographie tes notes ou colle un texte. L'IA comprend même le chaos — pas besoin de structure au départ." },
+              { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement." },
+              { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
+              { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée." },
             ].map((step, i) => (
               <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
                 <div
@@ -515,6 +543,35 @@ const Index = () => {
               </motion.div>
             ))}
           </motion.div>
+
+          {/* Placeholder image entre étape 2 et étape 3 */}
+          <div className="mt-10 md:mt-12 flex justify-center">
+            <div
+              className="w-full md:w-[60%] flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
+              style={{ height: "400px", borderRadius: "12px" }}
+            >
+              Board + Script IA
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* NOUVELLE SECTION : gain de temps */}
+      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#fff3eb" }}>
+        <div className="container text-center">
+          <div className="font-bold text-foreground" style={{ fontSize: "clamp(48px, 9vw, 80px)", lineHeight: 1.05 }}>
+            2h15 &nbsp;→&nbsp; 12 min
+          </div>
+          <p className="mt-4 text-foreground/80" style={{ fontSize: "20px" }}>
+            par vidéo. Soit 9 fois plus rapide.
+          </p>
+          <p className="mt-6 max-w-2xl mx-auto text-muted-foreground" style={{ fontSize: "18px", letterSpacing: "0.01em" }}>
+            À 5 vidéos par semaine : tu récupères 10 heures.<br />
+            Chaque semaine. Pour créer plus — ou pour vivre.
+          </p>
+          <p className="mt-8 max-w-2xl mx-auto italic text-muted-foreground/80" style={{ fontSize: "12px" }}>
+            Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
+          </p>
         </div>
       </motion.section>
 
@@ -522,20 +579,17 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Retaper tes notes te fait <span className="text-primary">perdre du temps</span>.
+            Tu perds 2h15 par vidéo. <span className="text-primary">Toutes les semaines.</span>
           </h2>
           <p className="mt-3 text-base text-muted-foreground" style={{ fontSize: "16px" }}>
-            Des heures perdues. Chaque semaine. Pour rien.
-          </p>
-          <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-            Tes meilleures idées naissent sur papier ou à voix haute. Mais entre la capture et un board propre, tout le monde abandonne.
+            Ce n'est pas un manque d'idées. C'est un problème de production.
           </p>
         </div>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-3">
           {[
-            { emoji: "⏱️", title: "30 minutes perdues", desc: "Recopier chaque note dans un outil de mindmap à la main, c'est une demi-heure à chaque réunion." },
-            { emoji: "🧱", title: "Outils trop lourds", desc: "Les whiteboards classiques : 200 fonctions, 1000 raccourcis, et toujours pas de structure." },
-            { emoji: "💨", title: "Les idées disparaissent", desc: "Les carnets s'empilent, les mémos vocaux et les photos restent dans le téléphone. Personne n'y revient." },
+            { emoji: "⏱️", title: "2h15 pour 1 vidéo", desc: "Miro pour structurer. Loom pour filmer. CapCut pour monter. 3 outils. 3 onglets. 3 fois plus de friction — pour chaque vidéo que tu publies." },
+            { emoji: "💨", title: "Des idées qui s'évaporent", desc: "Ton meilleur contenu naît sous la douche ou en voiture. Entre l'idée et l'enregistrement, il disparaît. Pour toujours." },
+            { emoji: "🧱", title: "Le plafond qui bloque ta croissance", desc: "Tu as des idées pour 30 vidéos. Tu en publies 4 par semaine. Pendant ce temps, d'autres créateurs publient 2× plus — avec la moitié de tes idées." },
           ].map((f, i) => (
             <motion.div
               key={i}
@@ -552,15 +606,15 @@ const Index = () => {
 
       {/* Features — bento asymmetric grid, dark grey icons */}
       <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut. Rien de plus.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut pour publier sans limite.</h2>
+        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être — en un seul.</p>
 
         <motion.div
           {...inViewProps}
           variants={gridContainer}
           className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
         >
-          {/* Row 1: Featured (2/3) + small (1/3) */}
+          {/* Row 1: Featured (2/3) — Enregistreur écran + téléprompter */}
           <motion.div
             variants={cardItem}
             className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
@@ -569,17 +623,25 @@ const Index = () => {
               className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
               style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
             >
-              UNIQUE
+              UNIQUE SUR LE MARCHÉ
             </span>
-            <div>
-              <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-              <h3 className="mt-4 text-2xl font-bold text-foreground">Capture vocale → Board</h3>
-              <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute. Aucun outil ne fait ça aussi vite.
-              </p>
-            </div>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
+            <div className="grid gap-6 md:grid-cols-[1fr_280px] md:items-center">
+              <div>
+                <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+                <h3 className="mt-4 text-2xl font-bold text-foreground">Filme devant ton board. Ton script défile. Tes abonnés ne voient rien.</h3>
+                <p className="mt-3 text-base text-muted-foreground max-w-xl">
+                  Enregistre ta présentation avec ta caméra. Le téléprompter est superposé sur l'écran — invisible dans la capture. Export direct TikTok vertical, Reels carré ou YouTube horizontal.
+                </p>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
+                </div>
+              </div>
+              <div
+                className="flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-xs md:text-sm font-medium text-center px-3"
+                style={{ width: "100%", maxWidth: "280px", height: "200px", borderRadius: "12px" }}
+              >
+                Interface enregistreur + téléprompter
+              </div>
             </div>
           </motion.div>
 
@@ -595,8 +657,8 @@ const Index = () => {
 
           {/* Row 2: 3 equal cards */}
           {[
-            { Icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
-            { Icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
+            { Icon: Mic, title: "Vocal → Board", desc: "Parle librement 30 secondes. L'IA transcrit, hiérarchise et génère ton board. Le before/after le plus viral du marché." },
+            { Icon: Wand2, title: "Script IA", desc: "L'agent transforme ta mindmap en script prêt à lire. Naturel, structuré, dans ta logique." },
             { Icon: Pencil, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
           ].map(({ Icon, title, desc }, i) => (
             <motion.div
@@ -613,7 +675,7 @@ const Index = () => {
           {/* Row 3: remaining cards */}
           {[
             { Icon: MousePointer2, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { Icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
+            { Icon: Download, title: "Export multi-format", desc: "TikTok, Reels, YouTube. Un board. Toutes les plateformes. En 1 clic." },
             { Icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
           ].map(({ Icon, title, desc }, i) => (
             <motion.div
@@ -631,7 +693,8 @@ const Index = () => {
 
       {/* Testimonials */}
       <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de retaper</h2>
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de choisir entre leurs idées.</h2>
+        <p className="mt-3 text-center text-muted-foreground">Maintenant ils les publient toutes.</p>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
             { name: "Camille D.", role: "Product Manager, Paris", text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau." },
@@ -659,11 +722,11 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} className="container py-16 md:py-20">
         <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Arrête de retaper.<br />
-            <span className="text-primary">Commence à penser.</span>
+            Arrête de choisir entre tes idées.<br />
+            <span className="text-primary">Publie-les toutes.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Ton premier board en 10 secondes. Sans carte bancaire. Sans installation.
+            Ton premier board en 10 secondes. Gratuit. Sans carte bancaire. Sans installation.
           </p>
           <form
             onSubmit={handleSubmit}
@@ -687,6 +750,9 @@ const Index = () => {
             </Button>
           </form>
           <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Rejoins les créateurs qui publient sans limite — sans travailler plus.
+          </p>
         </div>
       </motion.section>
 
