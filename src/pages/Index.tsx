@@ -340,10 +340,35 @@ const Index = () => {
             className="mx-auto mt-8 md:mt-10 w-full max-w-[700px]"
           >
             <div
-              className="w-full flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
-              style={{ height: "min(700px, 56vw)", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
+              className="relative w-full overflow-hidden bg-black border border-border"
+              style={{ aspectRatio: "16 / 9", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
             >
-              Capture d'écran app
+              {/* Subtle gradient backdrop */}
+              <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900" />
+
+              {/* Center play button */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/95 shadow-2xl md:h-24 md:w-24">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="ml-1 h-8 w-8 text-black md:h-10 md:w-10"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Bottom controls bar */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-black/70 to-transparent px-4 py-3 md:px-6 md:py-4">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white md:h-5 md:w-5">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
+                  <div className="h-full w-[35%] rounded-full bg-white" />
+                </div>
+                <span className="text-[11px] font-medium text-white tabular-nums md:text-xs">0:42 / 2:00</span>
+              </div>
             </div>
           </motion.div>
 
