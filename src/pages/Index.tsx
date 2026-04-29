@@ -339,7 +339,7 @@ const Index = () => {
             className="mt-5 text-center text-muted-foreground"
             style={{ fontSize: "14px" }}
           >
-            🎙️ Vocal → Board · 📸 Photo → Board · 🎬 Script + Vidéo prêt · ✨ Sans Miro. Sans Loom. Sans CapCut.
+            Du contenu illimité. <span className="text-primary">Sans</span> travailler plus.
           </motion.p>
 
           <motion.div
