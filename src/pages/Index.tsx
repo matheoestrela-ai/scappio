@@ -419,83 +419,21 @@ const Index = () => {
         <div className="relative mt-12 md:mt-16">
           {(() => {
             const steps = [
-              { num: "01", title: "Capture", desc: "Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction.", pos: "tr" },
-              { num: "02", title: "Structure IA", desc: "En 10 secondes, ton idée devient un board structuré. L'agent IA détecte les angles forts, complète les manques et écrit ton script automatiquement.", pos: "ml" },
-              { num: "03", title: "Enregistre", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board.", pos: "mr" },
-              { num: "04", title: "Publie", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée.", pos: "bc" },
+              { num: "01", title: "Capture", desc: "Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction." },
+              { num: "02", title: "Structure IA", desc: "En 10 secondes, ton idée devient un board structuré. L'agent IA détecte les angles forts, complète les manques et écrit ton script automatiquement." },
+              { num: "03", title: "Enregistre", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
             ];
-            // Circular flow: 01 top-right → 02 left → 03 right → 04 bottom → back to 01
-            const placement: Record<string, string> = {
-              tr:  "md:col-start-2 md:row-start-1 md:mt-8",
-              ml:  "md:col-start-1 md:row-start-2",
-              mr:  "md:col-start-2 md:row-start-2",
-              bc:  "md:col-span-2 md:row-start-3 md:justify-self-center md:text-center",
-            };
             return (
               <motion.div
                 {...inViewProps}
                 variants={gridContainer}
-                className="relative grid gap-16 md:gap-y-36 md:gap-x-56 md:grid-cols-2 md:grid-rows-3"
+                className="grid gap-12 md:gap-10 md:grid-cols-3"
               >
-                {/* Circular flow arrows: 01 → 02 → 03 → 04 → 01 */}
-                <svg
-                  aria-hidden="true"
-                  className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-0"
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <marker id="arrowOrange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                      <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
-                    </marker>
-                  </defs>
-                  {/* 01 (haut-droite) → 02 (milieu-gauche) */}
-                  <path
-                    d="M 58,22 C 42,18 25,28 18,44"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.7"
-                    strokeLinecap="round"
-                    strokeDasharray="3 3"
-                    markerEnd="url(#arrowOrange)"
-                  />
-                  {/* 02 (milieu-gauche) → 03 (milieu-droite) : passe en bas pour ne rien toucher */}
-                  <path
-                    d="M 28,56 C 38,72 60,72 70,56"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.7"
-                    strokeLinecap="round"
-                    strokeDasharray="3 3"
-                    markerEnd="url(#arrowOrange)"
-                  />
-                  {/* 03 (milieu-droite) → 04 (bas-centre) */}
-                  <path
-                    d="M 78,60 C 82,76 70,86 54,88"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.7"
-                    strokeLinecap="round"
-                    strokeDasharray="3 3"
-                    markerEnd="url(#arrowOrange)"
-                  />
-                  {/* 04 (bas-centre) → 01 (haut-droite) : grande boucle par la gauche */}
-                  <path
-                    d="M 42,88 C 6,82 4,20 56,16"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.7"
-                    strokeLinecap="round"
-                    strokeDasharray="3 3"
-                    markerEnd="url(#arrowOrange)"
-                  />
-                </svg>
-
                 {steps.map((step, i) => (
                   <motion.div
                     key={i}
                     variants={cardItem}
-                    className={`relative z-10 text-center md:text-left ${placement[step.pos]}`}
+                    className="text-center md:text-left"
                   >
                     <div
                       className="font-bold leading-none select-none"
@@ -504,16 +442,8 @@ const Index = () => {
                       {step.num}
                     </div>
                     <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                    <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">
-                      {step.desc.split(/(__HIGHLIGHT__.*?__END__)/g).map((part, idx) => {
-                        const m = part.match(/^__HIGHLIGHT__(.*)__END__$/);
-                        if (m) {
-                          return (
-                            <span key={idx} style={{ color: "#e8732a", fontWeight: 600 }}>{m[1]}</span>
-                          );
-                        }
-                        return <span key={idx}>{part}</span>;
-                      })}
+                    <p className="mt-3 text-sm md:text-base text-muted-foreground">
+                      {step.desc}
                     </p>
                   </motion.div>
                 ))}
