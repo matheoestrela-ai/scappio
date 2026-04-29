@@ -428,7 +428,7 @@ const Index = () => {
             // User: 1 haut droite, 2 bas gauche, 3 bas droite, 4 bas gauche
             // Interpret as 2x2 with overlap on bas gauche; we use 3 rows: row1: . , 1 ; row2: 2 , 3 ; row3: 4 , .
             const placement: Record<string, string> = {
-              tr: "md:col-start-2 md:row-start-1",
+              tr: "md:col-start-2 md:row-start-1 md:mt-16",
               bl: "md:col-start-1 md:row-start-2",
               br: "md:col-start-2 md:row-start-2",
               bl2: "md:col-start-1 md:row-start-3",
