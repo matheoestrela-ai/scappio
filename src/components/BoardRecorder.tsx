@@ -1,176 +1,250 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Monitor, Smartphone, Square, X } from "lucide-react";
+import { Camera, Square } from "lucide-react";
 import { toast } from "sonner";
 
 type Mode = "standard" | "tiktok";
-type Props = { containerRef?: React.RefObject<HTMLDivElement> };
 
-const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-const pickMime = () =>
-  ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find((m) => MediaRecorder.isTypeSupported(m)) || "video/webm";
-
-export default function BoardRecorder({ containerRef }: Props) {
-  const [open, setOpen] = useState(false);
+export default function BoardRecorder() {
   const [recording, setRecording] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const tracksRef = useRef<MediaStreamTrack[]>([]);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<number | null>(null);
+  const streamsRef = useRef<MediaStream[]>([]);
   const rafRef = useRef<number | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   const cleanup = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (timerRef.current) clearInterval(timerRef.current);
     rafRef.current = null;
+    streamsRef.current.forEach((s) => s.getTracks().forEach((t) => t.stop()));
+    streamsRef.current = [];
+    if (timerRef.current) window.clearInterval(timerRef.current);
     timerRef.current = null;
-    tracksRef.current.forEach((t) => t.stop());
-    tracksRef.current = [];
     recorderRef.current = null;
-  };
-
-  useEffect(() => cleanup, []);
-
-  const getBoardCanvas = () => {
-    const root = containerRef.current ?? document.body;
-    const boardElement =
-      root.querySelector(".react-flow") ||
-      root.querySelector("#board-container") ||
-      root.querySelector(".tl-canvas") ||
-      root.querySelector("canvas");
-    if (boardElement instanceof HTMLCanvasElement) return boardElement;
-    const nestedCanvas = boardElement?.querySelector("canvas");
-    return nestedCanvas instanceof HTMLCanvasElement ? nestedCanvas : null;
-  };
-
-  const download = () => {
-    const blob = new Blob(chunksRef.current, { type: "video/webm" });
-    chunksRef.current = [];
-    cleanup();
     setRecording(false);
     setElapsed(0);
-    if (!blob.size) return toast.error("Erreur lors de la capture du tableau");
+  };
+
+  useEffect(() => () => cleanup(), []);
+
+  const startTimer = () => {
+    const start = Date.now();
+    timerRef.current = window.setInterval(() => {
+      setElapsed(Math.floor((Date.now() - start) / 1000));
+    }, 250);
+  };
+
+  const downloadBlob = (chunks: Blob[], filename: string) => {
+    const blob = new Blob(chunks, { type: "video/webm" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `scappio-${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+    a.href = url;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
     toast.success("Enregistrement sauvegardé ✓");
   };
 
-  const start = async (nextMode: Mode) => {
-    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
-      toast.error("Ton navigateur ne supporte pas l'enregistrement");
-      return;
-    }
-    if (!getBoardCanvas()) return toast.error("Erreur lors de la capture du tableau");
+  const startStandard = async () => {
+    const chunks: Blob[] = [];
 
-    let mic: MediaStream | null = null;
-    let cam: MediaStream | null = null;
+    const displayStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+      // @ts-expect-error chromium hint
+      preferCurrentTab: true,
+    });
+    streamsRef.current.push(displayStream);
+
+    let audioStream: MediaStream | null = null;
     try {
-      mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
+      streamsRef.current.push(audioStream);
     } catch {
-      toast.warning("Microphone refusé — enregistrement sans audio");
+      toast.warning("Micro refusé — enregistrement sans audio");
     }
-    if (nextMode === "tiktok") {
-      try {
-        cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-      } catch {
-        toast.error("Accès à la caméra refusé");
-      }
-    }
+
+    const combinedStream = new MediaStream([
+      ...displayStream.getTracks(),
+      ...(audioStream ? audioStream.getTracks() : []),
+    ]);
+
+    const mediaRecorder = new MediaRecorder(combinedStream, {
+      mimeType: "video/webm;codecs=vp9",
+    });
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    mediaRecorder.onstop = () => {
+      downloadBlob(chunks, `scappio-${Date.now()}.webm`);
+      cleanup();
+    };
+
+    displayStream.getVideoTracks()[0].addEventListener("ended", () => {
+      if (mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    });
+
+    mediaRecorder.start(1000);
+    recorderRef.current = mediaRecorder;
+    setRecording(true);
+    startTimer();
+  };
+
+  const startTikTok = async () => {
+    const chunks: Blob[] = [];
+
+    const cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: 1080, height: 608 },
+      audio: true,
+    });
+    streamsRef.current.push(cameraStream);
+
+    const displayStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { width: 1080, height: 1344 },
+      audio: false,
+      // @ts-expect-error chromium hint
+      preferCurrentTab: true,
+    });
+    streamsRef.current.push(displayStream);
 
     const canvas = document.createElement("canvas");
-    canvas.width = nextMode === "standard" ? 1920 : 1080;
-    canvas.height = nextMode === "standard" ? 1080 : 1920;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return toast.error("Erreur lors de la capture du tableau");
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext("2d")!;
 
-    const camVideo = document.createElement("video");
-    if (cam) {
-      camVideo.srcObject = cam;
-      camVideo.muted = true;
-      camVideo.playsInline = true;
-      await camVideo.play().catch(() => {});
-    }
+    const cameraVideo = document.createElement("video");
+    cameraVideo.srcObject = cameraStream;
+    cameraVideo.muted = true;
+    await cameraVideo.play();
 
-    const draw = () => {
-      const boardCanvas = getBoardCanvas();
-      if (!boardCanvas) return;
-      if (nextMode === "standard") {
-        ctx.drawImage(boardCanvas, 0, 0, canvas.width, canvas.height);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(boardCanvas, 0, 0, 1080, 1344);
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 1344, 1080, 576);
-        if (camVideo.srcObject && camVideo.videoWidth) ctx.drawImage(camVideo, 0, 1344, 1080, 576);
-      }
-      rafRef.current = requestAnimationFrame(draw);
+    const displayVideo = document.createElement("video");
+    displayVideo.srcObject = displayStream;
+    displayVideo.muted = true;
+    await displayVideo.play();
+
+    const drawFrame = () => {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, 1080, 1920);
+      ctx.drawImage(displayVideo, 0, 0, 1080, 1344);
+      ctx.drawImage(cameraVideo, 0, 1344, 1080, 576);
+      rafRef.current = requestAnimationFrame(drawFrame);
     };
-    draw();
+    drawFrame();
 
     const canvasStream = canvas.captureStream(30);
-    const stream = new MediaStream([...canvasStream.getVideoTracks(), ...(mic?.getAudioTracks() ?? [])]);
-    tracksRef.current = [...canvasStream.getTracks(), ...(mic?.getTracks() ?? []), ...(cam?.getTracks() ?? [])];
+    const audioTrack = cameraStream.getAudioTracks()[0];
+    if (audioTrack) canvasStream.addTrack(audioTrack);
 
-    try {
-      const recorder = new MediaRecorder(stream, { mimeType: pickMime(), videoBitsPerSecond: 6_000_000 });
-      recorderRef.current = recorder;
-      recorder.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
-      recorder.onstop = download;
-      recorder.start(1000);
-      setOpen(false);
-      setElapsed(0);
-      setRecording(true);
-      timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
-    } catch {
+    const mediaRecorder = new MediaRecorder(canvasStream, {
+      mimeType: "video/webm;codecs=vp9",
+    });
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    mediaRecorder.onstop = () => {
+      downloadBlob(chunks, `scappio-tiktok-${Date.now()}.webm`);
       cleanup();
-      toast.error("Erreur lors de la capture du tableau");
+    };
+
+    displayStream.getVideoTracks()[0].addEventListener("ended", () => {
+      if (mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    });
+
+    mediaRecorder.start(1000);
+    recorderRef.current = mediaRecorder;
+    setRecording(true);
+    startTimer();
+  };
+
+  const start = async (mode: Mode) => {
+    setShowModal(false);
+    try {
+      if (mode === "standard") await startStandard();
+      else await startTikTok();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || "Impossible de démarrer l'enregistrement");
+      cleanup();
     }
   };
 
-  const stop = () => {
-    const recorder = recorderRef.current;
-    if (!recorder || recorder.state === "inactive") return cleanup();
-    recorder.stop();
+  const handleClick = () => {
+    if (recording) {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      } else {
+        cleanup();
+      }
+    } else {
+      setShowModal(true);
+    }
   };
+
+  const fmt = (s: number) =>
+    `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   return (
     <>
-      <div className="fixed top-4 right-4" style={{ zIndex: 9999 }}>
-        <button
-          type="button"
-          onClick={recording ? stop : () => setOpen(true)}
-          className="flex h-11 items-center gap-2 rounded-full bg-destructive px-4 text-destructive-foreground shadow-elegant transition hover:opacity-95"
-          aria-label={recording ? "Arrêter" : "Enregistrer"}
-        >
-          {recording ? <Square className="h-4 w-4 fill-current animate-pulse" /> : <Camera className="h-4 w-4" />}
-          <span className="text-sm font-medium">{recording ? "Arrêter" : "Enregistrer"}</span>
-          {recording && <span className="font-mono text-sm tabular-nums">{fmt(elapsed)}</span>}
-        </button>
-      </div>
+      <button
+        onClick={handleClick}
+        style={{ position: "fixed", top: 16, right: 16, zIndex: 9999 }}
+        className={`flex items-center gap-2 px-4 py-2 rounded-full text-white font-medium shadow-lg transition-all ${
+          recording ? "bg-red-600 animate-pulse" : "bg-red-600 hover:bg-red-700"
+        }`}
+      >
+        {recording ? (
+          <>
+            <Square className="w-4 h-4 fill-white" />
+            <span className="tabular-nums">{fmt(elapsed)}</span>
+            <span>Arrêter</span>
+          </>
+        ) : (
+          <>
+            <Camera className="w-4 h-4" />
+            <span>Enregistrer</span>
+          </>
+        )}
+      </button>
 
-      {open && !recording && (
-        <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 10000 }}>
-          <button type="button" className="absolute inset-0 bg-foreground/50" onClick={() => setOpen(false)} aria-label="Fermer" />
-          <div className="relative w-full max-w-sm rounded-2xl border bg-card p-4 shadow-elegant">
-            <button type="button" onClick={() => setOpen(false)} className="absolute right-3 top-3 text-muted-foreground" aria-label="Fermer">
-              <X className="h-4 w-4" />
-            </button>
-            <div className="mb-3 text-sm font-semibold">Choisir le format</div>
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => start("standard")} className="rounded-xl border bg-background p-4 text-left hover:bg-muted">
-                <Monitor className="mb-2 h-5 w-5 text-primary" />
-                <div className="text-sm font-medium">Standard</div>
-                <div className="text-xs text-muted-foreground">16:9</div>
+      {showModal && (
+        <div
+          style={{ zIndex: 10000 }}
+          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold mb-4 text-foreground">
+              Choisir le format
+            </h2>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => start("standard")}
+                className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90"
+              >
+                🖥️ Standard 16:9
               </button>
-              <button type="button" onClick={() => start("tiktok")} className="rounded-xl border bg-background p-4 text-left hover:bg-muted">
-                <Smartphone className="mb-2 h-5 w-5 text-primary" />
-                <div className="text-sm font-medium">TikTok</div>
-                <div className="text-xs text-muted-foreground">9:16 + caméra</div>
+              <button
+                onClick={() => start("tiktok")}
+                className="w-full px-4 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:opacity-90"
+              >
+                📱 TikTok 9:16 — facecam en bas
+              </button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full px-4 py-2 rounded-xl text-muted-foreground hover:bg-muted text-sm"
+              >
+                Annuler
               </button>
             </div>
           </div>

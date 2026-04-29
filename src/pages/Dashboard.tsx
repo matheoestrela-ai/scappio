@@ -760,7 +760,7 @@ const Dashboard = () => {
                 )}
 
                 {/* Bouton d'enregistrement — toujours visible (fixed top-right) */}
-                {!isMobile && <BoardRecorder containerRef={boardRef} />}
+                {!isMobile && <BoardRecorder />}
               </div>
 
               {/* Desktop : panneau latéral (mode normal) */}
