@@ -693,7 +693,8 @@ const Index = () => {
 
       {/* Testimonials */}
       <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de retaper</h2>
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de choisir entre leurs idées.</h2>
+        <p className="mt-3 text-center text-muted-foreground">Maintenant ils les publient toutes.</p>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
           {[
             { name: "Camille D.", role: "Product Manager, Paris", text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau." },
