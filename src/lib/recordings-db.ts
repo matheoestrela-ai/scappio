@@ -1,5 +1,7 @@
 // Tiny IndexedDB wrapper for storing recorded videos client-side.
 
+export type RecordingFormat = "standard" | "tiktok";
+
 export type Recording = {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export type Recording = {
   mimeType: string;
   size: number;
   blob: Blob;
+  format?: RecordingFormat; // defaults to "standard" when missing (legacy)
 };
 
 export type RecordingMeta = Omit<Recording, "blob">;
