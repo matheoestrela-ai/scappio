@@ -759,10 +759,8 @@ const Dashboard = () => {
                   </button>
                 )}
 
-                {/* Bouton d'enregistrement du tableau — visible uniquement en plein écran */}
-                {!isMobile && panelFullscreen && (
-                  <BoardRecorder containerRef={boardRef} />
-                )}
+                {/* Bouton d'enregistrement — toujours visible (fixed top-right) */}
+                {!isMobile && <BoardRecorder containerRef={boardRef} />}
               </div>
 
               {/* Desktop : panneau latéral (mode normal) */}

@@ -6,17 +6,17 @@ import { toCanvas } from "html-to-image";
 type Format = "standard" | "tiktok";
 
 type Props = {
+  /** Ref to the board DOM element to capture in TikTok mode. */
   containerRef: React.RefObject<HTMLDivElement>;
-  boardName?: string;
 };
 
 const TIKTOK_W = 1080;
 const TIKTOK_H = 1920;
 const TIKTOK_TOP_H = Math.round(TIKTOK_H * 0.4); // 768
 const TIKTOK_BOT_H = TIKTOK_H - TIKTOK_TOP_H; // 1152
-
 const ORANGE = "#F97316";
 
+// CSS selectors for elements that must be hidden during TikTok capture.
 const HIDE_SELECTORS = [
   "[data-record-hide='true']",
   ".recording-hidden",
@@ -25,7 +25,7 @@ const HIDE_SELECTORS = [
 ];
 
 const formatTime = (sec: number) => {
-  const m = Math.floor(sec / 60).toString().padStart(2, "0");
+  const m = Math.floor(sec / 60).toString();
   const s = (sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 };
@@ -54,23 +54,21 @@ const pickMime = () => {
 
 const BoardRecorder = ({ containerRef }: Props) => {
   const [showPicker, setShowPicker] = useState(false);
-  const [format, setFormat] = useState<Format>("standard");
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
 
-  // refs
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const tracksRef = useRef<MediaStreamTrack[]>([]);
+  const camVideoRef = useRef<HTMLVideoElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const snapTimerRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
-  const camVideoRef = useRef<HTMLVideoElement | null>(null);
-  const hiddenStylesRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
   const startTimeRef = useRef<number>(0);
   const formatRef = useRef<Format>("standard");
+  const hiddenStylesRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
 
-  const cleanupResources = useCallback(() => {
+  const cleanup = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -98,17 +96,19 @@ const BoardRecorder = ({ containerRef }: Props) => {
     hiddenStylesRef.current = [];
   }, []);
 
-  useEffect(() => () => cleanupResources(), [cleanupResources]);
+  useEffect(() => () => cleanup(), [cleanup]);
 
   const hideOverlayUI = () => {
     const seen = new Set<HTMLElement>();
     HIDE_SELECTORS.forEach((sel) => {
-      document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-        if (seen.has(el)) return;
-        seen.add(el);
-        hiddenStylesRef.current.push({ el, prev: el.style.display });
-        el.style.display = "none";
-      });
+      try {
+        document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+          if (seen.has(el)) return;
+          seen.add(el);
+          hiddenStylesRef.current.push({ el, prev: el.style.display });
+          el.style.display = "none";
+        });
+      } catch {}
     });
   };
 
@@ -120,9 +120,7 @@ const BoardRecorder = ({ containerRef }: Props) => {
     }, 500);
   };
 
-  // ─────────────────────────────────────────
-  // Standard 16:9 — record current tab directly
-  // ─────────────────────────────────────────
+  // ───────────────────────── STANDARD 16:9 ─────────────────────────
   const startStandard = async () => {
     if (!navigator.mediaDevices?.getDisplayMedia) {
       toast.error("Ton navigateur ne supporte pas l'enregistrement.");
@@ -138,11 +136,11 @@ const BoardRecorder = ({ containerRef }: Props) => {
           frameRate: { ideal: 30, max: 30 },
         },
         audio: false,
-        // @ts-ignore
+        // @ts-ignore — Chromium-only hint
         preferCurrentTab: true,
       });
     } catch {
-      toast.error("Partage d'écran refusé.");
+      toast.error("Accès à l'écran refusé");
       return;
     }
 
@@ -150,7 +148,7 @@ const BoardRecorder = ({ containerRef }: Props) => {
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     } catch {
-      toast.warning("Micro indisponible — enregistrement sans audio.");
+      toast.warning("Micro refusé — enregistrement sans audio.");
     }
 
     const tracks: MediaStreamTrack[] = [];
@@ -159,8 +157,8 @@ const BoardRecorder = ({ containerRef }: Props) => {
     tracksRef.current = tracks;
 
     const finalStream = new MediaStream(tracks);
-
     const mime = pickMime();
+
     let rec: MediaRecorder;
     try {
       rec = mime
@@ -168,7 +166,7 @@ const BoardRecorder = ({ containerRef }: Props) => {
         : new MediaRecorder(finalStream);
     } catch {
       toast.error("Impossible de démarrer l'enregistrement.");
-      cleanupResources();
+      cleanup();
       return;
     }
 
@@ -176,7 +174,7 @@ const BoardRecorder = ({ containerRef }: Props) => {
     rec.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
     rec.onstop = () => finalize(rec.mimeType || mime || "video/webm");
 
-    // Auto stop when user revokes screen share
+    // Auto-stop if user revokes screen share from the browser bar
     displayStream.getVideoTracks()[0]?.addEventListener("ended", () => {
       if (rec.state !== "inactive") rec.stop();
     });
@@ -186,12 +184,9 @@ const BoardRecorder = ({ containerRef }: Props) => {
     formatRef.current = "standard";
     setRecording(true);
     startTimer();
-    toast.success("Enregistrement démarré");
   };
 
-  // ─────────────────────────────────────────
-  // TikTok 9:16 — composite camera + board snapshot
-  // ─────────────────────────────────────────
+  // ───────────────────────── TIKTOK 9:16 ─────────────────────────
   const startTikTok = async () => {
     const boardEl = containerRef.current;
     if (!boardEl) {
@@ -206,20 +201,19 @@ const BoardRecorder = ({ containerRef }: Props) => {
         audio: false,
       });
     } catch {
-      toast.warning("Caméra indisponible — zone du haut vide.");
+      toast.warning("Caméra refusée — zone du haut vide.");
     }
 
     let micStream: MediaStream | null = null;
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     } catch {
-      toast.warning("Micro indisponible — enregistrement muet.");
+      toast.warning("Micro refusé — enregistrement muet.");
     }
 
-    // Hide overlay UI BEFORE first snapshot
+    // Hide overlays BEFORE first snapshot
     hideOverlayUI();
 
-    // Camera <video>
     if (camStream) {
       const v = document.createElement("video");
       v.srcObject = camStream;
@@ -231,39 +225,36 @@ const BoardRecorder = ({ containerRef }: Props) => {
     }
     if (micStream) micStream.getAudioTracks().forEach((t) => tracksRef.current.push(t));
 
-    // Composite canvas
     const canvas = document.createElement("canvas");
     canvas.width = TIKTOK_W;
     canvas.height = TIKTOK_H;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       toast.error("Canvas indisponible.");
-      cleanupResources();
+      cleanup();
       return;
     }
 
-    // Board snapshot loop (~10 fps)
+    // Snapshot the board only (~10fps) and cache the result.
     let boardSnap: HTMLCanvasElement | null = null;
     let snapInFlight = false;
 
     const snap = async () => {
-      if (!snapInFlight) {
+      if (!snapInFlight && containerRef.current) {
         snapInFlight = true;
         try {
-          const c = await toCanvas(boardEl, {
+          boardSnap = await toCanvas(containerRef.current, {
             cacheBust: false,
             pixelRatio: 1,
             skipFonts: true,
             backgroundColor: "#faf7f4",
             filter: (n: HTMLElement) => {
               if (!n || !(n as any).getAttribute) return true;
-              const v = (n as any).getAttribute?.("data-record-hide");
-              return v !== "true";
+              return (n as any).getAttribute?.("data-record-hide") !== "true";
             },
           });
-          boardSnap = c;
         } catch {
-          // ignore — keep last snapshot
+          // keep last good snap
         } finally {
           snapInFlight = false;
         }
@@ -279,6 +270,10 @@ const BoardRecorder = ({ containerRef }: Props) => {
 
       // TOP — camera (cover, mirrored)
       const cv = camVideoRef.current;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, TIKTOK_W, TIKTOK_TOP_H);
+      ctx.clip();
       if (cv && cv.readyState >= 2 && cv.videoWidth) {
         const vw = cv.videoWidth;
         const vh = cv.videoHeight;
@@ -287,25 +282,21 @@ const BoardRecorder = ({ containerRef }: Props) => {
         const dh = vh * scale;
         const dx = (TIKTOK_W - dw) / 2;
         const dy = (TIKTOK_TOP_H - dh) / 2;
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, TIKTOK_W, TIKTOK_TOP_H);
-        ctx.clip();
         ctx.translate(TIKTOK_W, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(cv, TIKTOK_W - dx - dw, dy, dw, dh);
-        ctx.restore();
       } else {
         ctx.fillStyle = "#1a1a1a";
         ctx.fillRect(0, 0, TIKTOK_W, TIKTOK_TOP_H);
-        ctx.fillStyle = "#555";
+        ctx.fillStyle = "#666";
         ctx.font = "80px system-ui, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("📷", TIKTOK_W / 2, TIKTOK_TOP_H / 2);
       }
+      ctx.restore();
 
-      // BOTTOM — board snapshot (contain, centered)
+      // BOTTOM — board snapshot (contain)
       ctx.fillStyle = "#faf7f4";
       ctx.fillRect(0, TIKTOK_TOP_H, TIKTOK_W, TIKTOK_BOT_H);
       if (boardSnap && boardSnap.width && boardSnap.height) {
@@ -323,7 +314,6 @@ const BoardRecorder = ({ containerRef }: Props) => {
     };
     rafRef.current = requestAnimationFrame(drawFrame);
 
-    // Build recording stream
     const videoStream = (canvas as any).captureStream(30) as MediaStream;
     const tracks: MediaStreamTrack[] = [...videoStream.getVideoTracks()];
     if (micStream) tracks.push(...micStream.getAudioTracks());
@@ -337,7 +327,7 @@ const BoardRecorder = ({ containerRef }: Props) => {
         : new MediaRecorder(finalStream);
     } catch {
       toast.error("Impossible de démarrer l'enregistrement.");
-      cleanupResources();
+      cleanup();
       return;
     }
 
@@ -350,7 +340,6 @@ const BoardRecorder = ({ containerRef }: Props) => {
     formatRef.current = "tiktok";
     setRecording(true);
     startTimer();
-    toast.success("Enregistrement TikTok démarré");
   };
 
   const finalize = (mime: string) => {
@@ -359,16 +348,13 @@ const BoardRecorder = ({ containerRef }: Props) => {
     const fmt = formatRef.current;
     const date = new Date().toISOString().slice(0, 10);
     const ext = mime.includes("mp4") ? "mp4" : "webm";
-    const fname =
-      fmt === "tiktok"
-        ? `scappio-tiktok-${date}.${ext}`
-        : `scappio-recording-${date}.${ext}`;
-    cleanupResources();
+    const fname = `scappio-${fmt}-${date}.${ext}`;
+    cleanup();
     setRecording(false);
     setElapsed(0);
     if (blob.size > 0) {
       downloadBlob(blob, fname);
-      toast.success("Enregistrement sauvegardé");
+      toast.success("Enregistrement terminé ✓");
     } else {
       toast.error("Enregistrement vide.");
     }
@@ -379,62 +365,67 @@ const BoardRecorder = ({ containerRef }: Props) => {
     if (rec && rec.state !== "inactive") {
       rec.stop();
     } else {
-      cleanupResources();
+      cleanup();
       setRecording(false);
     }
   };
 
-  const handleStart = () => {
-    setShowPicker(true);
-  };
-
-  const launch = () => {
+  const launch = (fmt: Format) => {
     setShowPicker(false);
-    if (format === "tiktok") void startTikTok();
+    if (fmt === "tiktok") void startTikTok();
     else void startStandard();
   };
 
   return (
     <>
-      {/* Recording outline */}
-      {recording && (
-        <div
-          data-record-hide="true"
-          className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-red-500/80 animate-pulse"
-        />
-      )}
-
-      {/* Timer */}
-      {recording && (
-        <div
-          data-record-hide="true"
-          className="absolute top-3 right-24 z-30 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/70 text-white text-xs font-mono"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-          {formatTime(elapsed)}
-        </div>
-      )}
-
-      {/* Record / Stop button */}
-      <button
-        type="button"
+      {/* ── Floating record/stop button — always visible (z 9999) ── */}
+      <div
         data-record-hide="true"
-        onClick={recording ? handleStop : handleStart}
-        title={recording ? "Arrêter l'enregistrement" : "Enregistrer"}
-        aria-label={recording ? "Arrêter l'enregistrement" : "Enregistrer"}
-        className={`absolute top-3 right-14 z-30 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md transition ${
-          recording
-            ? "bg-red-600 animate-pulse ring-2 ring-red-400/50"
-            : "bg-red-600 hover:bg-red-500"
-        }`}
+        className="fixed top-4 right-4 flex items-center gap-2"
+        style={{ zIndex: 9999 }}
       >
-        {recording ? <Square className="h-4 w-4 fill-white" /> : <Camera className="h-4 w-4" />}
-      </button>
+        {recording && (
+          <div className="flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1.5 text-white text-xs font-mono shadow-lg">
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            {formatTime(elapsed)}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={recording ? handleStop : () => setShowPicker(true)}
+          aria-label={recording ? "Arrêter l'enregistrement" : "Enregistrer"}
+          title={recording ? "Arrêter l'enregistrement" : "Enregistrer"}
+          className={`flex items-center gap-2 rounded-full pl-3 pr-4 h-10 text-white font-medium shadow-xl transition ${
+            recording
+              ? "bg-red-600 hover:bg-red-500 animate-pulse ring-2 ring-red-400/50"
+              : "bg-red-600 hover:bg-red-500"
+          }`}
+        >
+          {recording ? (
+            <>
+              <Square className="h-4 w-4 fill-white" />
+              <span className="text-sm">Stop</span>
+            </>
+          ) : (
+            <>
+              <Camera className="h-4 w-4" />
+              <span className="text-sm">Enregistrer</span>
+            </>
+          )}
+        </button>
+      </div>
 
-      {/* Format picker */}
+      {/* ── Format picker modal ── */}
       {showPicker && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPicker(false)} />
+        <div
+          data-record-hide="true"
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{ zIndex: 10000 }}
+        >
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowPicker(false)}
+          />
           <div className="relative w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl">
             <button
               type="button"
@@ -444,67 +435,42 @@ const BoardRecorder = ({ containerRef }: Props) => {
             >
               <X className="h-4 w-4" />
             </button>
-            <h3 className="text-base font-semibold">Format d'enregistrement</h3>
-            <p className="text-xs text-muted-foreground">Choisis un format puis lance l'enregistrement.</p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <h3 className="text-lg font-semibold">Choisir le format</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Le format choisi démarre l'enregistrement immédiatement.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setFormat("standard")}
-                className={`flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition ${
-                  format === "standard"
-                    ? "border-[#F97316] bg-[#fff3eb]"
-                    : "border-border bg-card hover:border-[#F97316]/50"
-                }`}
+                onClick={() => launch("standard")}
+                className="flex flex-col items-start gap-2 rounded-xl border-2 border-border bg-card p-4 text-left transition hover:border-[#F97316] hover:bg-[#fff3eb]"
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                    format === "standard" ? "bg-[#F97316] text-white" : "bg-muted"
-                  }`}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-white"
+                  style={{ background: ORANGE }}
                 >
                   <Monitor className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">🖥️ Standard 16:9</div>
-                  <div className="text-xs text-muted-foreground">Capture l'onglet courant</div>
+                  <div className="text-sm font-semibold">🖥️ Standard</div>
+                  <div className="text-xs text-muted-foreground">16:9 horizontal</div>
                 </div>
               </button>
               <button
                 type="button"
-                onClick={() => setFormat("tiktok")}
-                className={`flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition ${
-                  format === "tiktok"
-                    ? "border-[#F97316] bg-[#fff3eb]"
-                    : "border-border bg-card hover:border-[#F97316]/50"
-                }`}
+                onClick={() => launch("tiktok")}
+                className="flex flex-col items-start gap-2 rounded-xl border-2 border-border bg-card p-4 text-left transition hover:border-[#F97316] hover:bg-[#fff3eb]"
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                    format === "tiktok" ? "bg-[#F97316] text-white" : "bg-muted"
-                  }`}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-white"
+                  style={{ background: ORANGE }}
                 >
                   <Smartphone className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">📱 TikTok 9:16</div>
-                  <div className="text-xs text-muted-foreground">Caméra + board vertical</div>
+                  <div className="text-sm font-semibold">📱 TikTok / Reels</div>
+                  <div className="text-xs text-muted-foreground">9:16 avec facecam</div>
                 </div>
-              </button>
-            </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowPicker(false)}
-                className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={launch}
-                className="rounded-md px-4 py-2 text-sm font-semibold text-white"
-                style={{ background: ORANGE }}
-              >
-                Démarrer l'enregistrement
               </button>
             </div>
           </div>
