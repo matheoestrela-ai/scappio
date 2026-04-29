@@ -437,7 +437,7 @@ const Index = () => {
               <motion.div
                 {...inViewProps}
                 variants={gridContainer}
-                className="relative grid gap-12 md:gap-y-20 md:gap-x-24 md:grid-cols-2 md:grid-rows-3"
+                className="relative grid gap-16 md:gap-y-36 md:gap-x-56 md:grid-cols-2 md:grid-rows-3"
               >
                 {/* Spiral arrows overlay */}
                 <svg
@@ -451,12 +451,12 @@ const Index = () => {
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
                   </defs>
-                  {/* 1 (haut-droite) -> 2 (milieu-gauche) : spirale qui contourne par la droite puis revient à gauche */}
-                  <path d="M 70,22 C 98,30 98,55 75,40 C 55,30 30,38 22,48" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 2 (milieu-gauche) -> 3 (milieu-droite) : spirale qui descend puis remonte */}
-                  <path d="M 30,55 C 45,72 55,72 50,58 C 48,50 60,52 70,55" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 3 (milieu-droite) -> 4 (bas-gauche) : spirale qui passe par la droite et redescend */}
-                  <path d="M 78,62 C 98,72 98,92 70,82 C 50,75 35,82 25,88" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 1 (haut-droite) -> 2 (milieu-gauche) : large arc qui passe loin à droite */}
+                  <path d="M 78,18 C 110,28 108,52 80,50 C 55,48 30,44 18,52" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 2 (milieu-gauche) -> 3 (milieu-droite) : grand arc qui descend bas */}
+                  <path d="M 22,58 C 25,80 50,82 60,72 C 68,64 75,60 78,58" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 3 (milieu-droite) -> 4 (bas-gauche) : large arc passant loin à droite puis vers le bas-gauche */}
+                  <path d="M 82,68 C 112,78 108,98 78,92 C 55,88 35,90 22,90" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
                 </svg>
 
                 {steps.map((step, i) => (
