@@ -59,7 +59,11 @@ const Recordings = () => {
     const a = document.createElement("a");
     a.href = url;
     const ext = rec.mimeType.includes("mp4") ? "mp4" : "webm";
-    a.download = `${rec.name.replace(/[^a-z0-9-_ ]/gi, "_")}.${ext}`;
+    const base =
+      rec.format === "tiktok"
+        ? `scappio-tiktok-${new Date(rec.createdAt).toISOString().slice(0, 10)}`
+        : rec.name.replace(/[^a-z0-9-_ ]/gi, "_");
+    a.download = `${base}.${ext}`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
@@ -126,13 +130,17 @@ const Recordings = () => {
             <div className="space-y-4">
               {selected && selectedUrl ? (
                 <>
-                  <div className="rounded-2xl overflow-hidden border border-border bg-black shadow-elegant">
+                  <div
+                    className={`rounded-2xl overflow-hidden border border-border bg-black shadow-elegant ${
+                      selected.format === "tiktok" ? "mx-auto max-w-[360px]" : ""
+                    }`}
+                  >
                     <video
                       key={selected.id}
                       src={selectedUrl}
                       controls
                       autoPlay
-                      className="w-full aspect-video"
+                      className={`w-full ${selected.format === "tiktok" ? "aspect-[9/16]" : "aspect-video"}`}
                     />
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -164,30 +172,44 @@ const Recordings = () => {
 
             {/* List */}
             <div className="space-y-2">
-              {items.map((rec) => (
-                <button
-                  key={rec.id}
-                  onClick={() => setSelectedId(rec.id)}
-                  className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition ${
-                    selectedId === rec.id
-                      ? "border-primary bg-primary/5 shadow-sm"
-                      : "border-border hover:border-primary/50 bg-card"
-                  }`}
-                >
-                  <div className="relative h-14 w-20 shrink-0 rounded-md bg-muted overflow-hidden flex items-center justify-center">
-                    <Play className="h-5 w-5 text-muted-foreground" />
-                    <span className="absolute bottom-0.5 right-1 text-[10px] font-mono bg-black/70 text-white px-1 rounded">
-                      {formatDuration(rec.duration)}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{rec.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(rec.createdAt).toLocaleDateString("fr-FR")}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              {items.map((rec) => {
+                const isTikTok = rec.format === "tiktok";
+                return (
+                  <button
+                    key={rec.id}
+                    onClick={() => setSelectedId(rec.id)}
+                    className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition ${
+                      selectedId === rec.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/50 bg-card"
+                    }`}
+                  >
+                    <div
+                      className={`relative shrink-0 rounded-md bg-muted overflow-hidden flex items-center justify-center ${
+                        isTikTok ? "h-16 w-9" : "h-14 w-20"
+                      }`}
+                    >
+                      <Play className="h-5 w-5 text-muted-foreground" />
+                      <span className="absolute bottom-0.5 right-1 text-[10px] font-mono bg-black/70 text-white px-1 rounded">
+                        {formatDuration(rec.duration)}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="truncate text-sm font-medium">{rec.name}</p>
+                        {isTikTok && (
+                          <span className="shrink-0 rounded bg-[#F97316] px-1.5 py-0.5 text-[9px] font-bold text-white">
+                            TikTok
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(rec.createdAt).toLocaleDateString("fr-FR")}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
