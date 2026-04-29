@@ -65,7 +65,7 @@ const Auth = () => {
       <header className="container py-6">
         <Link to="/" className="flex items-center gap-2 w-fit">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary shadow-glow" />
-          <span className="text-xl font-semibold tracking-tight">gribouille</span>
+          <span className="text-xl font-semibold tracking-tight">scappio</span>
         </Link>
       </header>
 
