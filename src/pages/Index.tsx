@@ -8,15 +8,12 @@ import {
   ArrowRight,
   Menu,
   X,
-  Mic,
   Camera,
-  FileText,
   Wand2,
   Video,
   Send,
   Smartphone,
   Layout,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
