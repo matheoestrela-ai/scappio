@@ -606,15 +606,15 @@ const Index = () => {
 
       {/* Features — bento asymmetric grid, dark grey icons */}
       <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut. Rien de plus.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Une vraie alternative légère aux outils de whiteboard.</p>
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut pour publier sans limite.</h2>
+        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être — en un seul.</p>
 
         <motion.div
           {...inViewProps}
           variants={gridContainer}
           className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
         >
-          {/* Row 1: Featured (2/3) + small (1/3) */}
+          {/* Row 1: Featured (2/3) — Enregistreur écran + téléprompter */}
           <motion.div
             variants={cardItem}
             className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
@@ -623,17 +623,25 @@ const Index = () => {
               className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
               style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
             >
-              UNIQUE
+              UNIQUE SUR LE MARCHÉ
             </span>
-            <div>
-              <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-              <h3 className="mt-4 text-2xl font-bold text-foreground">Capture vocale → Board</h3>
-              <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                Dicte tes idées au micro. L'IA transcrit et structure, parfait pour penser à voix haute. Aucun outil ne fait ça aussi vite.
-              </p>
-            </div>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
+            <div className="grid gap-6 md:grid-cols-[1fr_280px] md:items-center">
+              <div>
+                <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+                <h3 className="mt-4 text-2xl font-bold text-foreground">Filme devant ton board. Ton script défile. Tes abonnés ne voient rien.</h3>
+                <p className="mt-3 text-base text-muted-foreground max-w-xl">
+                  Enregistre ta présentation avec ta caméra. Le téléprompter est superposé sur l'écran — invisible dans la capture. Export direct TikTok vertical, Reels carré ou YouTube horizontal.
+                </p>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
+                </div>
+              </div>
+              <div
+                className="flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-xs md:text-sm font-medium text-center px-3"
+                style={{ width: "100%", maxWidth: "280px", height: "200px", borderRadius: "12px" }}
+              >
+                Interface enregistreur + téléprompter
+              </div>
             </div>
           </motion.div>
 
@@ -649,8 +657,8 @@ const Index = () => {
 
           {/* Row 2: 3 equal cards */}
           {[
-            { Icon: Lightbulb, title: "Suggestions IA", desc: "L'IA propose des idées qui manquent, des connexions logiques et des sous-thèmes pertinents." },
-            { Icon: Wand2, title: "Auto-improve", desc: "Un clic et l'IA restructure ton board, ajoute les liens manquants." },
+            { Icon: Mic, title: "Vocal → Board", desc: "Parle librement 30 secondes. L'IA transcrit, hiérarchise et génère ton board. Le before/after le plus viral du marché." },
+            { Icon: Wand2, title: "Script IA", desc: "L'agent transforme ta mindmap en script prêt à lire. Naturel, structuré, dans ta logique." },
             { Icon: Pencil, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
           ].map(({ Icon, title, desc }, i) => (
             <motion.div
@@ -667,7 +675,7 @@ const Index = () => {
           {/* Row 3: remaining cards */}
           {[
             { Icon: MousePointer2, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { Icon: Download, title: "Export PDF & PNG", desc: "Exporte ton board en haute qualité ou partage un lien public." },
+            { Icon: Download, title: "Export multi-format", desc: "TikTok, Reels, YouTube. Un board. Toutes les plateformes. En 1 clic." },
             { Icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
           ].map(({ Icon, title, desc }, i) => (
             <motion.div
