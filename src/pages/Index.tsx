@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, FormEvent } from "react";
-import { motion, useScroll, useTransform, useReducedMotion, Variants } from "framer-motion";
+import { motion, useReducedMotion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,170 +9,253 @@ import {
   Menu,
   X,
   Mic,
-  Image as ImageIcon,
-  PenLine,
-  Quote,
-  Lightbulb,
+  Camera,
+  FileText,
   Wand2,
-  Pencil,
-  MousePointer2,
-  Download,
+  Video,
+  Send,
+  Smartphone,
+  Layout,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Typewriter hook
-const PLACEHOLDERS = [
-  "Décris ton idée, colle tes notes...",
-  "Résume ta dernière réunion...",
-  "Dis-le à voix haute ou en photo...",
-];
+/* ─────────────────────────────────────────────────────────────
+   Brand palette (per design brief — purple)
+   ───────────────────────────────────────────────────────────── */
+const PURPLE = "#6d28d9";
+const PURPLE_DARK = "#5b21b6";
+const INDIGO = "#4f46e5";
+const TEXT_BODY = "#374151";
+const TEXT_HEADING = "#0f172a";
+const BORDER_SOFT = "rgba(109, 40, 217, 0.1)";
+const CARD_SHADOW = "0 4px 32px rgba(109, 40, 217, 0.08)";
+const CARD_SHADOW_HOVER = "0 12px 48px rgba(109, 40, 217, 0.16)";
 
-function useTypewriter(reducedMotion: boolean) {
-  const [text, setText] = useState(PLACEHOLDERS[0]);
-  useEffect(() => {
-    if (reducedMotion) {
-      setText(PLACEHOLDERS[0]);
-      return;
-    }
-    let phraseIdx = 0;
-    let charIdx = PLACEHOLDERS[0].length;
-    let typing = false;
-    let timeout: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      const phrase = PLACEHOLDERS[phraseIdx];
-      if (typing) {
-        charIdx += 1;
-        setText(phrase.slice(0, charIdx));
-        if (charIdx >= phrase.length) {
-          typing = false;
-          timeout = setTimeout(tick, 2000);
-          return;
-        }
-        timeout = setTimeout(tick, 60);
-      } else {
-        charIdx -= 1;
-        setText(phrase.slice(0, Math.max(0, charIdx)));
-        if (charIdx <= 0) {
-          typing = true;
-          phraseIdx = (phraseIdx + 1) % PLACEHOLDERS.length;
-          timeout = setTimeout(tick, 200);
-          return;
-        }
-        timeout = setTimeout(tick, 30);
-      }
-    };
-    timeout = setTimeout(tick, 2000);
-    return () => clearTimeout(timeout);
-  }, [reducedMotion]);
-  return text;
-}
-
-// Variants
+/* ─────────────────────────────────────────────────────────────
+   Motion variants
+   ───────────────────────────────────────────────────────────── */
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
 };
-
 const heroContainer: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.15 } },
+  show: { transition: { staggerChildren: 0.12 } },
 };
-
 const sectionFade: Variants = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 32 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
-
 const gridContainer: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.1 } },
+  show: { transition: { staggerChildren: 0.08 } },
 };
-
 const cardItem: Variants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
-// Brand SVG logos for social proof — neutral grey
-const BRAND_LOGOS: { name: string; svg: JSX.Element }[] = [
-  {
-    name: "Notion",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279v-6.44l-1.215-.139c-.093-.514.28-.887.747-.933zM1.936 1.035l13.31-.98c1.634-.14 2.055-.047 3.082.7l4.249 2.986c.7.513.934.653.934 1.213v16.378c0 1.026-.373 1.634-1.68 1.726l-15.458.934c-.98.047-1.448-.093-1.962-.747L1.309 21.43c-.56-.747-.793-1.306-.793-1.96V2.667c0-.839.374-1.54 1.42-1.632z"/>
-      </svg>
-    ),
-  },
-  {
-    name: "Figma",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.015-4.49-4.491S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.015-4.49-4.491s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.491 4.49-4.491h4.588v4.441c0 2.503-2.039 4.54-4.563 4.54zm-.024-7.51c-1.652 0-2.995 1.355-3.019 3.005-.012 1.677 1.342 3.043 3.019 3.043 1.714 0 3.105-1.378 3.105-3.068v-2.98H8.148zm7.704 0h-.098c-2.476 0-4.49-2.015-4.49-4.49s2.014-4.491 4.49-4.491h.098c2.476 0 4.49 2.015 4.49 4.491s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z"/>
-      </svg>
-    ),
-  },
-  {
-    name: "Linear",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M.403 13.795a11.945 11.945 0 0 0 9.802 9.802L.402 13.795zM.008 8.838 15.16 23.992c.83-.156 1.633-.395 2.394-.71L.718 6.444a11.94 11.94 0 0 0-.71 2.394zm2.273-5.336L20.49 21.71a12.067 12.067 0 0 0 1.86-1.595L3.876 1.642a12.106 12.106 0 0 0-1.595 1.86zM6.86.488A11.945 11.945 0 0 1 23.512 17.14L6.86.488z"/>
-      </svg>
-    ),
-  },
-  {
-    name: "Slack",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.522H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.522h-2.522V8.834zm-1.268 0a2.528 2.528 0 0 1-2.523 2.522 2.527 2.527 0 0 1-2.52-2.522V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
-      </svg>
-    ),
-  },
-  {
-    name: "Trello",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M21.147 0H2.853A2.86 2.86 0 0 0 0 2.853v18.294A2.86 2.86 0 0 0 2.853 24h18.294A2.86 2.86 0 0 0 24 21.147V2.853A2.86 2.86 0 0 0 21.147 0zM10.34 18.13a.953.953 0 0 1-.953.953h-4.21a.954.954 0 0 1-.954-.953V5.43a.954.954 0 0 1 .954-.953h4.21a.954.954 0 0 1 .953.953zm9.431-5.962a.953.953 0 0 1-.953.954h-4.21a.954.954 0 0 1-.953-.954V5.43a.953.953 0 0 1 .953-.953h4.21a.953.953 0 0 1 .953.953z"/>
-      </svg>
-    ),
-  },
-  {
-    name: "Asana",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M18.78 12.653c-2.882 0-5.22 2.336-5.22 5.22 0 2.882 2.338 5.22 5.22 5.22 2.884 0 5.22-2.338 5.22-5.22 0-2.884-2.336-5.22-5.22-5.22zm-13.56.001C2.337 12.654 0 14.991 0 17.874c.001 2.882 2.338 5.22 5.22 5.22 2.884 0 5.22-2.338 5.22-5.22 0-2.883-2.336-5.22-5.22-5.22zM17.22 6.126c0 2.883-2.337 5.22-5.22 5.22-2.883 0-5.22-2.337-5.22-5.22S9.117.906 12 .906c2.883 0 5.22 2.337 5.22 5.22z"/>
-      </svg>
-    ),
-  },
-  {
-    name: "Whimsical",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <circle cx="6" cy="12" r="3.5" />
-        <circle cx="18" cy="12" r="3.5" />
-        <circle cx="12" cy="6" r="3.5" />
-        <circle cx="12" cy="18" r="3.5" />
-      </svg>
-    ),
-  },
-  {
-    name: "FigJam",
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm2 4v2h10V8H7zm0 4v2h7v-2H7z"/>
-      </svg>
-    ),
-  },
-];
+/* ─────────────────────────────────────────────────────────────
+   Reusable bits
+   ───────────────────────────────────────────────────────────── */
+const SectionTitle = ({
+  children,
+  light = false,
+}: {
+  children: React.ReactNode;
+  light?: boolean;
+}) => (
+  <div className="flex flex-col items-center text-center">
+    <h2
+      className="font-bold tracking-tight"
+      style={{
+        color: light ? "#ffffff" : TEXT_HEADING,
+        fontSize: "clamp(28px, 4.2vw, 42px)",
+        lineHeight: 1.15,
+        letterSpacing: "-0.02em",
+      }}
+    >
+      {children}
+    </h2>
+    <span
+      aria-hidden
+      className="mt-5 block rounded-full"
+      style={{
+        width: 48,
+        height: 4,
+        backgroundColor: light ? "#ffffff" : PURPLE,
+        opacity: light ? 0.9 : 1,
+      }}
+    />
+  </div>
+);
 
+const PrimaryButton = ({
+  children,
+  onClick,
+  type = "button",
+  className = "",
+  asLink,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  type?: "button" | "submit";
+  className?: string;
+  asLink?: string;
+}) => {
+  const base =
+    "inline-flex items-center justify-center gap-2 font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]";
+  const style: React.CSSProperties = {
+    backgroundColor: PURPLE,
+    padding: "14px 36px",
+    borderRadius: 12,
+    fontSize: 16,
+    boxShadow: "0 8px 24px rgba(109, 40, 217, 0.32)",
+  };
+  if (asLink) {
+    return (
+      <Link
+        to={asLink}
+        className={`${base} ${className}`}
+        style={style}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PURPLE_DARK)}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PURPLE)}
+      >
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      className={`${base} ${className}`}
+      style={style}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PURPLE_DARK)}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PURPLE)}
+    >
+      {children}
+    </button>
+  );
+};
+
+const GhostButton = ({
+  children,
+  asLink,
+  href,
+}: {
+  children: React.ReactNode;
+  asLink?: string;
+  href?: string;
+}) => {
+  const style: React.CSSProperties = {
+    border: `2px solid ${PURPLE}`,
+    color: PURPLE,
+    padding: "12px 32px",
+    borderRadius: 12,
+    fontSize: 16,
+    fontWeight: 600,
+    backgroundColor: "transparent",
+    transition: "all 0.2s ease",
+  };
+  const cls = "inline-flex items-center justify-center gap-2 hover:bg-[#6d28d9]/5";
+  if (href) return <a href={href} className={cls} style={style}>{children}</a>;
+  if (asLink) return <Link to={asLink} className={cls} style={style}>{children}</Link>;
+  return <button className={cls} style={style}>{children}</button>;
+};
+
+/* Card component with hover lift */
+const Card = ({
+  children,
+  className = "",
+  style = {},
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) => (
+  <div
+    className={`transition-all duration-[250ms] ease-out hover:-translate-y-1 ${className}`}
+    style={{
+      backgroundColor: "#ffffff",
+      border: `1px solid ${BORDER_SOFT}`,
+      borderRadius: 20,
+      boxShadow: CARD_SHADOW,
+      padding: 32,
+      ...style,
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = CARD_SHADOW_HOVER)}
+    onMouseLeave={(e) => (e.currentTarget.style.boxShadow = CARD_SHADOW)}
+  >
+    {children}
+  </div>
+);
+
+const IconBox = ({ children }: { children: React.ReactNode }) => (
+  <div
+    className="flex items-center justify-center"
+    style={{
+      width: 52,
+      height: 52,
+      backgroundColor: "rgba(109, 40, 217, 0.1)",
+      borderRadius: 14,
+      color: PURPLE,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const MockBlock = ({
+  icon,
+  label,
+  height = 260,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  height?: number;
+}) => (
+  <div
+    className="flex flex-col items-center justify-center gap-3 text-white"
+    style={{
+      background: `linear-gradient(135deg, ${PURPLE} 0%, ${INDIGO} 100%)`,
+      borderRadius: 16,
+      height,
+      width: "100%",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 12px 36px rgba(109,40,217,0.28)",
+    }}
+  >
+    <div
+      className="flex items-center justify-center"
+      style={{
+        width: 64,
+        height: 64,
+        borderRadius: 18,
+        backgroundColor: "rgba(255,255,255,0.18)",
+      }}
+    >
+      {icon}
+    </div>
+    <div style={{ fontWeight: 500, fontSize: 15, opacity: 0.95 }}>{label}</div>
+  </div>
+);
+
+/* ─────────────────────────────────────────────────────────────
+   Page
+   ───────────────────────────────────────────────────────────── */
 const Index = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [scrolled, setScrolled] = useState(false);
   const reducedMotion = useReducedMotion() ?? false;
-  const placeholder = useTypewriter(reducedMotion);
 
-  const { scrollY } = useScroll();
-  const gridY = useTransform(scrollY, [0, 1000], [0, 200]);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -187,605 +270,512 @@ const Index = () => {
   const inViewProps = {
     initial: "hidden" as const,
     whileInView: "show" as const,
-    viewport: { once: true, margin: "-100px" },
+    viewport: { once: true, margin: "-80px" },
   };
 
+  // Section padding (104 desktop / 64 mobile)
+  const sectionPad = "py-16 md:py-[104px]";
+
   return (
-    <div className="relative min-h-screen pb-24 md:pb-0" style={{ backgroundColor: "#faf7f4" }}>
-      {/* FigJam-style fine grid background (parallax) */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
+    <div className="relative min-h-screen pb-24 md:pb-0" style={{ backgroundColor: "#ffffff", color: TEXT_BODY }}>
+      {/* ─── Sticky nav ─── */}
+      <header
+        className="sticky top-0 z-50 transition-all duration-300"
         style={{
-          y: reducedMotion ? 0 : gridY,
-          backgroundImage:
-            "linear-gradient(to right, rgba(232,224,216,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(232,224,216,0.5) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-          maskImage: "linear-gradient(180deg, black, black 85%, transparent)",
-          WebkitMaskImage: "linear-gradient(180deg, black, black 85%, transparent)",
+          backgroundColor: scrolled ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.6)",
+          backdropFilter: "saturate(180%) blur(14px)",
+          WebkitBackdropFilter: "saturate(180%) blur(14px)",
+          borderBottom: scrolled ? `1px solid ${BORDER_SOFT}` : "1px solid transparent",
         }}
-      />
-      <div className="relative z-10">
-      {/* Nav */}
-      <header className="container flex items-center justify-between py-5 md:py-6">
-        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
-          <span className="text-xl md:text-2xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
-        </Link>
+      >
+        <div className="container flex items-center justify-between py-4">
+          <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
+            <span className="text-xl md:text-2xl font-extrabold tracking-tight" style={{ color: TEXT_HEADING }}>
+              <span style={{ color: PURPLE }}>scapp</span>io
+            </span>
+          </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-3">
-          <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">Comment ça marche</a>
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Fonctionnalités</a>
-          <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Témoignages</a>
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition">Connexion</Link>
-          <Button asChild size="sm" className="bg-primary text-primary-foreground shadow-glow hover:opacity-90 btn-shimmer">
-            <Link to="/auth">Commencer gratuitement</Link>
-          </Button>
-        </nav>
+          <nav className="hidden md:flex items-center gap-7">
+            <a href="#how" className="text-sm font-medium hover:opacity-70 transition" style={{ color: TEXT_BODY }}>Comment ça marche</a>
+            <a href="#features" className="text-sm font-medium hover:opacity-70 transition" style={{ color: TEXT_BODY }}>Fonctionnalités</a>
+            <a href="#stats" className="text-sm font-medium hover:opacity-70 transition" style={{ color: TEXT_BODY }}>Gain de temps</a>
+            <Link to="/auth" className="text-sm font-medium hover:opacity-70 transition" style={{ color: TEXT_BODY }}>Connexion</Link>
+            <PrimaryButton asLink="/auth" className="!py-2.5 !px-5 !text-sm">
+              Essayer gratuitement
+            </PrimaryButton>
+          </nav>
 
-        {/* Mobile actions */}
-        <div className="md:hidden flex items-center gap-2">
-          <Button asChild size="sm" variant="outline" className="h-10">
-            <Link to="/auth">Connexion</Link>
-          </Button>
-          <button
-            aria-label="Menu"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <PrimaryButton asLink="/auth" className="!py-2 !px-4 !text-sm">Essayer</PrimaryButton>
+            <button
+              aria-label="Menu"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg"
+              style={{ border: `1px solid ${BORDER_SOFT}`, backgroundColor: "#fff" }}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+
+        {menuOpen && (
+          <div className="md:hidden container pb-4">
+            <div className="rounded-2xl p-3 flex flex-col gap-1 text-base" style={{ border: `1px solid ${BORDER_SOFT}`, backgroundColor: "#fff", boxShadow: CARD_SHADOW }}>
+              <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-[#faf8ff] transition">Comment ça marche</a>
+              <a href="#features" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-[#faf8ff] transition">Fonctionnalités</a>
+              <a href="#stats" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-[#faf8ff] transition">Gain de temps</a>
+              <Link to="/auth" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-[#faf8ff] transition">Connexion</Link>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Mobile menu drawer */}
-      {menuOpen && (
-        <div className="md:hidden container pb-4">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-elegant flex flex-col gap-1 text-base">
-            <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Comment ça marche</a>
-            <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Le problème</a>
-            <a href="#features" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Fonctionnalités</a>
-            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Témoignages</a>
-            <Link to="/auth" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Connexion</Link>
-          </div>
+      {/* ─── HERO ─── */}
+      <section
+        className="relative overflow-hidden"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(109,40,217,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(109,40,217,0.07) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(900px 500px at 50% -10%, rgba(109,40,217,0.18), transparent 60%)",
+          }}
+        />
+        <div className="container relative pt-16 md:pt-28 pb-16 md:pb-[104px] text-center">
+          <motion.div initial="hidden" animate="show" variants={heroContainer}>
+            <motion.h1
+              variants={fadeUp}
+              className="mx-auto max-w-4xl"
+              style={{
+                fontSize: "clamp(36px, 6vw, 58px)",
+                fontWeight: 800,
+                lineHeight: 1.05,
+                letterSpacing: "-0.025em",
+                color: TEXT_HEADING,
+              }}
+            >
+              Crée du contenu illimité.
+              <br />
+              <span style={{ color: PURPLE }}>Sans jamais manquer d'idées.</span>
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUp}
+              className="mx-auto mt-6 max-w-2xl"
+              style={{ fontSize: 18, lineHeight: 1.7, color: TEXT_BODY }}
+            >
+              Capture une idée en 10 secondes, transforme-la en vidéo prête à publier en 12 minutes.
+              Scappio remplace Miro, Loom, CapCut — et ton blocage créatif.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <PrimaryButton asLink="/auth">
+                Essayer gratuitement <ArrowRight className="h-4 w-4" />
+              </PrimaryButton>
+              <GhostButton href="#how">Voir comment ça marche</GhostButton>
+            </motion.div>
+
+            <motion.p variants={fadeUp} className="mt-4 text-sm" style={{ color: "#6b7280" }}>
+              Pas de carte bancaire requise
+            </motion.p>
+
+            {/* Hero visual mock */}
+            <motion.div variants={fadeUp} className="mx-auto mt-14 md:mt-16 max-w-3xl">
+              <MockBlock
+                icon={<Layout className="h-8 w-8 text-white" />}
+                label="Aperçu de l'app Scappio"
+                height={320}
+              />
+            </motion.div>
+          </motion.div>
         </div>
-      )}
-
-      {/* Hero */}
-      <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
-        <motion.div initial="hidden" animate="show" variants={heroContainer}>
-          <motion.div variants={fadeUp} className="flex justify-center mb-5 md:mb-6">
-            <span
-              className="inline-flex items-center rounded-full border border-border bg-card/80 backdrop-blur px-4 py-1.5 text-xs md:text-sm font-medium text-foreground shadow-elegant"
-            >
-              ⚡ Du contenu illimité. Sans travailler plus.
-            </span>
-          </motion.div>
-          <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
-            <span className="block">
-              Transforme tes{" "}
-              <span className="relative inline-block">
-                <span
-                  className="inline-flex whitespace-nowrap align-baseline text-primary font-medium italic leading-none -rotate-[4deg] translate-y-[0.08em] text-[1.16em] sm:text-[1.14em] md:text-[1.18em]"
-                  style={{ fontFamily: "'Bradley Hand', 'Segoe Print', 'Comic Sans MS', 'Caveat', cursive" }}
-                >
-                  idées
-                </span>
-                <svg
-                  aria-hidden
-                  viewBox="0 0 200 14"
-                  preserveAspectRatio="none"
-                  className="absolute left-0 right-0 -bottom-2 w-full h-3 pointer-events-none"
-                >
-                  <path
-                    d="M2 8 C 50 2, 150 2, 198 8"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    className="animate-underline-draw"
-                  />
-                </svg>
-              </span>
-              {" "}en vidéos publiées.
-            </span>
-            <span className="block mt-1 sm:mt-1.5 md:mt-2">En <span style={{ color: "#e8732a", fontWeight: 900 }}>15 minutes</span>.</span>
-          </motion.h1>
-          <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-            Tu parles de ton idée. Scappio structure ton board, écrit ton script et prépare ton téléprompter. Tu filmes. Tu exportes. Tu recommences.
-          </motion.p>
-
-          {/* Chat-style prompt bar */}
-          <motion.form
-            variants={fadeUp}
-            onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget as HTMLFormElement);
-              const value = String(fd.get("prompt") || "").trim();
-              if (!value) {
-                toast.error("Écris quelque chose pour commencer");
-                return;
-              }
-              toast.success("On t'emmène créer ton board !");
-              window.location.href = "/auth";
-            }}
-            className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
-          >
-            <PenLine className="ml-2 h-5 w-5 text-muted-foreground shrink-0" />
-            <input
-              name="prompt"
-              type="text"
-              placeholder={placeholder}
-              className="flex-1 bg-transparent border-0 outline-none text-base placeholder:text-muted-foreground px-2 py-2"
-            />
-            <Button type="submit" size="sm" className="bg-primary text-primary-foreground shadow-glow hover:opacity-90">
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </motion.form>
-
-          <motion.div variants={fadeUp} className="mt-5 md:mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button asChild size="lg" className="w-full sm:w-auto bg-primary text-primary-foreground shadow-glow hover:opacity-90 btn-shimmer">
-              <Link to="/auth">
-                Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-              <a href="#how">Voir comment ça marche</a>
-            </Button>
-          </motion.div>
-
-          <motion.p
-            variants={fadeUp}
-            className="mt-5 text-center text-muted-foreground"
-            style={{ fontSize: "14px" }}
-          >
-            🎙️ Vocal → Board · 📸 Photo → Board · 🎬 Script + Vidéo prêt · ✨ Sans Miro. Sans Loom. Sans CapCut.
-          </motion.p>
-
-          <motion.div
-            variants={fadeUp}
-            className="mx-auto mt-8 md:mt-10 w-full max-w-[700px]"
-          >
-            <div
-              className="w-full flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
-              style={{ height: "min(700px, 56vw)", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
-            >
-              Capture d'écran app
-            </div>
-          </motion.div>
-
-        </motion.div>
-
-        {/* Mockup transformation */}
-        <motion.div
-          {...inViewProps}
-          variants={sectionFade}
-          className="mx-auto mt-12 md:mt-16 max-w-5xl rounded-2xl md:rounded-3xl border border-border bg-gradient-card p-2 md:p-3 shadow-elegant"
-        >
-          <div className="rounded-xl md:rounded-2xl bg-gradient-board p-4 md:p-10">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1.4fr] items-center gap-6 md:gap-8">
-              <div className="flex flex-col gap-3">
-                <motion.div
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.3 }}
-                  className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node"
-                >
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
-                    <Mic className="h-3.5 w-3.5 text-primary" /> Note vocale · 0:08
-                  </div>
-                  <div className="flex items-end gap-1 h-8">
-                    {[6, 12, 20, 14, 28, 22, 16, 24, 10, 18, 26, 14, 8, 20, 12].map((h, i) => (
-                      <span key={i} className="w-1.5 rounded-full bg-primary" style={{ height: `${h}px` }} />
-                    ))}
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="rounded-2xl bg-card border border-border p-4 md:p-5 text-left shadow-node"
-                >
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
-                    <ImageIcon className="h-3.5 w-3.5 text-primary" /> Photo de tes notes
-                  </div>
-                  <div className="space-y-1 text-sm text-foreground/80" style={{ fontFamily: "'Comic Sans MS', 'Bradley Hand', cursive" }}>
-                    <p>→ Lancer beta</p>
-                    <p>· landing fr</p>
-                    <p>· waitlist · témoins</p>
-                  </div>
-                </motion.div>
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.4, delay: 0.4 }}
-                className="flex md:flex-col items-center justify-center gap-2 text-primary"
-              >
-                <Sparkles className="h-5 w-5 animate-sparkle-spin" />
-                <ArrowRight className="h-5 w-5" />
-              </motion.div>
-
-              <motion.div
-                {...inViewProps}
-                variants={{
-                  hidden: {},
-                  show: { transition: { staggerChildren: 0.15, delayChildren: 0.8 } },
-                }}
-                className="flex flex-col items-center gap-4 md:gap-5"
-              >
-                <motion.div
-                  variants={{ hidden: { scale: 0, opacity: 0 }, show: { scale: 1, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } } }}
-                  className="rounded-2xl px-6 py-3 text-primary-foreground text-sm md:text-lg font-semibold shadow-node bg-primary"
-                >
-                  Lancer la beta
-                </motion.div>
-                <motion.div
-                  variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.4 } } }}
-                  className="flex gap-10 md:gap-16 -my-1"
-                >
-                  <span className="block h-4 w-px bg-primary/40" />
-                  <span className="block h-4 w-px bg-primary/40" />
-                  <span className="block h-4 w-px bg-primary/40" />
-                </motion.div>
-                <div className="flex items-center justify-center gap-3 md:gap-5">
-                  <motion.div
-                    variants={{ hidden: { scale: 0, opacity: 0 }, show: { scale: 1, opacity: 1, transition: { duration: 0.4 } } }}
-                    className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-primary-foreground text-[11px] md:text-sm font-semibold text-center px-1 shadow-node bg-primary"
-                  >
-                    Landing FR
-                  </motion.div>
-                  <motion.div
-                    variants={{ hidden: { scale: 0, opacity: 0 }, show: { scale: 1, opacity: 1, transition: { duration: 0.4 } } }}
-                    className="relative h-16 w-16 md:h-20 md:w-20"
-                  >
-                    <div className="absolute inset-1.5 rounded-xl shadow-node bg-primary" style={{ transform: "rotate(45deg)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center text-primary-foreground text-[11px] md:text-sm font-semibold">
-                      Waitlist
-                    </div>
-                  </motion.div>
-                  <motion.div
-                    variants={{ hidden: { scale: 0, opacity: 0 }, show: { scale: 1, opacity: 1, transition: { duration: 0.4 } } }}
-                    className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full text-primary-foreground text-[11px] md:text-sm font-semibold text-center px-1 shadow-node bg-primary"
-                  >
-                    Témoins
-                  </motion.div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
       </section>
 
-      {/* Description */}
-      <motion.section {...inViewProps} variants={sectionFade} className="container py-10">
-        <p className="mx-auto max-w-2xl text-center text-base md:text-lg text-muted-foreground">
-          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
-          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
-          Tu obtiens un mindmap propre et éditable, sans rien retaper.
-        </p>
+      {/* ─── PAIN POINTS (immediately after hero) ─── */}
+      <motion.section
+        {...inViewProps}
+        variants={sectionFade}
+        id="pain"
+        className={sectionPad}
+        style={{ backgroundColor: "#faf8ff" }}
+      >
+        <div className="container">
+          <SectionTitle>Tu perds 2h15 pour chaque vidéo. Et ça se voit.</SectionTitle>
+          <motion.div {...inViewProps} variants={gridContainer} className="mt-14 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: "🪟",
+                text: "Tu ouvres 4 outils différents avant de filmer la moindre seconde.",
+              },
+              {
+                icon: "💨",
+                text: "Tes meilleures idées disparaissent avant que tu les structures.",
+              },
+              {
+                icon: "🧱",
+                text: "Tu reportes la création parce que le setup te coûte plus d'énergie que le contenu lui-même.",
+              },
+            ].map((p, i) => (
+              <motion.div key={i} variants={cardItem}>
+                <Card>
+                  <div style={{ fontSize: 32, lineHeight: 1 }}>{p.icon}</div>
+                  <p
+                    className="mt-4"
+                    style={{ fontSize: 17, lineHeight: 1.7, color: TEXT_BODY, fontWeight: 500 }}
+                  >
+                    {p.text}
+                  </p>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
       </motion.section>
 
-      {/* Social proof — real SVG logos in neutral grey */}
-      <motion.section {...inViewProps} variants={sectionFade} className="container py-10">
-        <div className="rounded-2xl border border-border bg-card/60 backdrop-blur py-6 md:py-7 text-center shadow-elegant overflow-hidden">
-          <p className="px-6 text-xs md:text-sm uppercase tracking-widest text-muted-foreground">
-            Utilisé par des équipes qui viennent de
-          </p>
-          <div
-            className="mt-5 relative w-full overflow-hidden"
-            style={{
-              maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-            }}
-          >
-            <div className="flex w-max animate-marquee gap-12 whitespace-nowrap" style={{ color: "#aaa" }}>
-              {Array.from({ length: 2 }).map((_, dup) => (
-                <div key={dup} className="flex items-center gap-12 pr-12" aria-hidden={dup === 1}>
-                  {BRAND_LOGOS.map(({ name, svg }) => (
-                    <span key={`${dup}-${name}`} className="inline-flex items-center" title={name}>
-                      <span className="h-6 w-auto inline-flex items-center [&_svg]:h-6 [&_svg]:w-auto">
-                        {svg}
-                      </span>
+      {/* ─── HOW IT WORKS ─── */}
+      <motion.section
+        {...inViewProps}
+        variants={sectionFade}
+        id="how"
+        className={sectionPad}
+        style={{ backgroundColor: "#ffffff" }}
+      >
+        <div className="container">
+          <SectionTitle>De l'idée brute à la vidéo publiée. En 12 minutes.</SectionTitle>
+
+          <div className="relative mt-16">
+            {/* Dashed connector (desktop) */}
+            <div
+              aria-hidden
+              className="hidden md:block absolute left-0 right-0"
+              style={{
+                top: 56,
+                height: 1,
+                borderTop: `2px dashed ${BORDER_SOFT}`,
+                marginLeft: "12.5%",
+                marginRight: "12.5%",
+              }}
+            />
+            <motion.div
+              {...inViewProps}
+              variants={gridContainer}
+              className="grid gap-8 md:gap-6 md:grid-cols-4 relative"
+            >
+              {[
+                {
+                  num: "01",
+                  title: "Capture tout",
+                  desc: "Photo, vocal, texte, PDF. Capture n'importe quelle idée en moins de 10 secondes, peu importe où tu es.",
+                  icon: <Camera className="h-6 w-6" />,
+                },
+                {
+                  num: "02",
+                  title: "Structure avec l'IA",
+                  desc: "Scappio transforme tes notes brutes en plan structuré, script optimisé et board visuel prêt à l'emploi.",
+                  icon: <Wand2 className="h-6 w-6" />,
+                },
+                {
+                  num: "03",
+                  title: "Enregistre sans stress",
+                  desc: "Enregistreur d'écran intégré + téléprompter. Tu lis, tu parles, tu filmes. Zéro montage préalable.",
+                  icon: <Video className="h-6 w-6" />,
+                },
+                {
+                  num: "04",
+                  title: "Publie en avance",
+                  desc: "Exporte, planifie, répète. 5 vidéos par semaine sans sacrifier ni ta créativité ni ton temps.",
+                  icon: <Send className="h-6 w-6" />,
+                },
+              ].map((step, i) => (
+                <motion.div key={i} variants={cardItem} className="relative">
+                  <div
+                    className="relative h-full"
+                    style={{
+                      backgroundColor: "#ffffff",
+                      border: `1px solid ${BORDER_SOFT}`,
+                      borderRadius: 20,
+                      padding: 28,
+                      boxShadow: CARD_SHADOW,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute select-none font-extrabold leading-none"
+                      style={{
+                        top: 12,
+                        right: 18,
+                        fontSize: 64,
+                        color: PURPLE,
+                        opacity: 0.12,
+                        letterSpacing: "-0.04em",
+                      }}
+                    >
+                      {step.num}
                     </span>
-                  ))}
-                </div>
+                    <IconBox>{step.icon}</IconBox>
+                    <h3
+                      className="mt-5"
+                      style={{ fontSize: 22, fontWeight: 600, color: TEXT_HEADING, lineHeight: 1.3 }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="mt-3" style={{ fontSize: 15, lineHeight: 1.7, color: TEXT_BODY }}>
+                      {step.desc}
+                    </p>
+                  </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.section>
 
-      {/* How it works — horizontal stepper timeline */}
-      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
-        <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
-          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Tu parles 30 secondes. Scappio fait le reste.
-          </p>
-        </div>
+      {/* ─── FEATURES ─── */}
+      <motion.section
+        {...inViewProps}
+        variants={sectionFade}
+        id="features"
+        className={sectionPad}
+        style={{ backgroundColor: "#f9fafb" }}
+      >
+        <div className="container">
+          <SectionTitle>Tout ce dont tu as besoin. Dans un seul outil.</SectionTitle>
 
-        <div className="relative mt-12 md:mt-16">
           <motion.div
             {...inViewProps}
             variants={gridContainer}
-            className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
+            className="mt-14 grid gap-6 md:grid-cols-2"
           >
             {[
-              { num: "01", title: "Vocal et texte", desc: "Décris ton idée à voix haute, photographie tes notes ou colle un texte. L'IA comprend même le chaos — pas besoin de structure au départ." },
-              { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement." },
-              { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
-              { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée." },
-            ].map((step, i) => (
-              <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
+              {
+                icon: <Camera className="h-6 w-6" />,
+                title: "Capture universelle",
+                desc: "Photo, vocal, texte, PDF. Chaque idée capturée instantanément, organisée automatiquement.",
+              },
+              {
+                icon: <Sparkles className="h-6 w-6" />,
+                title: "Board + Script IA",
+                desc: "Tes notes deviennent un board visuel structuré et un script prêt à lire. L'IA fait le travail ingrat.",
+              },
+              {
+                icon: <Video className="h-6 w-6" />,
+                title: "Enregistreur + Téléprompter",
+                desc: "La seule app qui combine enregistrement d'écran et téléprompter. Aucun concurrent ne propose ça.",
+              },
+              {
+                icon: <Smartphone className="h-6 w-6" />,
+                title: "Mobile-first",
+                desc: "Conçu pour filmer depuis ton téléphone. Pas de setup, pas d'ordinateur obligatoire.",
+              },
+            ].map((f, i) => (
+              <motion.div key={i} variants={cardItem}>
+                <Card>
+                  <IconBox>{f.icon}</IconBox>
+                  <h3
+                    className="mt-5"
+                    style={{ fontSize: 22, fontWeight: 600, color: TEXT_HEADING, lineHeight: 1.3 }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p className="mt-3" style={{ fontSize: 16, lineHeight: 1.75, color: TEXT_BODY }}>
+                    {f.desc}
+                  </p>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ─── STATS / BENEFITS (dark) ─── */}
+      <motion.section
+        {...inViewProps}
+        variants={sectionFade}
+        id="stats"
+        className={sectionPad}
+        style={{ backgroundColor: "#120a2a", color: "#ffffff" }}
+      >
+        <div className="container">
+          <SectionTitle light>9× plus rapide. Vraiment.</SectionTitle>
+
+          <motion.div
+            {...inViewProps}
+            variants={gridContainer}
+            className="mt-14 grid gap-6 md:grid-cols-3"
+          >
+            {[
+              { value: "12 min", label: "pour créer une vidéo complète avec Scappio" },
+              { value: "2h15", label: "ce que ça prend sans Scappio (Miro + script + Loom + CapCut)" },
+              { value: "10h", label: "économisées par semaine à 5 vidéos" },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                variants={cardItem}
+                className="text-center"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 20,
+                  padding: 32,
+                }}
+              >
                 <div
-                  className="font-bold leading-none select-none"
-                  style={{ color: "#e8732a", fontSize: "48px" }}
+                  style={{
+                    fontSize: "clamp(48px, 6vw, 64px)",
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    letterSpacing: "-0.03em",
+                    background: `linear-gradient(135deg, #c4b5fd 0%, #ffffff 100%)`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
                 >
-                  {step.num}
+                  {s.value}
                 </div>
-                <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">
-                  {step.desc.split(/(__HIGHLIGHT__.*?__END__)/g).map((part, idx) => {
-                    const m = part.match(/^__HIGHLIGHT__(.*)__END__$/);
-                    if (m) {
-                      return (
-                        <span key={idx} style={{ color: "#e8732a", fontWeight: 600 }}>{m[1]}</span>
-                      );
-                    }
-                    return <span key={idx}>{part}</span>;
-                  })}
+                <p className="mt-4" style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(255,255,255,0.75)" }}>
+                  {s.label}
                 </p>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Placeholder image entre étape 2 et étape 3 */}
-          <div className="mt-10 md:mt-12 flex justify-center">
-            <div
-              className="w-full md:w-[60%] flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
-              style={{ height: "400px", borderRadius: "12px" }}
-            >
-              Board + Script IA
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* NOUVELLE SECTION : gain de temps */}
-      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#fff3eb" }}>
-        <div className="container text-center">
-          <div className="font-bold text-foreground" style={{ fontSize: "clamp(48px, 9vw, 80px)", lineHeight: 1.05 }}>
-            2h15 &nbsp;→&nbsp; 12 min
-          </div>
-          <p className="mt-4 text-foreground/80" style={{ fontSize: "20px" }}>
-            par vidéo. Soit 9 fois plus rapide.
-          </p>
-          <p className="mt-6 max-w-2xl mx-auto text-muted-foreground" style={{ fontSize: "18px", letterSpacing: "0.01em" }}>
-            À 5 vidéos par semaine : tu récupères 10 heures.<br />
-            Chaque semaine. Pour créer plus — ou pour vivre.
-          </p>
-          <p className="mt-8 max-w-2xl mx-auto italic text-muted-foreground/80" style={{ fontSize: "12px" }}>
-            Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
-          </p>
-        </div>
-      </motion.section>
-
-      {/* Problem — emojis instead of icon squares */}
-      <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-16 md:py-20">
-        <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Tu perds 2h15 par vidéo. <span className="text-primary">Toutes les semaines.</span>
-          </h2>
-          <p className="mt-3 text-base text-muted-foreground" style={{ fontSize: "16px" }}>
-            Ce n'est pas un manque d'idées. C'est un problème de production.
-          </p>
-        </div>
-        <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-3">
-          {[
-            { emoji: "⏱️", title: "2h15 pour 1 vidéo", desc: "Miro pour structurer. Loom pour filmer. CapCut pour monter. 3 outils. 3 onglets. 3 fois plus de friction — pour chaque vidéo que tu publies." },
-            { emoji: "💨", title: "Des idées qui s'évaporent", desc: "Ton meilleur contenu naît sous la douche ou en voiture. Entre l'idée et l'enregistrement, il disparaît. Pour toujours." },
-            { emoji: "🧱", title: "Le plafond qui bloque ta croissance", desc: "Tu as des idées pour 30 vidéos. Tu en publies 4 par semaine. Pendant ce temps, d'autres créateurs publient 2× plus — avec la moitié de tes idées." },
-          ].map((f, i) => (
-            <motion.div
-              key={i}
-              variants={cardItem}
-              className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
-            >
-              <div className="card-icon leading-none" style={{ fontSize: "32px" }}>{f.emoji}</div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">{f.title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{f.desc}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </motion.section>
-
-      {/* Features — bento asymmetric grid, dark grey icons */}
-      <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut pour publier sans limite.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être — en un seul.</p>
-
-        <motion.div
-          {...inViewProps}
-          variants={gridContainer}
-          className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
-        >
-          {/* Row 1: Featured (2/3) — Enregistreur écran + téléprompter */}
-          <motion.div
-            variants={cardItem}
-            className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
+          <p
+            className="mt-10 text-center mx-auto max-w-2xl"
+            style={{ fontSize: 17, color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}
           >
-            <span
-              className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
-              style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
+            Ce ne sont pas des estimations. C'est le calcul réel, outil par outil.
+          </p>
+        </div>
+      </motion.section>
+
+      {/* ─── FINAL CTA ─── */}
+      <motion.section
+        {...inViewProps}
+        variants={sectionFade}
+        className={`relative overflow-hidden ${sectionPad}`}
+        style={{
+          background: `linear-gradient(135deg, ${PURPLE} 0%, ${INDIGO} 100%)`,
+        }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(600px 300px at 50% 50%, rgba(255,255,255,0.18), transparent 70%)",
+          }}
+        />
+        <div className="container relative">
+          <div className="mx-auto text-center" style={{ maxWidth: 640 }}>
+            <h2
+              style={{
+                fontSize: "clamp(28px, 4.2vw, 42px)",
+                fontWeight: 700,
+                lineHeight: 1.15,
+                letterSpacing: "-0.02em",
+                color: "#ffffff",
+              }}
             >
-              UNIQUE SUR LE MARCHÉ
-            </span>
-            <div className="grid gap-6 md:grid-cols-[1fr_280px] md:items-center">
-              <div>
-                <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-                <h3 className="mt-4 text-2xl font-bold text-foreground">Filme devant ton board. Ton script défile. Tes abonnés ne voient rien.</h3>
-                <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                  Enregistre ta présentation avec ta caméra. Le téléprompter est superposé sur l'écran — invisible dans la capture. Export direct TikTok vertical, Reels carré ou YouTube horizontal.
-                </p>
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
-                </div>
-              </div>
-              <div
-                className="flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-xs md:text-sm font-medium text-center px-3"
-                style={{ width: "100%", maxWidth: "280px", height: "200px", borderRadius: "12px" }}
+              Arrête de reporter. Commence à créer.
+            </h2>
+            <p
+              className="mx-auto mt-5"
+              style={{
+                fontSize: 18,
+                lineHeight: 1.7,
+                color: "rgba(255,255,255,0.85)",
+                maxWidth: 560,
+              }}
+            >
+              Rejoint les créateurs qui produisent 5× plus de contenu sans travailler 5× plus.
+            </p>
+
+            <form
+              onSubmit={handleSubmit}
+              className="mx-auto mt-9 flex flex-col sm:flex-row gap-3"
+              style={{ maxWidth: 480 }}
+            >
+              <Input
+                type="email"
+                required
+                placeholder="ton@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-[52px] text-base bg-white border-0"
+                aria-label="Adresse email"
+                style={{ borderRadius: 12 }}
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.99] shrink-0"
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: PURPLE,
+                  padding: "14px 28px",
+                  borderRadius: 12,
+                  fontSize: 16,
+                  height: 52,
+                  boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
+                }}
               >
-                Interface enregistreur + téléprompter
-              </div>
-            </div>
-          </motion.div>
+                Créer mon compte gratuit <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
 
-          {/* Row 1: small card */}
-          <motion.div
-            variants={cardItem}
-            className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
-          >
-            <Sparkles className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-            <h3 className="mt-4 text-lg font-semibold text-foreground">IA Vision avancée</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">Détecte mots, flèches et hiérarchie même sur une écriture brouillonne.</p>
-          </motion.div>
-
-          {/* Row 2: 3 equal cards */}
-          {[
-            { Icon: Mic, title: "Vocal → Board", desc: "Parle librement 30 secondes. L'IA transcrit, hiérarchise et génère ton board. Le before/after le plus viral du marché." },
-            { Icon: Wand2, title: "Script IA", desc: "L'agent transforme ta mindmap en script prêt à lire. Naturel, structuré, dans ta logique." },
-            { Icon: Pencil, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
-          ].map(({ Icon, title, desc }, i) => (
-            <motion.div
-              key={i}
-              variants={cardItem}
-              className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
-            >
-              <Icon className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-              <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{desc}</p>
-            </motion.div>
-          ))}
-
-          {/* Row 3: remaining cards */}
-          {[
-            { Icon: MousePointer2, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { Icon: Download, title: "Export multi-format", desc: "TikTok, Reels, YouTube. Un board. Toutes les plateformes. En 1 clic." },
-            { Icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
-          ].map(({ Icon, title, desc }, i) => (
-            <motion.div
-              key={`r3-${i}`}
-              variants={cardItem}
-              className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
-            >
-              <Icon className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-              <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
-              <p className="mt-2 text-sm md:text-base text-muted-foreground">{desc}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </motion.section>
-
-      {/* Testimonials */}
-      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de choisir entre leurs idées.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Maintenant ils les publient toutes.</p>
-        <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
-          {[
-            { name: "Camille D.", role: "Product Manager, Paris", text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau." },
-            { name: "Thomas R.", role: "Fondateur, Lyon", text: "J'ai testé tous les outils de mindmap. scappio c'est le seul qui comprend mon écriture pourrie. Bluffant." },
-            { name: "Sarah M.", role: "Designer UX, Bordeaux", text: "L'auto-improve est dingue. Il rajoute les connexions logiques que j'avais oubliées sur le papier. Comme un co-pilote." },
-          ].map((t, i) => (
-            <motion.div key={i} variants={cardItem} className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant flex flex-col">
-              <Quote className="card-icon h-6 w-6 text-primary/60" />
-              <p className="mt-4 text-sm md:text-base text-foreground/90 flex-1">"{t.text}"</p>
-              <div className="mt-5 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-glow">
-                  {t.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </motion.section>
-
-      {/* Final CTA */}
-      <motion.section {...inViewProps} variants={sectionFade} className="container py-16 md:py-20">
-        <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Arrête de choisir entre tes idées.<br />
-            <span className="text-primary">Publie-les toutes.</span>
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Ton premier board en 10 secondes. Gratuit. Sans carte bancaire. Sans installation.
-          </p>
-          <form
-            onSubmit={handleSubmit}
-            className="mx-auto mt-8 flex flex-col sm:flex-row gap-3 max-w-md"
-          >
-            <Input
-              type="email"
-              required
-              placeholder="ton@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 text-base"
-              aria-label="Adresse email"
-            />
-            <Button
-              type="submit"
-              size="lg"
-              className="h-12 bg-primary text-primary-foreground shadow-glow hover:opacity-90 shrink-0 btn-shimmer"
-            >
-              Commencer gratuitement
-            </Button>
-          </form>
-          <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Rejoins les créateurs qui publient sans limite — sans travailler plus.
-          </p>
+            <p className="mt-5" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
+              Accès immédiat · Aucune carte requise
+            </p>
+          </div>
         </div>
       </motion.section>
 
-      {/* Enriched footer */}
-      <footer className="border-t border-border" style={{ backgroundColor: "#f0ebe4" }}>
-        <div className="container py-10 md:py-12 grid gap-8 md:grid-cols-3 items-start">
+      {/* ─── FOOTER ─── */}
+      <footer style={{ backgroundColor: "#0b0618", color: "rgba(255,255,255,0.7)" }}>
+        <div className="container py-12 grid gap-8 md:grid-cols-3 items-start">
           <div>
             <Link to="/" className="inline-flex items-center gap-2" aria-label="Accueil">
-              <span className="text-xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
+              <span className="text-xl font-extrabold tracking-tight" style={{ color: "#fff" }}>
+                <span style={{ color: "#a78bfa" }}>scapp</span>io
+              </span>
             </Link>
-            <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-              Transforme tes idées en boards
+            <p className="mt-3 text-sm max-w-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
+              Du contenu illimité. Sans jamais manquer d'idées.
             </p>
           </div>
           <nav className="flex flex-col gap-2 text-sm md:items-center">
-            <a href="/privacy" className="text-muted-foreground hover:text-foreground transition">Politique de confidentialité</a>
-            <a href="/terms" className="text-muted-foreground hover:text-foreground transition">CGU</a>
-            <a href="mailto:hello@scappio.com" className="text-muted-foreground hover:text-foreground transition">Contact</a>
+            <a href="/privacy" className="hover:text-white transition" style={{ color: "rgba(255,255,255,0.7)" }}>Politique de confidentialité</a>
+            <a href="/terms" className="hover:text-white transition" style={{ color: "rgba(255,255,255,0.7)" }}>CGU</a>
+            <a href="mailto:hello@scappio.com" className="hover:text-white transition" style={{ color: "rgba(255,255,255,0.7)" }}>Contact</a>
           </nav>
-          <div className="text-sm text-muted-foreground md:text-right">
-            © 2026 scappio · <a href="/privacy" className="hover:text-foreground transition">Confidentialité</a> · <a href="/terms" className="hover:text-foreground transition">CGU</a>
+          <div className="text-sm md:text-right" style={{ color: "rgba(255,255,255,0.5)" }}>
+            © 2026 scappio
+            <div className="mt-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+              Propulsé par GPT-Vision
+            </div>
           </div>
         </div>
       </footer>
 
       {/* Sticky mobile CTA */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
-        <Button asChild size="lg" className="w-full h-12 bg-primary text-primary-foreground shadow-glow hover:opacity-90 text-base btn-shimmer">
-          <Link to="/auth">
-            Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
+      <div
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+        style={{
+          backgroundColor: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(12px)",
+          borderTop: `1px solid ${BORDER_SOFT}`,
+          boxShadow: "0 -8px 24px rgba(109,40,217,0.08)",
+        }}
+      >
+        <PrimaryButton asLink="/auth" className="!w-full !flex">
+          Essayer gratuitement <ArrowRight className="h-4 w-4" />
+        </PrimaryButton>
       </div>
     </div>
   );
