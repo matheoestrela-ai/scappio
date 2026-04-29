@@ -439,7 +439,7 @@ const Index = () => {
                 variants={gridContainer}
                 className="relative grid gap-16 md:gap-y-36 md:gap-x-56 md:grid-cols-2 md:grid-rows-3"
               >
-                {/* Flow arrows: 1 → 2 → 3 → 4, dessinées dans les couloirs vides du grid */}
+                {/* Flow arrows: 1 → 2 → 3 → 4, courbées et animées */}
                 <svg
                   aria-hidden="true"
                   className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-0"
@@ -451,43 +451,56 @@ const Index = () => {
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
                     <style>{`
-                      @keyframes dashFlow { to { stroke-dashoffset: -20; } }
-                      .flowPath {
-                        stroke-dasharray: 2 2;
-                        animation: dashFlow 2.5s linear infinite;
+                      @keyframes dashFlow { to { stroke-dashoffset: -40; } }
+                      @keyframes floatY {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-1.5px); }
                       }
+                      .flowPath {
+                        stroke-dasharray: 3 3;
+                        animation: dashFlow 1.8s linear infinite;
+                      }
+                      .flowGroup1 { animation: floatY 3.2s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+                      .flowGroup2 { animation: floatY 3.2s ease-in-out infinite; animation-delay: 0.4s; transform-origin: center; transform-box: fill-box; }
+                      .flowGroup3 { animation: floatY 3.2s ease-in-out infinite; animation-delay: 0.8s; transform-origin: center; transform-box: fill-box; }
                     `}</style>
                   </defs>
-                  {/* 1 (haut-droite ~ x:75 y:15) → 2 (milieu-gauche ~ x:25 y:50) : arc qui descend en diagonale par le centre-haut */}
-                  <path
-                    className="flowPath"
-                    d="M 70,20 C 55,22 40,30 28,42"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.6"
-                    strokeLinecap="round"
-                    markerEnd="url(#arrowOrange)"
-                  />
-                  {/* 2 (milieu-gauche ~ x:25 y:50) → 3 (milieu-droite ~ x:75 y:50) : arc horizontal qui passe par le centre */}
-                  <path
-                    className="flowPath"
-                    d="M 32,52 C 45,62 55,62 68,52"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.6"
-                    strokeLinecap="round"
-                    markerEnd="url(#arrowOrange)"
-                  />
-                  {/* 3 (milieu-droite ~ x:75 y:50) → 4 (bas-gauche ~ x:25 y:85) : arc qui descend en diagonale */}
-                  <path
-                    className="flowPath"
-                    d="M 70,60 C 55,68 40,75 28,82"
-                    fill="none"
-                    stroke="#e8732a"
-                    strokeWidth="0.6"
-                    strokeLinecap="round"
-                    markerEnd="url(#arrowOrange)"
-                  />
+                  {/* 1 (haut-droite) → 2 (milieu-gauche) : courbe ample vers le centre-haut */}
+                  <g className="flowGroup1">
+                    <path
+                      className="flowPath"
+                      d="M 65,18 C 50,10 35,18 22,38"
+                      fill="none"
+                      stroke="#e8732a"
+                      strokeWidth="0.7"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrowOrange)"
+                    />
+                  </g>
+                  {/* 2 (milieu-gauche) → 3 (milieu-droite) : grande boucle qui plonge sous le centre */}
+                  <g className="flowGroup2">
+                    <path
+                      className="flowPath"
+                      d="M 32,55 C 40,72 60,72 68,55"
+                      fill="none"
+                      stroke="#e8732a"
+                      strokeWidth="0.7"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrowOrange)"
+                    />
+                  </g>
+                  {/* 3 (milieu-droite) → 4 (bas-gauche) : courbe ample qui contourne par la droite puis redescend à gauche */}
+                  <g className="flowGroup3">
+                    <path
+                      className="flowPath"
+                      d="M 78,62 C 95,72 80,90 35,85"
+                      fill="none"
+                      stroke="#e8732a"
+                      strokeWidth="0.7"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrowOrange)"
+                    />
+                  </g>
                 </svg>
 
                 {steps.map((step, i) => (
