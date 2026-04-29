@@ -957,12 +957,13 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     <>
       {/* Recording outline */}
       {recording && (
-        <div className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-red-500/80 animate-pulse" />
+        <div data-record-hide="true" className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-red-500/80 animate-pulse" />
       )}
 
       {/* Record / Stop button */}
       <button
         type="button"
+        data-record-hide="true"
         onClick={handleStartClick}
         title={recording ? "Arrêter l'enregistrement" : "Enregistrer le tableau"}
         aria-label={recording ? "Arrêter l'enregistrement" : "Enregistrer le tableau"}
@@ -978,7 +979,7 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
 
       {/* Timer */}
       {recording && (
-        <div className="absolute top-3 right-24 z-30 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/70 text-white text-xs font-mono">
+        <div data-record-hide="true" className="absolute top-3 right-24 z-30 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/70 text-white text-xs font-mono">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
           {formatTime(elapsed)}
         </div>
@@ -987,6 +988,7 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       {/* Standard mode: floating circular cam preview */}
       {previewActive && hasCamera && activeFormat === "standard" && (
         <div
+          data-record-hide="true"
           onPointerDown={onBubbleDown}
           onPointerMove={onBubbleMove}
           onPointerUp={onBubbleUp}
@@ -1010,6 +1012,7 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
       {/* TikTok mode: vertical preview in corner */}
       {previewActive && activeFormat === "tiktok" && (
         <div
+          data-record-hide="true"
           className="absolute bottom-4 right-4 z-30 rounded-xl overflow-hidden bg-black shadow-2xl border border-white/30"
           style={{ width: 200, height: Math.round(200 * (TIKTOK_H / TIKTOK_W)) }}
         >
