@@ -451,12 +451,12 @@ const Index = () => {
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
                   </defs>
-                  {/* 1 (haut-droite) -> 2 (milieu-gauche) : spirale qui contourne par la droite puis revient à gauche */}
-                  <path d="M 70,22 C 98,30 98,55 75,40 C 55,30 30,38 22,48" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 2 (milieu-gauche) -> 3 (milieu-droite) : spirale qui descend puis remonte */}
-                  <path d="M 30,55 C 45,72 55,72 50,58 C 48,50 60,52 70,55" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
-                  {/* 3 (milieu-droite) -> 4 (bas-gauche) : spirale qui passe par la droite et redescend */}
-                  <path d="M 78,62 C 98,72 98,92 70,82 C 50,75 35,82 25,88" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 01 (haut-droite) -> 02 (milieu-gauche) : boucle qui descend par la droite et revient pointer vers 02 */}
+                  <path d="M 65,28 C 92,38 92,60 60,52 C 40,48 25,48 18,46" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 02 (milieu-gauche) -> 03 (milieu-droite) : boucle qui descend puis pointe vers 03 */}
+                  <path d="M 22,60 C 30,72 50,72 45,60 C 42,52 55,50 65,50" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 03 (milieu-droite) -> 04 (bas-gauche) : boucle qui descend par la droite et pointe vers 04 */}
+                  <path d="M 70,62 C 92,72 92,92 60,86 C 40,82 28,82 22,82" fill="none" stroke="#e8732a" strokeWidth="0.5" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
                 </svg>
 
                 {steps.map((step, i) => (
