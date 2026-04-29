@@ -479,14 +479,6 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Description */}
-      <motion.section {...inViewProps} variants={sectionFade} className="container py-10">
-        <p className="mx-auto max-w-2xl text-center text-base md:text-lg text-muted-foreground">
-          Enregistre tes gribouillis en <span className="font-semibold text-foreground">vocal</span> ou en <span className="font-semibold text-foreground">photo</span>.
-          L'IA extrait les idées, les priorités et les connexions, puis te suggère ce qui manque.
-          Tu obtiens un mindmap propre et éditable, sans rien retaper.
-        </p>
-      </motion.section>
 
       {/* Social proof — real SVG logos in neutral grey */}
       <motion.section {...inViewProps} variants={sectionFade} className="container py-10">
