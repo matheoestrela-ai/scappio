@@ -503,9 +503,9 @@ const Index = () => {
       {/* How it works — horizontal stepper timeline */}
       <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Comment ça marche</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Tu parles, tu photographes, tu colles. L'IA structure en 10 secondes — tu gardes la main.
+            Tu parles 30 secondes. Scappio fait le reste.
           </p>
         </div>
 
@@ -516,10 +516,10 @@ const Index = () => {
             className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
           >
             {[
-              { num: "01", title: "Vocal et texte", desc: "Dicte tes idées à voix haute ou écris-les. Le micro capte et l'IA transcrit, même quand tu penses à voix haute." },
-              { num: "02", title: "Photo", desc: "Ou prends une photo de tes notes manuscrites — JPG ou PNG, écriture brouillonne acceptée." },
-              { num: "03", title: "IA structure", desc: "L'IA détecte le sujet principal, les idées, la hiérarchie et les connexions." },
-              { num: "04", title: "Board", desc: "Visualise un mindmap clair, modifie-le et exporte-le en PDF ou PNG, __HIGHLIGHT__et ensuite la possibilité de l'enregistrer sous format YouTube ou TikTok pour l'envoyer à ton équipe ou même créer du contenu__END__, __HIGHLIGHT__ou enregistre-toi en train de le présenter__END__." },
+              { num: "01", title: "Vocal et texte", desc: "Décris ton idée à voix haute, photographie tes notes ou colle un texte. L'IA comprend même le chaos — pas besoin de structure au départ." },
+              { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement." },
+              { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
+              { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée." },
             ].map((step, i) => (
               <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
                 <div
@@ -543,6 +543,35 @@ const Index = () => {
               </motion.div>
             ))}
           </motion.div>
+
+          {/* Placeholder image entre étape 2 et étape 3 */}
+          <div className="mt-10 md:mt-12 flex justify-center">
+            <div
+              className="w-full md:w-[60%] flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
+              style={{ height: "400px", borderRadius: "12px" }}
+            >
+              Board + Script IA
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* NOUVELLE SECTION : gain de temps */}
+      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#fff3eb" }}>
+        <div className="container text-center">
+          <div className="font-bold text-foreground" style={{ fontSize: "clamp(48px, 9vw, 80px)", lineHeight: 1.05 }}>
+            2h15 &nbsp;→&nbsp; 12 min
+          </div>
+          <p className="mt-4 text-foreground/80" style={{ fontSize: "20px" }}>
+            par vidéo. Soit 9 fois plus rapide.
+          </p>
+          <p className="mt-6 max-w-2xl mx-auto text-muted-foreground" style={{ fontSize: "18px", letterSpacing: "0.01em" }}>
+            À 5 vidéos par semaine : tu récupères 10 heures.<br />
+            Chaque semaine. Pour créer plus — ou pour vivre.
+          </p>
+          <p className="mt-8 max-w-2xl mx-auto italic text-muted-foreground/80" style={{ fontSize: "12px" }}>
+            Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
+          </p>
         </div>
       </motion.section>
 
