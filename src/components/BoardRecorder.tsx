@@ -298,6 +298,9 @@ const BoardRecorder = ({ containerRef, boardName }: Props) => {
     timerRef.current = null;
     stoppedRef.current = null;
     stopAllStreams();
+    if (typeof document !== "undefined") {
+      document.body.classList.remove("recording-active");
+    }
     setPreviewActive(false);
     setHasCamera(false);
   };
