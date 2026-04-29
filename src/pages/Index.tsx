@@ -722,11 +722,11 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} className="container py-16 md:py-20">
         <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Arrête de retaper.<br />
-            <span className="text-primary">Commence à penser.</span>
+            Arrête de choisir entre tes idées.<br />
+            <span className="text-primary">Publie-les toutes.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Ton premier board en 10 secondes. Sans carte bancaire. Sans installation.
+            Ton premier board en 10 secondes. Gratuit. Sans carte bancaire. Sans installation.
           </p>
           <form
             onSubmit={handleSubmit}
