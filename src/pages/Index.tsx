@@ -254,13 +254,6 @@ const Index = () => {
       {/* Hero */}
       <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
-          <motion.div variants={fadeUp} className="flex justify-center mb-5 md:mb-6">
-            <span
-              className="inline-flex items-center rounded-full border border-border bg-card/80 backdrop-blur px-4 py-1.5 text-xs md:text-sm font-medium text-foreground shadow-elegant"
-            >
-              ⚡ Du contenu illimité. Sans travailler plus.
-            </span>
-          </motion.div>
           <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
             <span className="block">
               Transforme tes{" "}
