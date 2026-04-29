@@ -437,7 +437,7 @@ const Index = () => {
               <motion.div
                 {...inViewProps}
                 variants={gridContainer}
-                className="relative grid gap-12 md:gap-y-20 md:gap-x-24 md:grid-cols-2 md:grid-rows-3"
+                className="relative grid gap-16 md:gap-y-36 md:gap-x-56 md:grid-cols-2 md:grid-rows-3"
               >
                 {/* Spiral arrows overlay */}
                 <svg
