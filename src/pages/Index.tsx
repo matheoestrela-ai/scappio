@@ -417,39 +417,77 @@ const Index = () => {
         </div>
 
         <div className="relative mt-12 md:mt-16">
-          <motion.div
-            {...inViewProps}
-            variants={gridContainer}
-            className="grid gap-10 md:gap-6 md:grid-cols-4 relative"
-          >
-            {[
-              { num: "01", title: "Input", desc: "Vocal, texte, pdf, vocal." },
-              { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement." },
-              { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
-              { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée." },
-            ].map((step, i) => (
-              <motion.div key={i} variants={cardItem} className="relative text-center md:text-left">
-                <div
-                  className="font-bold leading-none select-none"
-                  style={{ color: "#e8732a", fontSize: "48px" }}
+          {(() => {
+            const steps = [
+              { num: "01", title: "Input", desc: "Vocal, texte, pdf, vocal.", pos: "tr" },
+              { num: "02", title: "Photo", desc: "En 10 secondes, ta mindmap structurée apparaît. L'agent IA analyse le contenu, détecte ce qui manque et écrit ton script de vidéo automatiquement.", pos: "bl" },
+              { num: "03", title: "IA structure", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board.", pos: "br" },
+              { num: "04", title: "Board", desc: "Format TikTok, Reels ou YouTube en 1 clic. Tu fermes Scappio. Tu rouvres Scappio. Tu passes à ta prochaine idée.", pos: "bl2" },
+            ];
+            // Grid placement: 1=top-right, 2=bottom-left (row2), 3=bottom-right (row2 — wait user said row3), 4=bottom-left
+            // User: 1 haut droite, 2 bas gauche, 3 bas droite, 4 bas gauche
+            // Interpret as 2x2 with overlap on bas gauche; we use 3 rows: row1: . , 1 ; row2: 2 , 3 ; row3: 4 , .
+            const placement: Record<string, string> = {
+              tr: "md:col-start-2 md:row-start-1",
+              bl: "md:col-start-1 md:row-start-2",
+              br: "md:col-start-2 md:row-start-2",
+              bl2: "md:col-start-1 md:row-start-3",
+            };
+            return (
+              <motion.div
+                {...inViewProps}
+                variants={gridContainer}
+                className="relative grid gap-12 md:gap-y-20 md:gap-x-24 md:grid-cols-2 md:grid-rows-3"
+              >
+                {/* Spiral arrows overlay */}
+                <svg
+                  aria-hidden="true"
+                  className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-0"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
                 >
-                  {step.num}
-                </div>
-                <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">
-                  {step.desc.split(/(__HIGHLIGHT__.*?__END__)/g).map((part, idx) => {
-                    const m = part.match(/^__HIGHLIGHT__(.*)__END__$/);
-                    if (m) {
-                      return (
-                        <span key={idx} style={{ color: "#e8732a", fontWeight: 600 }}>{m[1]}</span>
-                      );
-                    }
-                    return <span key={idx}>{part}</span>;
-                  })}
-                </p>
+                  <defs>
+                    <marker id="arrowOrange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
+                    </marker>
+                  </defs>
+                  {/* 1 (top-right) -> 2 (mid-left): spiral curve */}
+                  <path d="M 75,18 C 95,40 5,30 25,52" fill="none" stroke="#e8732a" strokeWidth="0.6" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 2 (mid-left) -> 3 (mid-right): spiral curve */}
+                  <path d="M 25,55 C 50,75 50,35 75,55" fill="none" stroke="#e8732a" strokeWidth="0.6" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                  {/* 3 (mid-right) -> 4 (bottom-left): spiral curve */}
+                  <path d="M 75,58 C 95,82 5,72 25,90" fill="none" stroke="#e8732a" strokeWidth="0.6" strokeLinecap="round" markerEnd="url(#arrowOrange)" strokeDasharray="1.5 1.5" />
+                </svg>
+
+                {steps.map((step, i) => (
+                  <motion.div
+                    key={i}
+                    variants={cardItem}
+                    className={`relative z-10 text-center md:text-left ${placement[step.pos]}`}
+                  >
+                    <div
+                      className="font-bold leading-none select-none"
+                      style={{ color: "#e8732a", fontSize: "48px" }}
+                    >
+                      {step.num}
+                    </div>
+                    <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
+                    <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xs mx-auto md:mx-0">
+                      {step.desc.split(/(__HIGHLIGHT__.*?__END__)/g).map((part, idx) => {
+                        const m = part.match(/^__HIGHLIGHT__(.*)__END__$/);
+                        if (m) {
+                          return (
+                            <span key={idx} style={{ color: "#e8732a", fontWeight: 600 }}>{m[1]}</span>
+                          );
+                        }
+                        return <span key={idx}>{part}</span>;
+                      })}
+                    </p>
+                  </motion.div>
+                ))}
               </motion.div>
-            ))}
-          </motion.div>
+            );
+          })()}
 
           {/* Placeholder image entre étape 2 et étape 3 */}
           <div className="mt-10 md:mt-12 flex justify-center">
