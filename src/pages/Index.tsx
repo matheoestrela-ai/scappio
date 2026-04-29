@@ -451,9 +451,9 @@ const Index = () => {
                       <path d="M0,0 L10,5 L0,10 z" fill="#e8732a" />
                     </marker>
                   </defs>
-                  {/* 1 (haut-droite) → 2 (milieu-gauche) : courbe ample vers le centre-haut */}
+                  {/* 1 (haut-droite) → 2 (milieu-gauche) : départ au milieu du bloc 1, arrivée à distance du bloc 2 */}
                   <path
-                    d="M 65,18 C 50,10 35,18 22,38"
+                    d="M 58,24 C 46,18 28,20 15,44"
                     fill="none"
                     stroke="#e8732a"
                     strokeWidth="0.7"
