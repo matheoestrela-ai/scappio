@@ -412,7 +412,7 @@ const Index = () => {
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Tu parles 30 secondes. Scappio fait le reste.
+            Fini la perte de temps.
           </p>
         </div>
 
