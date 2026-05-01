@@ -526,10 +526,13 @@ const Index = () => {
             </span>
             .
           </p>
-          <p className="mt-8 max-w-2xl mx-auto italic text-white" style={{ fontSize: "13px", opacity: 0.6 }}>
-            Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
-          </p>
         </div>
+        {/* Smooth gradient transition to cream background */}
+        <div
+          aria-hidden
+          className="pointer-events-none mt-12 md:mt-16 h-24 md:h-32 w-full"
+          style={{ background: "linear-gradient(to bottom, #f97316 0%, #faf7f4 100%)" }}
+        />
       </motion.section>
 
       {/* Problem — emojis instead of icon squares */}
