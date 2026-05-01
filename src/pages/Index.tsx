@@ -252,9 +252,9 @@ const Index = () => {
       )}
 
       {/* Hero */}
-      <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
+      <section className="container pt-8 md:pt-12 pb-12 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
-          <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
+          <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]" style={{ color: "#1a1a1a" }}>
             <span className="block">
               Transforme tes{" "}
               <span className="relative inline-block">
