@@ -518,38 +518,25 @@ const Index = () => {
           variants={gridContainer}
           className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
         >
-          {/* Row 1: Featured (2/3) — Enregistreur écran + téléprompter */}
+          {/* Featured card — Enregistreur + téléprompter (now a normal card) */}
           <motion.div
             variants={cardItem}
-            className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
+            className="card-lift relative rounded-2xl border border-border bg-card p-6 shadow-elegant"
           >
             <span
               className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
               style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
             >
-              UNIQUE SUR LE MARCHÉ
+              UNIQUE
             </span>
-            <div className="grid gap-6 md:grid-cols-[1fr_280px] md:items-center">
-              <div>
-                <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-                <h3 className="mt-4 text-2xl font-bold text-foreground">Filme devant ton board. Ton script défile. Tes abonnés ne voient rien.</h3>
-                <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                  Enregistre ta présentation avec ta caméra. Le téléprompter est superposé sur l'écran — invisible dans la capture. Export direct TikTok vertical, Reels carré ou YouTube horizontal.
-                </p>
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
-                </div>
-              </div>
-              <div
-                className="flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-xs md:text-sm font-medium text-center px-3"
-                style={{ width: "100%", maxWidth: "280px", height: "200px", borderRadius: "12px" }}
-              >
-                Interface enregistreur + téléprompter
-              </div>
-            </div>
+            <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Enregistreur + téléprompter</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">
+              Filme devant ton board. Ton script défile en surimpression — invisible dans la capture. Export TikTok, Reels ou YouTube.
+            </p>
           </motion.div>
 
-          {/* Row 1: small card */}
+          {/* Small card */}
           <motion.div
             variants={cardItem}
             className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
