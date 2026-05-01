@@ -303,9 +303,9 @@ const Index = () => {
               toast.success("On t'emmène créer ton board !");
               window.location.href = "/auth";
             }}
-            className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
+            className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-1 sm:gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-1.5 sm:p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
           >
-            <PenLine className="ml-2 h-5 w-5 text-muted-foreground shrink-0" />
+            <PenLine className="ml-1 sm:ml-2 h-5 w-5 text-muted-foreground shrink-0 hidden sm:block" />
             <button
               type="button"
               aria-label="Glisser-déposer un fichier"
