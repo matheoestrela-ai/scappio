@@ -318,7 +318,7 @@ const Index = () => {
               name="prompt"
               type="text"
               placeholder={placeholder}
-              className="flex-1 bg-transparent border-0 outline-none text-base placeholder:text-muted-foreground px-2 py-2"
+              className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm sm:text-base placeholder:text-muted-foreground px-1 sm:px-2 py-2"
             />
             <button
               type="button"
