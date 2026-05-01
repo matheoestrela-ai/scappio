@@ -480,8 +480,8 @@ const Index = () => {
       {/* Stats — orange section */}
       <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#f97316" }}>
         <div className="container text-center">
-          <div className="font-black text-white" style={{ fontSize: "clamp(48px, 10vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
-            2h15 &nbsp;<span className="text-white">→</span>&nbsp;
+          <div className="font-black text-white whitespace-nowrap" style={{ fontSize: "clamp(32px, 9vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
+            2h15 <span className="text-white mx-1 sm:mx-3">→</span>
             <span
               style={{
                 fontFamily: "'Caveat', 'Bradley Hand', 'Segoe Print', cursive",
