@@ -508,7 +508,8 @@ const Index = () => {
                 aria-hidden
                 viewBox="0 0 200 14"
                 preserveAspectRatio="none"
-                className="absolute left-0 right-0 -bottom-1 w-full h-3 pointer-events-none"
+                className="absolute left-0 right-0 w-full h-3 pointer-events-none"
+                style={{ bottom: "-10px" }}
               >
                 <motion.path
                   d="M2 8 C 50 2, 150 2, 198 8"
