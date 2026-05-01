@@ -18,6 +18,7 @@ import {
   MousePointer2,
   Download,
   Zap,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -305,12 +306,28 @@ const Index = () => {
             className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
           >
             <PenLine className="ml-2 h-5 w-5 text-muted-foreground shrink-0" />
+            <button
+              type="button"
+              aria-label="Glisser-déposer un fichier"
+              onClick={() => toast.info("Glisse un fichier ou une image ici")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition shrink-0"
+            >
+              <Upload className="h-5 w-5" />
+            </button>
             <input
               name="prompt"
               type="text"
               placeholder={placeholder}
               className="flex-1 bg-transparent border-0 outline-none text-base placeholder:text-muted-foreground px-2 py-2"
             />
+            <button
+              type="button"
+              aria-label="Message vocal"
+              onClick={() => toast.info("Enregistrement vocal bientôt disponible")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition shrink-0"
+            >
+              <Mic className="h-5 w-5" />
+            </button>
             <Button type="submit" size="sm" className="bg-primary text-primary-foreground shadow-glow hover:opacity-90">
               <ArrowRight className="h-4 w-4" />
             </Button>
