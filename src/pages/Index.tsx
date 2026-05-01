@@ -564,7 +564,7 @@ const Index = () => {
       {/* Features — bento asymmetric grid, dark grey icons */}
       <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
         <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut pour publier sans limite.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être — en un seul.</p>
+        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être en un seul.</p>
 
         <motion.div
           {...inViewProps}
