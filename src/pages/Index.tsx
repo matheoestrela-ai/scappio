@@ -252,9 +252,9 @@ const Index = () => {
       )}
 
       {/* Hero */}
-      <section className="container pt-8 md:pt-12 pb-16 md:pb-20 text-center">
+      <section className="container pt-8 md:pt-12 pb-12 md:pb-20 text-center">
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
-          <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]">
+          <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]" style={{ color: "#1a1a1a" }}>
             <span className="block">
               Transforme tes{" "}
               <span className="relative inline-block">
@@ -337,11 +337,16 @@ const Index = () => {
 
           <motion.div
             variants={fadeUp}
-            className="mx-auto mt-8 md:mt-10 w-full max-w-[700px]"
+            className="mx-auto mt-8 md:mt-10 w-full"
+            style={{ maxWidth: "900px" }}
           >
             <div
-              className="relative w-full overflow-hidden bg-black border border-border"
-              style={{ aspectRatio: "16 / 9", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
+              className="relative w-full overflow-hidden bg-black"
+              style={{
+                aspectRatio: "16 / 9",
+                borderRadius: "16px",
+                boxShadow: "0 24px 80px rgba(0,0,0,0.2), 0 0 60px rgba(249,115,22,0.15)",
+              }}
             >
               {/* Subtle gradient backdrop */}
               <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900" />
@@ -407,16 +412,17 @@ const Index = () => {
         </div>
       </motion.section>
 
-      {/* How it works — horizontal stepper timeline */}
-      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
+      {/* How it works — dark section */}
+      <motion.section {...inViewProps} variants={sectionFade} id="how" className="py-16 md:py-20" style={{ backgroundColor: "#1c1917" }}>
+        <div className="container">
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
-          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
+          <p className="mt-3 text-white/70 max-w-xl mx-auto">
             Fini la perte de temps.
           </p>
         </div>
 
-        <div className="relative mt-12 md:mt-16">
+        <div className="relative mt-10 md:mt-12">
           {(() => {
             const steps = [
               { num: "01", title: "Capture", desc: "Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction." },
@@ -427,7 +433,7 @@ const Index = () => {
               <motion.div
                 {...inViewProps}
                 variants={gridContainer}
-                className="grid gap-12 md:gap-10 md:grid-cols-3"
+                className="grid gap-10 md:gap-10 md:grid-cols-3"
               >
                 {steps.map((step, i) => (
                   <motion.div
@@ -437,12 +443,12 @@ const Index = () => {
                   >
                     <div
                       className="font-bold leading-none select-none"
-                      style={{ color: "#e8732a", fontSize: "48px" }}
+                      style={{ color: "#f97316", fontSize: "48px" }}
                     >
                       {step.num}
                     </div>
-                    <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                    <p className="mt-3 text-sm md:text-base text-muted-foreground">
+                    <h3 className="mt-3 text-lg font-bold text-white">{step.title}</h3>
+                    <p className="mt-3 text-sm md:text-base text-white/70">
                       {step.desc}
                     </p>
                   </motion.div>
@@ -450,33 +456,24 @@ const Index = () => {
               </motion.div>
             );
           })()}
-
-          {/* Placeholder image entre étape 2 et étape 3 */}
-          <div className="mt-10 md:mt-12 flex justify-center">
-            <div
-              className="w-full md:w-[60%] flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
-              style={{ height: "400px", borderRadius: "12px" }}
-            >
-              Board + Script IA
-            </div>
-          </div>
+        </div>
         </div>
       </motion.section>
 
-      {/* NOUVELLE SECTION : gain de temps */}
-      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#fff3eb" }}>
+      {/* Stats — orange section */}
+      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#f97316" }}>
         <div className="container text-center">
-          <div className="font-bold text-foreground" style={{ fontSize: "clamp(48px, 9vw, 80px)", lineHeight: 1.05 }}>
-            2h15 &nbsp;→&nbsp; 12 min
+          <div className="font-black text-white" style={{ fontSize: "clamp(48px, 10vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
+            2h15 &nbsp;<span className="text-white">→</span>&nbsp; 12 min
           </div>
-          <p className="mt-4 text-foreground/80" style={{ fontSize: "20px" }}>
+          <p className="mt-4 text-white" style={{ fontSize: "20px", opacity: 0.8 }}>
             par vidéo. Soit 9 fois plus rapide.
           </p>
-          <p className="mt-6 max-w-2xl mx-auto text-muted-foreground" style={{ fontSize: "18px", letterSpacing: "0.01em" }}>
+          <p className="mt-6 max-w-2xl mx-auto text-white" style={{ fontSize: "18px", letterSpacing: "0.01em", opacity: 0.8 }}>
             À 5 vidéos par semaine : tu récupères 10 heures.<br />
             Chaque semaine. Pour créer plus — ou pour vivre.
           </p>
-          <p className="mt-8 max-w-2xl mx-auto italic text-muted-foreground/80" style={{ fontSize: "12px" }}>
+          <p className="mt-8 max-w-2xl mx-auto italic text-white" style={{ fontSize: "13px", opacity: 0.6 }}>
             Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
           </p>
         </div>
@@ -521,38 +518,25 @@ const Index = () => {
           variants={gridContainer}
           className="mt-10 md:mt-12 grid gap-5 grid-cols-1 md:grid-cols-3"
         >
-          {/* Row 1: Featured (2/3) — Enregistreur écran + téléprompter */}
+          {/* Featured card — Enregistreur + téléprompter (now a normal card) */}
           <motion.div
             variants={cardItem}
-            className="card-lift relative md:col-span-2 rounded-2xl border border-border bg-card p-8 shadow-elegant flex flex-col justify-between min-h-[260px]"
+            className="card-lift relative rounded-2xl border border-border bg-card p-6 shadow-elegant"
           >
             <span
               className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide"
               style={{ backgroundColor: "#fff3eb", color: "#9a3a08" }}
             >
-              UNIQUE SUR LE MARCHÉ
+              UNIQUE
             </span>
-            <div className="grid gap-6 md:grid-cols-[1fr_280px] md:items-center">
-              <div>
-                <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-                <h3 className="mt-4 text-2xl font-bold text-foreground">Filme devant ton board. Ton script défile. Tes abonnés ne voient rien.</h3>
-                <p className="mt-3 text-base text-muted-foreground max-w-xl">
-                  Enregistre ta présentation avec ta caméra. Le téléprompter est superposé sur l'écran — invisible dans la capture. Export direct TikTok vertical, Reels carré ou YouTube horizontal.
-                </p>
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  Propulsé par GPT-Vision <ArrowRight className="h-4 w-4" />
-                </div>
-              </div>
-              <div
-                className="flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-xs md:text-sm font-medium text-center px-3"
-                style={{ width: "100%", maxWidth: "280px", height: "200px", borderRadius: "12px" }}
-              >
-                Interface enregistreur + téléprompter
-              </div>
-            </div>
+            <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Enregistreur + téléprompter</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">
+              Filme devant ton board. Ton script défile en surimpression — invisible dans la capture. Export TikTok, Reels ou YouTube.
+            </p>
           </motion.div>
 
-          {/* Row 1: small card */}
+          {/* Small card */}
           <motion.div
             variants={cardItem}
             className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
@@ -598,31 +582,46 @@ const Index = () => {
         </motion.div>
       </motion.section>
 
-      {/* Testimonials */}
-      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de choisir entre leurs idées.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Maintenant ils les publient toutes.</p>
-        <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
+      {/* Testimonials — dark section */}
+      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="py-16 md:py-20" style={{ backgroundColor: "#1c1917" }}>
+        <div className="container">
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight text-white">Ils ont arrêté de choisir entre leurs idées.</h2>
+        <p className="mt-3 text-center text-white/70">Maintenant ils les publient toutes.</p>
+        <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-2">
           {[
             { name: "Camille D.", role: "Product Manager, Paris", text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau." },
             { name: "Thomas R.", role: "Fondateur, Lyon", text: "J'ai testé tous les outils de mindmap. scappio c'est le seul qui comprend mon écriture pourrie. Bluffant." },
-            { name: "Sarah M.", role: "Designer UX, Bordeaux", text: "L'auto-improve est dingue. Il rajoute les connexions logiques que j'avais oubliées sur le papier. Comme un co-pilote." },
           ].map((t, i) => (
-            <motion.div key={i} variants={cardItem} className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant flex flex-col">
-              <Quote className="card-icon h-6 w-6 text-primary/60" />
-              <p className="mt-4 text-sm md:text-base text-foreground/90 flex-1">"{t.text}"</p>
-              <div className="mt-5 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-glow">
+            <motion.div
+              key={i}
+              variants={cardItem}
+              className="flex flex-col"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "16px",
+                padding: "32px",
+              }}
+            >
+              <div style={{ color: "#f97316", letterSpacing: "2px", fontSize: "18px" }}>★★★★★</div>
+              <Quote className="mt-4 h-6 w-6" style={{ color: "#f97316" }} />
+              <p className="mt-3 text-base text-white/90 flex-1">"{t.text}"</p>
+              <div className="mt-6 flex items-center gap-3">
+                <div
+                  className="flex items-center justify-center text-sm font-semibold text-white"
+                  style={{ height: 40, width: 40, borderRadius: "50%", backgroundColor: "#f97316" }}
+                >
                   {t.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
+                  <div className="text-sm font-semibold text-white">{t.name}</div>
+                  <div className="text-xs text-white/60">{t.role}</div>
                 </div>
               </div>
             </motion.div>
           ))}
         </motion.div>
+        </div>
       </motion.section>
 
       {/* Final CTA */}
@@ -671,7 +670,7 @@ const Index = () => {
               <span className="text-xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
             </Link>
             <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-              Transforme tes idées en boards
+              Du contenu illimité. Sans jamais manquer d'idées.
             </p>
           </div>
           <nav className="flex flex-col gap-2 text-sm md:items-center">
