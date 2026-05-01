@@ -544,9 +544,9 @@ const Index = () => {
         </div>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-3">
           {[
-            { emoji: "⏱️", title: "2h15 pour 1 vidéo", desc: "Miro pour structurer. Loom pour filmer. CapCut pour monter. 3 outils. 3 onglets. 3 fois plus de friction — pour chaque vidéo que tu publies." },
+            { emoji: "⏱️", title: "2h15 pour 1 vidéo", desc: "Miro pour structurer. Loom pour filmer. CapCut pour monter. 3 outils. 3 onglets. 3 fois plus de friction pour chaque vidéo que tu publies." },
             { emoji: "💨", title: "Des idées qui s'évaporent", desc: "Ton meilleur contenu naît sous la douche ou en voiture. Entre l'idée et l'enregistrement, il disparaît. Pour toujours." },
-            { emoji: "🧱", title: "Le plafond qui bloque ta croissance", desc: "Tu as des idées pour 30 vidéos. Tu en publies 4 par semaine. Pendant ce temps, d'autres créateurs publient 2× plus — avec la moitié de tes idées." },
+            { emoji: "🧱", title: "Le plafond qui bloque ta croissance", desc: "Tu as des idées pour 30 vidéos. Tu en publies 4 par semaine. Pendant ce temps, d'autres créateurs publient 2× plus avec la moitié de tes idées." },
           ].map((f, i) => (
             <motion.div
               key={i}
@@ -564,7 +564,7 @@ const Index = () => {
       {/* Features — bento asymmetric grid, dark grey icons */}
       <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
         <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut pour publier sans limite.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être — en un seul.</p>
+        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être en un seul.</p>
 
         <motion.div
           {...inViewProps}
@@ -585,7 +585,7 @@ const Index = () => {
             <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
             <h3 className="mt-4 text-lg font-semibold text-foreground">Enregistreur + téléprompter</h3>
             <p className="mt-2 text-sm md:text-base text-muted-foreground">
-              Filme devant ton board. Ton script défile en surimpression — invisible dans la capture. Export TikTok, Reels ou YouTube.
+              Filme devant ton board. Ton script défile en surimpression, invisible dans la capture. Export TikTok, Reels ou YouTube.
             </p>
           </motion.div>
 
@@ -710,7 +710,7 @@ const Index = () => {
           </form>
           <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Rejoins les créateurs qui publient sans limite — sans travailler plus.
+            Rejoins les créateurs qui publient sans limite, sans travailler plus.
           </p>
         </div>
       </motion.section>
