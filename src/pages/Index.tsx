@@ -710,7 +710,7 @@ const Index = () => {
           </form>
           <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Rejoins les créateurs qui publient sans limite — sans travailler plus.
+            Rejoins les créateurs qui publient sans limite, sans travailler plus.
           </p>
         </div>
       </motion.section>
