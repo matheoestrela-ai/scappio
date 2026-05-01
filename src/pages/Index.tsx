@@ -214,7 +214,7 @@ const Index = () => {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-3">
+        <nav className="hidden lg:flex items-center gap-4">
           <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">Comment ça marche</a>
           <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Fonctionnalités</a>
           <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Témoignages</a>
@@ -224,8 +224,8 @@ const Index = () => {
           </Button>
         </nav>
 
-        {/* Mobile actions */}
-        <div className="md:hidden flex items-center gap-2">
+        {/* Mobile/Tablet actions */}
+        <div className="lg:hidden flex items-center gap-2">
           <Button asChild size="sm" variant="outline" className="h-10">
             <Link to="/auth">Connexion</Link>
           </Button>
