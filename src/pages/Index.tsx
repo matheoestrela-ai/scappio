@@ -486,8 +486,12 @@ const Index = () => {
               style={{
                 fontFamily: "'Caveat', 'Bradley Hand', 'Segoe Print', cursive",
                 fontStyle: "italic",
-                fontWeight: 600,
+                fontWeight: 700,
                 letterSpacing: "0.01em",
+                fontSize: "1.4em",
+                lineHeight: 0.9,
+                display: "inline-block",
+                verticalAlign: "middle",
               }}
             >
               12 min
