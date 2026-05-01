@@ -501,8 +501,29 @@ const Index = () => {
             par vidéo. Soit 9 fois plus rapide.
           </p>
           <p className="mt-6 max-w-2xl mx-auto text-white" style={{ fontSize: "18px", letterSpacing: "0.01em", opacity: 0.8 }}>
-            À 5 vidéos par semaine : tu récupères 10 heures.<br />
-            Chaque semaine. Pour créer plus — ou pour vivre.
+            À 5 vidéos par semaine : tu récupères{" "}
+            <span className="relative inline-block whitespace-nowrap">
+              10 heures
+              <motion.svg
+                aria-hidden
+                viewBox="0 0 200 14"
+                preserveAspectRatio="none"
+                className="absolute left-0 right-0 -bottom-1 w-full h-3 pointer-events-none"
+              >
+                <motion.path
+                  d="M2 8 C 50 2, 150 2, 198 8"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 1.1, ease: "easeOut" }}
+                />
+              </motion.svg>
+            </span>
+            .
           </p>
           <p className="mt-8 max-w-2xl mx-auto italic text-white" style={{ fontSize: "13px", opacity: 0.6 }}>
             Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
