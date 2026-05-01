@@ -460,20 +460,20 @@ const Index = () => {
         </div>
       </motion.section>
 
-      {/* NOUVELLE SECTION : gain de temps */}
-      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#fff3eb" }}>
+      {/* Stats — orange section */}
+      <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#f97316" }}>
         <div className="container text-center">
-          <div className="font-bold text-foreground" style={{ fontSize: "clamp(48px, 9vw, 80px)", lineHeight: 1.05 }}>
-            2h15 &nbsp;→&nbsp; 12 min
+          <div className="font-black text-white" style={{ fontSize: "clamp(48px, 10vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
+            2h15 &nbsp;<span className="text-white">→</span>&nbsp; 12 min
           </div>
-          <p className="mt-4 text-foreground/80" style={{ fontSize: "20px" }}>
+          <p className="mt-4 text-white" style={{ fontSize: "20px", opacity: 0.8 }}>
             par vidéo. Soit 9 fois plus rapide.
           </p>
-          <p className="mt-6 max-w-2xl mx-auto text-muted-foreground" style={{ fontSize: "18px", letterSpacing: "0.01em" }}>
+          <p className="mt-6 max-w-2xl mx-auto text-white" style={{ fontSize: "18px", letterSpacing: "0.01em", opacity: 0.8 }}>
             À 5 vidéos par semaine : tu récupères 10 heures.<br />
             Chaque semaine. Pour créer plus — ou pour vivre.
           </p>
-          <p className="mt-8 max-w-2xl mx-auto italic text-muted-foreground/80" style={{ fontSize: "12px" }}>
+          <p className="mt-8 max-w-2xl mx-auto italic text-white" style={{ fontSize: "13px", opacity: 0.6 }}>
             Calcul basé sur : structuration Miro (30 min) + script (30 min) + enregistrement Loom (10 min) + montage CapCut (45 min) = 2h15 / contre vocal → board → téléprompter → export Scappio = 12 min.
           </p>
         </div>
