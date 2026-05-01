@@ -241,7 +241,7 @@ const Index = () => {
 
       {/* Mobile menu drawer */}
       {menuOpen && (
-        <div className="md:hidden container pb-4">
+        <div className="lg:hidden container pb-4">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-elegant flex flex-col gap-1 text-base">
             <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Comment ça marche</a>
             <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Le problème</a>
