@@ -481,7 +481,17 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} className="py-16 md:py-20" style={{ backgroundColor: "#f97316" }}>
         <div className="container text-center">
           <div className="font-black text-white" style={{ fontSize: "clamp(48px, 10vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
-            2h15 &nbsp;<span className="text-white">→</span>&nbsp; 12 min
+            2h15 &nbsp;<span className="text-white">→</span>&nbsp;
+            <span
+              style={{
+                fontFamily: "'Caveat', 'Bradley Hand', 'Segoe Print', cursive",
+                fontStyle: "italic",
+                fontWeight: 600,
+                letterSpacing: "0.01em",
+              }}
+            >
+              12 min
+            </span>
           </div>
           <p className="mt-4 text-white" style={{ fontSize: "20px", opacity: 0.8 }}>
             par vidéo. Soit 9 fois plus rapide.
