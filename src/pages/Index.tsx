@@ -192,7 +192,7 @@ const Index = () => {
   };
 
   return (
-    <div className="relative min-h-screen pb-24 md:pb-0" style={{ backgroundColor: "#faf7f4" }}>
+    <div className="relative min-h-screen pb-24 lg:pb-0 overflow-x-hidden" style={{ backgroundColor: "#faf7f4" }}>
       {/* FigJam-style fine grid background (parallax) */}
       <motion.div
         aria-hidden
@@ -214,7 +214,7 @@ const Index = () => {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-3">
+        <nav className="hidden lg:flex items-center gap-4">
           <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">Comment ça marche</a>
           <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Fonctionnalités</a>
           <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Témoignages</a>
@@ -224,8 +224,8 @@ const Index = () => {
           </Button>
         </nav>
 
-        {/* Mobile actions */}
-        <div className="md:hidden flex items-center gap-2">
+        {/* Mobile/Tablet actions */}
+        <div className="lg:hidden flex items-center gap-2">
           <Button asChild size="sm" variant="outline" className="h-10">
             <Link to="/auth">Connexion</Link>
           </Button>
@@ -241,7 +241,7 @@ const Index = () => {
 
       {/* Mobile menu drawer */}
       {menuOpen && (
-        <div className="md:hidden container pb-4">
+        <div className="lg:hidden container pb-4">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-elegant flex flex-col gap-1 text-base">
             <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Comment ça marche</a>
             <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Le problème</a>
@@ -303,9 +303,9 @@ const Index = () => {
               toast.success("On t'emmène créer ton board !");
               window.location.href = "/auth";
             }}
-            className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
+            className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-1 sm:gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-1.5 sm:p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
           >
-            <PenLine className="ml-2 h-5 w-5 text-muted-foreground shrink-0" />
+            <PenLine className="ml-1 sm:ml-2 h-5 w-5 text-muted-foreground shrink-0 hidden sm:block" />
             <button
               type="button"
               aria-label="Glisser-déposer un fichier"
@@ -318,7 +318,7 @@ const Index = () => {
               name="prompt"
               type="text"
               placeholder={placeholder}
-              className="flex-1 bg-transparent border-0 outline-none text-base placeholder:text-muted-foreground px-2 py-2"
+              className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm sm:text-base placeholder:text-muted-foreground px-1 sm:px-2 py-2"
             />
             <button
               type="button"
@@ -480,7 +480,7 @@ const Index = () => {
       {/* Stats — orange section */}
       <motion.section {...inViewProps} variants={sectionFade} className="pt-16 md:pt-20 pb-0" style={{ backgroundColor: "#f97316" }}>
         <div className="container text-center">
-          <div className="font-black text-white whitespace-nowrap" style={{ fontSize: "clamp(32px, 9vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
+          <div className="font-black text-white whitespace-nowrap" style={{ fontSize: "clamp(28px, 8.5vw, 96px)", fontWeight: 900, lineHeight: 1.05 }}>
             2h15 <span className="text-white mx-1 sm:mx-3">→</span>
             <span
               style={{
@@ -744,7 +744,7 @@ const Index = () => {
       </footer>
 
       {/* Sticky mobile CTA */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
         <Button asChild size="lg" className="w-full h-12 bg-primary text-primary-foreground shadow-glow hover:opacity-90 text-base btn-shimmer">
           <Link to="/auth">
             Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
