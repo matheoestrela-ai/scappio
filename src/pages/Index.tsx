@@ -670,7 +670,7 @@ const Index = () => {
               <span className="text-xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
             </Link>
             <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-              Transforme tes idées en boards
+              Du contenu illimité. Sans jamais manquer d'idées.
             </p>
           </div>
           <nav className="flex flex-col gap-2 text-sm md:items-center">
