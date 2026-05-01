@@ -18,6 +18,7 @@ import {
   MousePointer2,
   Download,
   Zap,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
