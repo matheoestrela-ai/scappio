@@ -337,11 +337,16 @@ const Index = () => {
 
           <motion.div
             variants={fadeUp}
-            className="mx-auto mt-8 md:mt-10 w-full max-w-[700px]"
+            className="mx-auto mt-8 md:mt-10 w-full"
+            style={{ maxWidth: "900px" }}
           >
             <div
-              className="relative w-full overflow-hidden bg-black border border-border"
-              style={{ aspectRatio: "16 / 9", borderRadius: "16px", boxShadow: "0 6px 24px -8px rgba(0,0,0,0.15)" }}
+              className="relative w-full overflow-hidden bg-black"
+              style={{
+                aspectRatio: "16 / 9",
+                borderRadius: "16px",
+                boxShadow: "0 24px 80px rgba(0,0,0,0.2), 0 0 60px rgba(249,115,22,0.15)",
+              }}
             >
               {/* Subtle gradient backdrop */}
               <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900" />
