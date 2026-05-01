@@ -582,31 +582,46 @@ const Index = () => {
         </motion.div>
       </motion.section>
 
-      {/* Testimonials */}
-      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Ils ont arrêté de choisir entre leurs idées.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Maintenant ils les publient toutes.</p>
-        <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-5 md:grid-cols-3">
+      {/* Testimonials — dark section */}
+      <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="py-16 md:py-20" style={{ backgroundColor: "#1c1917" }}>
+        <div className="container">
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight text-white">Ils ont arrêté de choisir entre leurs idées.</h2>
+        <p className="mt-3 text-center text-white/70">Maintenant ils les publient toutes.</p>
+        <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-2">
           {[
             { name: "Camille D.", role: "Product Manager, Paris", text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau." },
             { name: "Thomas R.", role: "Fondateur, Lyon", text: "J'ai testé tous les outils de mindmap. scappio c'est le seul qui comprend mon écriture pourrie. Bluffant." },
-            { name: "Sarah M.", role: "Designer UX, Bordeaux", text: "L'auto-improve est dingue. Il rajoute les connexions logiques que j'avais oubliées sur le papier. Comme un co-pilote." },
           ].map((t, i) => (
-            <motion.div key={i} variants={cardItem} className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant flex flex-col">
-              <Quote className="card-icon h-6 w-6 text-primary/60" />
-              <p className="mt-4 text-sm md:text-base text-foreground/90 flex-1">"{t.text}"</p>
-              <div className="mt-5 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-glow">
+            <motion.div
+              key={i}
+              variants={cardItem}
+              className="flex flex-col"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "16px",
+                padding: "32px",
+              }}
+            >
+              <div style={{ color: "#f97316", letterSpacing: "2px", fontSize: "18px" }}>★★★★★</div>
+              <Quote className="mt-4 h-6 w-6" style={{ color: "#f97316" }} />
+              <p className="mt-3 text-base text-white/90 flex-1">"{t.text}"</p>
+              <div className="mt-6 flex items-center gap-3">
+                <div
+                  className="flex items-center justify-center text-sm font-semibold text-white"
+                  style={{ height: 40, width: 40, borderRadius: "50%", backgroundColor: "#f97316" }}
+                >
                   {t.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
+                  <div className="text-sm font-semibold text-white">{t.name}</div>
+                  <div className="text-xs text-white/60">{t.role}</div>
                 </div>
               </div>
             </motion.div>
           ))}
         </motion.div>
+        </div>
       </motion.section>
 
       {/* Final CTA */}
