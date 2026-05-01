@@ -412,16 +412,17 @@ const Index = () => {
         </div>
       </motion.section>
 
-      {/* How it works — horizontal stepper timeline */}
-      <motion.section {...inViewProps} variants={sectionFade} id="how" className="container py-16 md:py-20">
+      {/* How it works — dark section */}
+      <motion.section {...inViewProps} variants={sectionFade} id="how" className="py-16 md:py-20" style={{ backgroundColor: "#1c1917" }}>
+        <div className="container">
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
-          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
+          <p className="mt-3 text-white/70 max-w-xl mx-auto">
             Fini la perte de temps.
           </p>
         </div>
 
-        <div className="relative mt-12 md:mt-16">
+        <div className="relative mt-10 md:mt-12">
           {(() => {
             const steps = [
               { num: "01", title: "Capture", desc: "Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction." },
@@ -432,7 +433,7 @@ const Index = () => {
               <motion.div
                 {...inViewProps}
                 variants={gridContainer}
-                className="grid gap-12 md:gap-10 md:grid-cols-3"
+                className="grid gap-10 md:gap-10 md:grid-cols-3"
               >
                 {steps.map((step, i) => (
                   <motion.div
@@ -442,12 +443,12 @@ const Index = () => {
                   >
                     <div
                       className="font-bold leading-none select-none"
-                      style={{ color: "#e8732a", fontSize: "48px" }}
+                      style={{ color: "#f97316", fontSize: "48px" }}
                     >
                       {step.num}
                     </div>
-                    <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
-                    <p className="mt-3 text-sm md:text-base text-muted-foreground">
+                    <h3 className="mt-3 text-lg font-bold text-white">{step.title}</h3>
+                    <p className="mt-3 text-sm md:text-base text-white/70">
                       {step.desc}
                     </p>
                   </motion.div>
@@ -455,16 +456,7 @@ const Index = () => {
               </motion.div>
             );
           })()}
-
-          {/* Placeholder image entre étape 2 et étape 3 */}
-          <div className="mt-10 md:mt-12 flex justify-center">
-            <div
-              className="w-full md:w-[60%] flex items-center justify-center bg-muted/60 border border-border text-muted-foreground text-sm md:text-base font-medium"
-              style={{ height: "400px", borderRadius: "12px" }}
-            >
-              Board + Script IA
-            </div>
-          </div>
+        </div>
         </div>
       </motion.section>
 
