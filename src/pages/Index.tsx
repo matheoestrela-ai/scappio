@@ -442,9 +442,9 @@ const Index = () => {
         <div className="relative mt-10 md:mt-12">
           {(() => {
             const steps = [
-              { num: "01", title: "Capture", desc: "Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction." },
-              { num: "02", title: "Structure IA", desc: "En 10 secondes, ton idée devient un board structuré. L'agent IA détecte les angles forts, complète les manques et écrit ton script automatiquement." },
-              { num: "03", title: "Enregistre", desc: "Lance l'enregistrement. Ton script défile en direct — invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board." },
+              { num: "01", title: "Capture", desc: <>Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction.</> },
+              { num: "02", title: "Structure IA", desc: <>En 10 secondes, ton idée devient un board structuré. L'agent IA détecte les angles forts, complète les manques et écrit ton script automatiquement.</> },
+              { num: "03", title: "Enregistre", desc: <>Lance l'enregistrement. Ton script défile en direct, invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board. Sous format <span style={{ color: "#f97316", fontWeight: 600 }}>TikTok</span> ou YouTube.</> },
             ];
             return (
               <motion.div
