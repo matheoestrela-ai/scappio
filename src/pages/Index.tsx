@@ -530,8 +530,11 @@ const Index = () => {
         {/* Smooth gradient transition to cream background */}
         <div
           aria-hidden
-          className="pointer-events-none mt-12 md:mt-16 h-24 md:h-32 w-full"
-          style={{ background: "linear-gradient(to bottom, #f97316 0%, #faf7f4 100%)" }}
+          className="pointer-events-none mt-16 md:mt-24 h-56 md:h-80 w-full"
+          style={{
+            background:
+              "linear-gradient(to bottom, #f97316 0%, #fbb070 30%, #fde0c4 60%, #faf7f4 100%)",
+          }}
         />
       </motion.section>
 
