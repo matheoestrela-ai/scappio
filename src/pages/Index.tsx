@@ -585,7 +585,7 @@ const Index = () => {
             <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
             <h3 className="mt-4 text-lg font-semibold text-foreground">Enregistreur + téléprompter</h3>
             <p className="mt-2 text-sm md:text-base text-muted-foreground">
-              Filme devant ton board. Ton script défile en surimpression — invisible dans la capture. Export TikTok, Reels ou YouTube.
+              Filme devant ton board. Ton script défile en surimpression, invisible dans la capture. Export TikTok, Reels ou YouTube.
             </p>
           </motion.div>
 
