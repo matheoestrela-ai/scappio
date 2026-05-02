@@ -156,43 +156,46 @@ export default function ScreenRecorder() {
       toast.error("Ton navigateur ne supporte pas l'enregistrement");
       return;
     }
-    let display: MediaStream;
+    // Step 1 — Camera + microphone FIRST, so the user explicitly grants
+    // camera access before the browser opens the screen-share picker.
+    let cameraStream: MediaStream | null = null;
     try {
-      display = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false,
-        // @ts-ignore
-        preferCurrentTab: true,
-      });
-    } catch {
-      toast.error("Partage d'écran annulé");
-      return;
-    }
-
-    let camStream: MediaStream | null = null;
-    try {
-      camStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 1280, height: 720 },
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
         audio: true,
       });
     } catch {
       toast.warning("Caméra non disponible — enregistrement sans facecam");
     }
 
-    if (!camStream || camStream.getAudioTracks().length === 0) {
-      // Try mic separately if camera failed or has no audio track
+    // If camera failed entirely, still try to get the mic alone.
+    if (!cameraStream) {
       try {
-        const mic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        if (camStream) {
-          mic.getAudioTracks().forEach((t) => camStream!.addTrack(t));
-        } else {
-          camStream = mic;
-        }
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false,
+        });
       } catch {
         toast.warning("Microphone non disponible — enregistrement sans son");
       }
     }
 
+    // Step 2 — Screen share
+    let screenStream: MediaStream;
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+        // @ts-ignore — Chromium extension
+        preferCurrentTab: true,
+      });
+    } catch {
+      toast.error("Partage d'écran annulé");
+      cameraStream?.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+      return;
+    }
+
+    // Step 3 — Hidden canvas
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
     canvas.height = 1920;
@@ -203,23 +206,29 @@ export default function ScreenRecorder() {
     offscreenCanvasRef.current = canvas;
     const ctx = canvas.getContext("2d")!;
 
-    const tabVideo = document.createElement("video");
-    tabVideo.srcObject = display;
-    tabVideo.muted = true;
-    tabVideo.autoplay = true;
-    tabVideo.playsInline = true;
-    try { await tabVideo.play(); } catch {}
+    // Step 4 — Video elements (screen + camera)
+    const screenVideo = document.createElement("video");
+    screenVideo.srcObject = screenStream;
+    screenVideo.muted = true;
+    screenVideo.autoplay = true;
+    screenVideo.playsInline = true;
+    try { await screenVideo.play(); } catch {}
 
-    let camVideo: HTMLVideoElement | null = null;
-    if (camStream && camStream.getVideoTracks().length > 0) {
-      camVideo = document.createElement("video");
-      const camOnly = new MediaStream(camStream.getVideoTracks());
-      camVideo.srcObject = camOnly;
-      camVideo.muted = true;
-      camVideo.autoplay = true;
-      camVideo.playsInline = true;
-      try { await camVideo.play(); } catch {}
+    let cameraVideo: HTMLVideoElement | null = null;
+    if (cameraStream && cameraStream.getVideoTracks().length > 0) {
+      cameraVideo = document.createElement("video");
+      cameraVideo.srcObject = cameraStream;
+      cameraVideo.muted = true;
+      cameraVideo.autoplay = true;
+      cameraVideo.playsInline = true;
+      try { await cameraVideo.play(); } catch {}
     }
+
+    // Aliases for the rest of the function (drawing, recorder setup, cleanup).
+    const display = screenStream;
+    const camStream = cameraStream;
+    const tabVideo = screenVideo;
+    const camVideo = cameraVideo;
 
     const draw = () => {
       ctx.fillStyle = "#000";
