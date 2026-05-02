@@ -98,6 +98,7 @@ const MyRecording = () => {
     const v = videoRef.current;
     if (!v) return;
     const onTime = () => {
+      setPlayhead(v.currentTime);
       if (v.currentTime > trimEnd) {
         v.pause();
         v.currentTime = trimEnd;
@@ -106,8 +107,16 @@ const MyRecording = () => {
         v.currentTime = trimStart;
       }
     };
+    const onPause = () => setPlaying(false);
+    const onPlay = () => setPlaying(true);
     v.addEventListener("timeupdate", onTime);
-    return () => v.removeEventListener("timeupdate", onTime);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("play", onPlay);
+    return () => {
+      v.removeEventListener("timeupdate", onTime);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("play", onPlay);
+    };
   }, [trimStart, trimEnd]);
 
   const togglePlay = () => {
