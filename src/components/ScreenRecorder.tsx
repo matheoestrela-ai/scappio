@@ -287,6 +287,7 @@ export default function ScreenRecorder() {
       if (audioTrack) canvasStream.addTrack(audioTrack);
 
       stopTracksRef.current = [
+        ...screenStream.getTracks(),
         ...cameraStream.getTracks(),
         ...canvasStream.getVideoTracks(),
       ];
