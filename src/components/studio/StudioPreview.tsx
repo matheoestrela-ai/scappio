@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { StudioFormat } from "@/lib/studio-recorder";
 import type { WebcamBubble } from "@/hooks/useStudioRecorder";
 
 type Props = {
   format: StudioFormat;
-  cameraStream: RefObject<MediaStream | null>;
-  screenStream: RefObject<MediaStream | null>;
+  cameraStream: MediaStream | null;
+  screenStream: MediaStream | null;
   cameraOn: boolean;
   screenOn: boolean;
   bubble: WebcamBubble;
@@ -28,10 +28,17 @@ export default function StudioPreview({
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
-    if (camRef.current) camRef.current.srcObject = cameraStream.current;
+    const el = camRef.current;
+    if (!el) return;
+    el.srcObject = cameraStream;
+    if (cameraStream) el.play().catch(() => {});
   }, [cameraStream, cameraOn]);
+
   useEffect(() => {
-    if (scrRef.current) scrRef.current.srcObject = screenStream.current;
+    const el = scrRef.current;
+    if (!el) return;
+    el.srcObject = screenStream;
+    if (screenStream) el.play().catch(() => {});
   }, [screenStream, screenOn]);
 
   // Drag bubble within container (16:9 + screen on only).
