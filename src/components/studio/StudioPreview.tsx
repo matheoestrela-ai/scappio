@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import type { StudioFormat } from "@/lib/studio-recorder";
 import type { WebcamBubble } from "@/hooks/useStudioRecorder";
 
@@ -12,8 +12,8 @@ type Props = {
   onBubbleChange: (b: WebcamBubble) => void;
 };
 
-// Live preview of the studio composition (mirrors the recorder canvas layout).
-export default function StudioPreview({
+// Live preview of the studio composition using separate UI video elements.
+const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
   format,
   cameraStream,
   screenStream,
@@ -21,21 +21,25 @@ export default function StudioPreview({
   screenOn,
   bubble,
   onBubbleChange,
-}: Props) {
+}, forwardedRef) {
   const camRef = useRef<HTMLVideoElement>(null);
+  const bubbleCamRef = useRef<HTMLVideoElement>(null);
   const scrRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
-    const el = camRef.current;
-    if (!el) return;
-    el.srcObject = cameraStream;
-    if (cameraStream) {
+    const bind = (el: HTMLVideoElement | null, stream: MediaStream | null) => {
+      if (!el) return;
+      el.srcObject = stream;
+      if (!stream) return;
       const start = () => el.play().catch(() => {});
       el.addEventListener("loadedmetadata", start, { once: true });
       start();
-    }
+    };
+
+    bind(camRef.current, cameraStream);
+    bind(bubbleCamRef.current, cameraStream);
   }, [cameraStream, cameraOn]);
 
   useEffect(() => {
@@ -82,7 +86,11 @@ export default function StudioPreview({
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div
-        ref={containerRef}
+        ref={(node) => {
+          containerRef.current = node;
+          if (typeof forwardedRef === "function") forwardedRef(node);
+          else if (forwardedRef) forwardedRef.current = node;
+        }}
         className={`relative ${aspect} bg-black rounded-xl overflow-hidden shadow-elegant ${
           format === "9:16" ? "h-full max-h-full" : "w-full max-w-full"
         }`}
@@ -97,7 +105,7 @@ export default function StudioPreview({
             isSplit
               ? "inset-x-0 top-0 h-1/2 w-full object-cover z-10 opacity-100"
               : isPip
-                ? "z-20 h-full w-full object-cover pointer-events-none"
+                ? "opacity-0 pointer-events-none"
                 : showCameraFull
                   ? "inset-0 h-full w-full object-cover z-10 opacity-100"
                   : "opacity-0 pointer-events-none"
@@ -138,7 +146,7 @@ export default function StudioPreview({
             }}
           >
             <video
-              ref={camRef}
+              ref={bubbleCamRef}
               autoPlay
               muted
               playsInline
@@ -155,4 +163,6 @@ export default function StudioPreview({
       </div>
     </div>
   );
-}
+});
+
+export default StudioPreview;
