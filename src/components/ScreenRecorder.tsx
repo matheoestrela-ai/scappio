@@ -158,29 +158,39 @@ export default function ScreenRecorder() {
     }
     formatRef.current = "youtube";
     try {
+      // 1) Caméra + micro D'ABORD (un seul prompt, geste utilisateur intact).
+      let camAndMic: MediaStream | null = null;
+      try {
+        camAndMic = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: true,
+        });
+      } catch {
+        // On essaie au moins le micro
+        try {
+          camAndMic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          toast.warning("Caméra non disponible");
+        } catch {
+          toast.warning("Caméra et microphone non disponibles");
+        }
+      }
+
+      const micStream: MediaStream | null =
+        camAndMic && camAndMic.getAudioTracks().length > 0
+          ? new MediaStream(camAndMic.getAudioTracks())
+          : null;
+      const cameraStream: MediaStream | null =
+        camAndMic && camAndMic.getVideoTracks().length > 0
+          ? new MediaStream(camAndMic.getVideoTracks())
+          : null;
+
+      // 2) Écran ENSUITE — la permission précédente garde le geste valide.
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: { ideal: 30 } },
         audio: false,
         // @ts-ignore — Chromium hint
         preferCurrentTab: true,
       });
-
-      let micStream: MediaStream | null = null;
-      try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      } catch {
-        toast.warning("Microphone non disponible");
-      }
-
-      let cameraStream: MediaStream | null = null;
-      try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-        });
-      } catch {
-        toast.warning("Caméra non disponible");
-      }
 
       hiddenOverlaysRef.current = hideOverlays();
 
