@@ -1,18 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, FileDown, LogOut, RefreshCcw, Image as ImageIcon, Sparkles, Pencil, FileText, Maximize2, Minimize2, Camera, Video, History as HistoryIcon, Check } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import VoiceRecorder from "@/components/VoiceRecorder";
+  Loader2,
+  FileDown,
+  Image as ImageIcon,
+  Sparkles,
+  Pencil,
+  FileText,
+  Maximize2,
+  Minimize2,
+  Share2,
+  Mic,
+  Lightbulb,
+  ClipboardList,
+  Rocket,
+  Target,
+} from "lucide-react";
 
 import { type BoardData, type BoardApi } from "@/components/Board";
 import TldrawBoard from "@/components/TldrawBoard";
@@ -32,36 +38,28 @@ import {
   titleFromBoard,
   type BoardMethod,
 } from "@/lib/boards-history";
+import ChatSidebar, { SidebarToggleButton } from "@/components/ChatSidebar";
+import ChatComposer from "@/components/ChatComposer";
 
-const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+const MAX_SIZE = 25 * 1024 * 1024;
 
 const normalizeImageFile = async (file: File): Promise<File> => {
   const isHeic =
     file.type === "image/heic" ||
     file.type === "image/heif" ||
     /\.(heic|heif)$/i.test(file.name);
-
   if (!isHeic) return file;
-
   try {
-    const converted = await heic2any({
-      blob: file,
-      toType: "image/jpeg",
-      quality: 0.9,
-    });
-
+    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
     const output = Array.isArray(converted) ? converted[0] : converted;
-    if (!(output instanceof Blob)) {
-      throw new Error("Conversion HEIC impossible");
-    }
-
+    if (!(output instanceof Blob)) throw new Error("Conversion HEIC impossible");
     const safeName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
     return new File([output], safeName, { type: "image/jpeg" });
   } catch (err: any) {
     const msg = String(err?.message ?? err ?? "");
     if (msg.includes("ERR_LIBHEIF") || msg.toLowerCase().includes("format not supported")) {
       throw new Error(
-        "Ce fichier HEIC n'est pas lisible par le navigateur. Sur iPhone : Réglages > Appareil photo > Formats > « Le plus compatible », ou exporte la photo en JPG/PNG.",
+        "Ce fichier HEIC n'est pas lisible. Sur iPhone : Réglages > Appareil photo > Formats > « Le plus compatible », ou exporte en JPG/PNG.",
       );
     }
     throw new Error("Impossible de convertir l'image HEIC. Réessaie en JPG ou PNG.");
@@ -74,7 +72,6 @@ const parseBoardData = (input: unknown): BoardData | null => {
   if (!input || typeof input !== "object") return null;
   const c = input as { nodes?: Array<Record<string, unknown>> };
   if (!Array.isArray(c.nodes)) return null;
-
   const nodes = c.nodes
     .filter(
       (n) =>
@@ -89,17 +86,17 @@ const parseBoardData = (input: unknown): BoardData | null => {
       level: n.level as 1 | 2 | 3,
       parent: (n.parent as string | null) ?? null,
     }));
-
   if (!nodes.length) return null;
-
-  // Ensure parents reference existing ids
   const ids = new Set(nodes.map((n) => n.id));
-  const safe = nodes.map((n) =>
-    n.parent && !ids.has(n.parent) ? { ...n, parent: null } : n,
-  );
-
-  return { nodes: safe };
+  return { nodes: nodes.map((n) => (n.parent && !ids.has(n.parent) ? { ...n, parent: null } : n)) };
 };
+
+const QUICK_SUGGESTIONS = [
+  { icon: Lightbulb, label: "Une idée de vidéo", text: "J'ai une idée de vidéo : " },
+  { icon: ClipboardList, label: "Mes notes de réunion", text: "Voici mes notes de réunion : " },
+  { icon: Rocket, label: "Mon plan de lancement", text: "Voici mon plan de lancement : " },
+  { icon: Target, label: "Ma stratégie de contenu", text: "Ma stratégie de contenu : " },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -107,26 +104,24 @@ const Dashboard = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [improving, setImproving] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [panelFullscreen, setPanelFullscreen] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(false);
-  const [textDialogOpen, setTextDialogOpen] = useState(false);
-  const [textInput, setTextInput] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+  const [composerPrefill, setComposerPrefill] = useState(0);
+
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
 
-  // ---- Auto-save state ----
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentBoardId, setCurrentBoardId] = useState<string | null>(null);
   const [creationMethod, setCreationMethod] = useState<BoardMethod>("manual");
-  const [savedFlash, setSavedFlash] = useState(false);
   const lastSerializedRef = useRef<string>("");
   const lastVersionAtRef = useRef<number>(0);
   const debounceRef = useRef<number | null>(null);
@@ -140,9 +135,7 @@ const Dashboard = () => {
     if (!current.nodes.length) return;
     setSuggestionsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("board-suggest", {
-        body: { board: current },
-      });
+      const { data, error } = await supabase.functions.invoke("board-suggest", { body: { board: current } });
       if (error) {
         const msg = (error as any)?.message ?? "Erreur de suggestions";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
@@ -181,9 +174,7 @@ const Dashboard = () => {
     if (!current.nodes.length) return;
     setImproving(true);
     try {
-      const { data, error } = await supabase.functions.invoke("board-improve", {
-        body: { board: current },
-      });
+      const { data, error } = await supabase.functions.invoke("board-improve", { body: { board: current } });
       if (error) {
         const msg = (error as any)?.message ?? "Erreur Auto-améliorer";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
@@ -199,7 +190,6 @@ const Dashboard = () => {
       api.replaceBoard({ nodes });
       setBoard({ nodes });
       toast.success("Board restructuré par l'IA");
-      // refresh suggestions on the new board
       setTimeout(() => refreshSuggestions(), 200);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
@@ -216,11 +206,8 @@ const Dashboard = () => {
       parentHint: s.parentHint ?? null,
     });
     setInsights((prev) =>
-      prev
-        ? { ...prev, suggestions: prev.suggestions.filter((x) => x.id !== s.id) }
-        : prev,
+      prev ? { ...prev, suggestions: prev.suggestions.filter((x) => x.id !== s.id) } : prev,
     );
-    // Re-run hierarchical layout so the new node lands cleanly under its parent
     setTimeout(() => boardApiRef.current?.relayout(), 50);
     toast.success("Ajouté au board");
   }, []);
@@ -242,22 +229,16 @@ const Dashboard = () => {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
-  // ---- Generate small thumbnail of the board (PNG data URL) ----
   const generateThumbnail = useCallback(async (): Promise<string | null> => {
     if (!boardRef.current) return null;
     try {
-      const url = await toPng(boardRef.current, {
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 0.5,
-      });
+      const url = await toPng(boardRef.current, { cacheBust: true, backgroundColor: "#ffffff", pixelRatio: 0.5 });
       return url;
     } catch {
       return null;
     }
   }, []);
 
-  // ---- Save current board now ----
   const saveNow = useCallback(async (snapshotVersion = false) => {
     const id = currentBoardId;
     const api = boardApiRef.current;
@@ -267,23 +248,16 @@ const Dashboard = () => {
     if (serialized === lastSerializedRef.current && !snapshotVersion) return;
     try {
       const thumbnail = await generateThumbnail();
-      await updateBoard({
-        id,
-        data,
-        title: titleFromBoard(data),
-        thumbnail,
-        snapshotVersion,
-      });
+      await updateBoard({ id, data, title: titleFromBoard(data), thumbnail, snapshotVersion });
       lastSerializedRef.current = serialized;
       if (snapshotVersion) lastVersionAtRef.current = Date.now();
-      setSavedFlash(true);
-      setTimeout(() => setSavedFlash(false), 1600);
+      setSidebarRefreshKey((k) => k + 1);
     } catch (e: any) {
       console.warn("Auto-save échouée:", e?.message);
     }
   }, [currentBoardId, generateThumbnail]);
 
-  // ---- Load board from URL (?board=<id>) ----
+  // Load board from URL
   useEffect(() => {
     const id = searchParams.get("board");
     if (!id || id === currentBoardId || !authChecked) return;
@@ -296,22 +270,21 @@ const Dashboard = () => {
           return;
         }
         setBoard(row.data);
+        setUserMessage(row.title);
         setCurrentBoardId(row.id);
         setCreationMethod(row.method);
         setInsights(null);
         lastSerializedRef.current = JSON.stringify(row.data);
-      } catch (e: any) {
+      } catch {
         toast.error("Impossible d'ouvrir ce tableau");
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, authChecked]);
 
-  // ---- Auto-save: watcher + debounce + periodic ----
+  // Auto-save watchers
   useEffect(() => {
     if (!currentBoardId || !board) return;
-
-    // Watch the live board every 1s; if changes, schedule a 3s debounced save.
     watcherRef.current = window.setInterval(() => {
       const api = boardApiRef.current;
       if (!api) return;
@@ -319,16 +292,12 @@ const Dashboard = () => {
       if (serialized !== lastSerializedRef.current) {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = window.setTimeout(() => {
-          // snapshot a version once per 5 minutes of activity
           const snap = Date.now() - lastVersionAtRef.current > 5 * 60 * 1000;
           saveNow(snap);
         }, 3000);
       }
     }, 1000);
-
-    // Periodic forced save every 30s
     periodicRef.current = window.setInterval(() => saveNow(false), 30000);
-
     return () => {
       if (watcherRef.current) clearInterval(watcherRef.current);
       if (periodicRef.current) clearInterval(periodicRef.current);
@@ -346,53 +315,43 @@ const Dashboard = () => {
 
   const runAnalysis = useCallback(async (
     payload: { image?: string; text?: string; pdf?: string },
-    method: BoardMethod = "manual",
+    method: BoardMethod,
+    displayMessage: string,
   ) => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
     setCurrentBoardId(null);
+    setUserMessage(displayMessage);
     lastSerializedRef.current = "";
     try {
-      const { data, error } = await supabase.functions.invoke("analyze-notes", {
-        body: payload,
-      });
-
+      const { data, error } = await supabase.functions.invoke("analyze-notes", { body: payload });
       if (error) {
         const msg = (error as any)?.message ?? "Erreur d'analyse";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
-        else if (msg.includes("402")) toast.error("Crédits IA épuisés. Recharge ton workspace.");
+        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
         else if (msg.toLowerCase().includes("unsupported image format")) {
           toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
         } else toast.error(msg);
         return;
       }
-
       const parsedBoard = parseBoardData(data);
-
       if (!parsedBoard) {
         toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie un contenu plus clair.");
         return;
       }
-
       setBoard(parsedBoard);
       setInsights(null);
       setCreationMethod(method);
-
-      // Persist as a new board immediately
       try {
-        const created = await createBoard({
-          data: parsedBoard,
-          method,
-          title: titleFromBoard(parsedBoard),
-        });
+        const created = await createBoard({ data: parsedBoard, method, title: titleFromBoard(parsedBoard) });
         setCurrentBoardId(created.id);
         lastSerializedRef.current = JSON.stringify(parsedBoard);
         setSearchParams({ board: created.id }, { replace: true });
+        setSidebarRefreshKey((k) => k + 1);
       } catch (e: any) {
         console.warn("Auto-save initial échouée:", e?.message);
       }
-
       toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
       setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
@@ -402,7 +361,7 @@ const Dashboard = () => {
     }
   }, [refreshSuggestions, setSearchParams]);
 
-  const handleFile = useCallback(async (file: File) => {
+  const handleImageFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
       toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
       return;
@@ -412,10 +371,9 @@ const Dashboard = () => {
       return;
     }
     try {
-      const normalizedFile = await normalizeImageFile(file);
-      const dataUrl = await fileToBase64(normalizedFile);
-      setPreview(dataUrl);
-      await runAnalysis({ image: dataUrl }, "photo");
+      const normalized = await normalizeImageFile(file);
+      const dataUrl = await fileToBase64(normalized);
+      await runAnalysis({ image: dataUrl }, "photo", `📸 Photo : ${file.name}`);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     }
@@ -423,7 +381,7 @@ const Dashboard = () => {
 
   const handlePdfFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
-      toast.error("Format non supporté. Choisis un fichier PDF.");
+      toast.error("Format non supporté. Choisis un PDF.");
       return;
     }
     if (file.size > MAX_SIZE) {
@@ -431,35 +389,24 @@ const Dashboard = () => {
       return;
     }
     try {
-      setPreview(null);
       const dataUrl = await fileToBase64(file);
-      await runAnalysis({ pdf: dataUrl }, "pdf");
+      await runAnalysis({ pdf: dataUrl }, "pdf", `📄 PDF : ${file.name}`);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
     }
   }, [runAnalysis]);
 
-  const handleTextSubmit = useCallback(async () => {
-    const value = textInput.trim();
-    if (!value) {
-      toast.error("Écris un peu de texte d'abord.");
-      return;
-    }
-    setTextDialogOpen(false);
-    setPreview(null);
-    await runAnalysis({ text: value }, "text");
-    setTextInput("");
-  }, [runAnalysis, textInput]);
+  const handleTextSend = useCallback(async (text: string) => {
+    await runAnalysis({ text }, "text", text);
+  }, [runAnalysis]);
 
   const handleVoiceRecorded = useCallback(async (audioDataUrl: string) => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
-    setPreview(null);
+    setUserMessage("🎙️ Message vocal en cours de transcription…");
     try {
-      const { data, error } = await supabase.functions.invoke("transcribe-audio", {
-        body: { audio: audioDataUrl },
-      });
+      const { data, error } = await supabase.functions.invoke("transcribe-audio", { body: { audio: audioDataUrl } });
       if (error) {
         const msg = (error as any)?.message ?? "Erreur de transcription";
         if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
@@ -474,8 +421,8 @@ const Dashboard = () => {
         setProcessing(false);
         return;
       }
-      toast.success("Transcription terminée, analyse en cours…");
-      await runAnalysis({ text: transcript }, "voice");
+      toast.success("Transcription terminée, analyse…");
+      await runAnalysis({ text: transcript }, "voice", `🎙️ ${transcript}`);
     } catch (e: any) {
       toast.error(e.message ?? "Erreur inattendue");
       setProcessing(false);
@@ -486,17 +433,16 @@ const Dashboard = () => {
     e.preventDefault();
     setDragActive(false);
     const f = e.dataTransfer.files?.[0];
-    if (f) handleFile(f);
+    if (!f) return;
+    if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) handlePdfFile(f);
+    else handleImageFile(f);
   };
 
   const exportPDF = async () => {
     if (!boardRef.current) return;
     toast.info("Génération du PDF…");
     try {
-      const dataUrl = await toPng(boardRef.current, {
-        backgroundColor: "#F5F3FF",
-        pixelRatio: 2,
-      });
+      const dataUrl = await toPng(boardRef.current, { backgroundColor: "#F5F3FF", pixelRatio: 2 });
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1600, 1000] });
       pdf.addImage(dataUrl, "PNG", 0, 0, 1600, 1000);
       pdf.save("scappio-board.pdf");
@@ -506,17 +452,32 @@ const Dashboard = () => {
     }
   };
 
-  const reset = () => {
+  const handleNewBoard = () => {
     setBoard(null);
     setInsights(null);
-    setPreview(null);
+    setUserMessage(null);
     setCurrentBoardId(null);
     lastSerializedRef.current = "";
     if (searchParams.get("board")) setSearchParams({}, { replace: true });
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const handleSelectBoard = (id: string) => {
+    setSearchParams({ board: id }, { replace: true });
+  };
+
+  const handleQuickSuggestion = (text: string) => {
+    handleTextSend(text);
+  };
+
+  const handleShare = async () => {
+    if (!currentBoardId) return;
+    const url = `${window.location.origin}/dashboard?board=${currentBoardId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Lien copié !");
+    } catch {
+      toast.error("Impossible de copier le lien");
+    }
   };
 
   if (!authChecked) {
@@ -528,313 +489,236 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-hero flex flex-col">
-      <header className="border-b border-border/60 backdrop-blur bg-background/70 sticky top-0 z-10">
-        <div className="container flex items-center justify-between py-3 sm:py-4 gap-2">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="h-7 w-7 rounded-lg bg-gradient-primary shadow-glow" />
-            <span className="font-semibold tracking-tight">scappio</span>
-          </Link>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {savedFlash && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 animate-fade-in">
-                <Check className="h-3.5 w-3.5" /> Sauvegardé
-              </span>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/history")}
-              className="px-2 sm:px-3"
-            >
-              <HistoryIcon className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Historique</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/studio")}
-              className="px-2 sm:px-3"
-            >
-              <Camera className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Studio</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/recordings")}
-              className="px-2 sm:px-3"
-            >
-              <Video className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Mes enregistrements</span>
-            </Button>
-            {board && (
-              <>
-                <Button variant="outline" size="sm" onClick={reset} className="px-2 sm:px-3">
-                  <RefreshCcw className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Nouvelle photo</span>
-                </Button>
-                <Button size="sm" onClick={exportPDF} className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
-                  <FileDown className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Exporter PDF</span>
-                </Button>
-              </>
-            )}
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="min-h-screen flex" style={{ backgroundColor: "#FAFAF8" }}>
+      <ChatSidebar
+        currentBoardId={currentBoardId}
+        onNewBoard={handleNewBoard}
+        onSelectBoard={handleSelectBoard}
+        refreshKey={sidebarRefreshKey}
+        open={sidebarOpen}
+        onOpenChange={setSidebarOpen}
+      />
+
+      {/* Main chat area */}
+      <main
+        className="flex-1 flex flex-col min-w-0 relative"
+        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+        onDragLeave={(e) => {
+          // only deactivate when truly leaving the main area
+          if (e.currentTarget === e.target) setDragActive(false);
+        }}
+        onDrop={onDrop}
+      >
+        {/* Mobile top bar */}
+        <div className="lg:hidden sticky top-0 z-20 flex items-center justify-between px-3 py-2 border-b border-border/60 bg-[#FAFAF8]/90 backdrop-blur">
+          <SidebarToggleButton onClick={() => setSidebarOpen(true)} />
+          <span className="font-bold text-sm"><span className="text-primary">scapp</span>io</span>
+          <div className="w-9" />
         </div>
-      </header>
 
-      <main className="flex-1 container py-4 sm:py-8">
-        {!board && !processing && (
-          <div className="mx-auto max-w-2xl">
-            <h1 className="text-3xl font-bold tracking-tight">Upload tes notes</h1>
-            <p className="mt-2 text-muted-foreground">
-              Une photo nette de tes notes manuscrites. JPG ou PNG, max 8 MB.
-            </p>
-
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={onDrop}
-              onClick={() => inputRef.current?.click()}
-              className={`mt-8 cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition shadow-elegant ${
-                dragActive
-                  ? "border-primary bg-primary/5 scale-[1.01]"
-                  : "border-primary/30 bg-gradient-card hover:border-primary/60"
-              }`}
-            >
-              <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-primary text-white shadow-glow">
-                <Upload className="h-6 w-6" />
-              </div>
-              <p className="mt-4 font-medium">Glisse une photo ici, ou clique pour choisir</p>
-               <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC · max 25 MB</p>
-              <input
-                ref={inputRef}
-                type="file"
-                 accept="image/png,image/jpeg,image/heic,image/heif,.heic,.heif"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFile(f);
-                }}
-              />
-            </div>
-
-            <div className="mt-4">
-              <VoiceRecorder onRecorded={handleVoiceRecorded} disabled={processing} />
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setTextDialogOpen(true)}
-                className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-card p-4 text-left shadow-elegant transition hover:border-primary/60"
-              >
-                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
-                  <Pencil className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-medium">✏️ Écrire un texte</p>
-                  <p className="text-xs text-muted-foreground">Colle ou tape ton contenu</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => pdfInputRef.current?.click()}
-                className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-card p-4 text-left shadow-elegant transition hover:border-primary/60"
-              >
-                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-glow">
-                  <FileText className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-medium">📄 Choisir un document</p>
-                  <p className="text-xs text-muted-foreground">PDF · max 25 MB</p>
-                </div>
-                <input
-                  ref={pdfInputRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handlePdfFile(f);
-                    e.target.value = "";
-                  }}
-                />
-              </button>
-            </div>
+        {/* Drag overlay */}
+        {dragActive && (
+          <div className="absolute inset-0 z-30 m-4 rounded-2xl border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            <p className="text-lg font-semibold text-primary">Dépose ici</p>
           </div>
         )}
 
-        <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Écrire un texte</DialogTitle>
-              <DialogDescription>
-                Colle ou tape ton contenu. L'IA en fera un board hiérarchique.
-              </DialogDescription>
-            </DialogHeader>
-            <Textarea
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Tape ou colle ton texte ici…"
-              className="min-h-[220px]"
-            />
-            <div className="flex justify-end">
-              <Button onClick={handleTextSubmit} className="bg-gradient-primary shadow-glow hover:opacity-90">
-                Transformer en board →
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {processing && (
-          <div className="mx-auto max-w-2xl text-center py-20">
-            <div className="relative mx-auto h-20 w-20">
-              <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-20 animate-brand-pulse" />
-              <div className="absolute inset-3 rounded-full bg-gradient-primary shadow-glow" />
-              <div className="absolute inset-0 animate-brand-orbit">
-                <div className="absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-accent shadow-md" />
-              </div>
-            </div>
-            <h2 className="mt-8 text-2xl font-semibold tracking-tight">L'IA analyse tes notes…</h2>
-            <p className="mt-2 text-muted-foreground">
-              Détection des idées, formes et connexions. Environ 10–15 secondes.
-            </p>
-            {preview && (
-              <img
-                src={preview}
-                alt="Aperçu de tes notes"
-                className="mx-auto mt-8 max-h-64 rounded-2xl border border-border shadow-elegant"
-              />
-            )}
-          </div>
-        )}
-
-        {board && (
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <ImageIcon className="h-4 w-4 shrink-0" />
-              <span className="truncate">
-                {board.nodes.length} nœuds ·{" "}
-                {board.nodes.filter((n) => n.level === 2).length} idées ·{" "}
-                {board.nodes.filter((n) => n.level === 3).length} détails
-              </span>
-            </div>
-            <div
-              className={
-                panelFullscreen && !isMobile
-                  ? "fixed inset-0 z-40 flex w-full gap-0 bg-background"
-                  : "relative flex h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] w-full gap-4"
-              }
-            >
-              <div
-                ref={boardRef}
-                className={
-                  panelFullscreen && !isMobile
-                    ? "relative flex-1 min-w-0 overflow-hidden"
-                    : "relative flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden"
-                }
-              >
-                <TldrawBoard data={board} apiRef={boardApiRef} />
-
-                {/* Bouton agrandir / réduire — ancré dans le board, en haut à droite */}
-                {!isMobile && (
-                  <button
-                    type="button"
-                    onClick={() => setPanelFullscreen((v) => !v)}
-                    className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-background/95 backdrop-blur border border-border shadow-md hover:bg-accent transition"
-                    aria-label={panelFullscreen ? "Réduire le board" : "Agrandir le board"}
-                    title={panelFullscreen ? "Réduire le board" : "Agrandir le board"}
-                  >
-                    {panelFullscreen ? (
-                      <Minimize2 className="h-4 w-4" />
-                    ) : (
-                      <Maximize2 className="h-4 w-4" />
-                    )}
-                  </button>
-                )}
-
-              </div>
-
-              {/* Desktop : panneau latéral (mode normal) */}
-              {!isMobile && !panelFullscreen && (
-                <SuggestionsPanel
-                  insights={insights}
-                  loading={suggestionsLoading}
-                  improving={improving}
-                  onAccept={acceptSuggestion}
-                  onReject={rejectSuggestion}
-                  onRefresh={refreshSuggestions}
-                  onAutoImprove={autoImprove}
-                />
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          {!board && !processing ? (
+            <WelcomeScreen onSuggestion={handleQuickSuggestion} />
+          ) : (
+            <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-4">
+              {/* User message bubble */}
+              {userMessage && (
+                <div className="flex justify-end">
+                  <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-4 py-2.5 text-sm shadow-sm">
+                    {userMessage}
+                  </div>
+                </div>
               )}
 
-              {/* Desktop : agent en bulle quand le board est en plein écran */}
-              {!isMobile && panelFullscreen && (
-                <Sheet open={bubbleOpen} onOpenChange={setBubbleOpen}>
-                  <SheetTrigger asChild>
-                    <button
-                      type="button"
-                      className="absolute bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105 active:scale-95"
-                      aria-label="Ouvrir l'agent IA"
-                    >
-                      <Sparkles className="h-6 w-6" />
-                    </button>
-                  </SheetTrigger>
-                  <SheetContent side="right" className="w-full sm:max-w-md p-0">
-                    <div className="h-full pt-2">
-                      <SuggestionsPanel
-                        insights={insights}
-                        loading={suggestionsLoading}
-                        improving={improving}
-                        onAccept={acceptSuggestion}
-                        onReject={rejectSuggestion}
-                        onRefresh={refreshSuggestions}
-                        onAutoImprove={autoImprove}
-                      />
+              {processing && (
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-gradient-primary text-white flex items-center justify-center shrink-0">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="rounded-2xl rounded-tl-sm bg-card border border-border px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    L'IA structure ton board…
+                  </div>
+                </div>
+              )}
+
+              {board && (
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-gradient-primary text-white flex items-center justify-center shrink-0">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      {board.nodes.length} nœuds · {board.nodes.filter((n) => n.level === 2).length} idées · {board.nodes.filter((n) => n.level === 3).length} détails
                     </div>
-                  </SheetContent>
-                </Sheet>
-              )}
 
-              {/* Mobile : bouton flottant + bottom sheet */}
-              {isMobile && (
-                <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
-                  <SheetTrigger asChild>
-                    <button
-                      type="button"
-                      className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
-                      aria-label="Ouvrir l'agent IA"
+                    <div
+                      className={
+                        panelFullscreen && !isMobile
+                          ? "fixed inset-0 z-40 flex w-full gap-0 bg-background"
+                          : "relative flex h-[60vh] sm:h-[65vh] w-full gap-4"
+                      }
                     >
-                      <Sparkles className="h-5 w-5" />
-                    </button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-2xl">
-                    <div className="h-full pt-2">
-                      <SuggestionsPanel
-                        insights={insights}
-                        loading={suggestionsLoading}
-                        improving={improving}
-                        onAccept={acceptSuggestion}
-                        onReject={rejectSuggestion}
-                        onRefresh={refreshSuggestions}
-                        onAutoImprove={autoImprove}
-                      />
+                      <div
+                        ref={boardRef}
+                        className={
+                          panelFullscreen && !isMobile
+                            ? "relative flex-1 min-w-0 overflow-hidden"
+                            : "relative flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden bg-card"
+                        }
+                      >
+                        <TldrawBoard data={board} apiRef={boardApiRef} />
+                        {!isMobile && (
+                          <button
+                            type="button"
+                            onClick={() => setPanelFullscreen((v) => !v)}
+                            className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-background/95 backdrop-blur border border-border shadow-md hover:bg-accent transition"
+                            aria-label={panelFullscreen ? "Réduire" : "Agrandir"}
+                          >
+                            {panelFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                          </button>
+                        )}
+                      </div>
+
+                      {!isMobile && !panelFullscreen && (
+                        <SuggestionsPanel
+                          insights={insights}
+                          loading={suggestionsLoading}
+                          improving={improving}
+                          onAccept={acceptSuggestion}
+                          onReject={rejectSuggestion}
+                          onRefresh={refreshSuggestions}
+                          onAutoImprove={autoImprove}
+                        />
+                      )}
+
+                      {!isMobile && panelFullscreen && (
+                        <Sheet open={bubbleOpen} onOpenChange={setBubbleOpen}>
+                          <SheetTrigger asChild>
+                            <button
+                              type="button"
+                              className="absolute bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105"
+                              aria-label="Ouvrir l'agent IA"
+                            >
+                              <Sparkles className="h-6 w-6" />
+                            </button>
+                          </SheetTrigger>
+                          <SheetContent side="right" className="w-full sm:max-w-md p-0">
+                            <div className="h-full pt-2">
+                              <SuggestionsPanel
+                                insights={insights}
+                                loading={suggestionsLoading}
+                                improving={improving}
+                                onAccept={acceptSuggestion}
+                                onReject={rejectSuggestion}
+                                onRefresh={refreshSuggestions}
+                                onAutoImprove={autoImprove}
+                              />
+                            </div>
+                          </SheetContent>
+                        </Sheet>
+                      )}
+
+                      {isMobile && (
+                        <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+                          <SheetTrigger asChild>
+                            <button
+                              type="button"
+                              className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
+                              aria-label="Ouvrir l'agent IA"
+                            >
+                              <Sparkles className="h-5 w-5" />
+                            </button>
+                          </SheetTrigger>
+                          <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-2xl">
+                            <div className="h-full pt-2">
+                              <SuggestionsPanel
+                                insights={insights}
+                                loading={suggestionsLoading}
+                                improving={improving}
+                                onAccept={acceptSuggestion}
+                                onReject={rejectSuggestion}
+                                onRefresh={refreshSuggestions}
+                                onAutoImprove={autoImprove}
+                              />
+                            </div>
+                          </SheetContent>
+                        </Sheet>
+                      )}
                     </div>
-                  </SheetContent>
-                </Sheet>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button size="sm" variant="outline" onClick={() => boardApiRef.current?.relayout()}>
+                        <Pencil className="h-4 w-4 mr-1.5" /> Éditer
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={exportPDF}>
+                        <FileDown className="h-4 w-4 mr-1.5" /> Exporter PDF
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => navigate("/studio")}>
+                        <Mic className="h-4 w-4 mr-1.5" /> Enregistrer
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleShare}>
+                        <Share2 className="h-4 w-4 mr-1.5" /> Partager
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Composer pinned at bottom */}
+        <div className="shrink-0 border-t border-border/40 bg-[#FAFAF8]/95 backdrop-blur py-3 sm:py-4 px-2">
+          <ChatComposer
+            disabled={processing}
+            onSendText={handleTextSend}
+            onPickImage={handleImageFile}
+            onPickPdf={handlePdfFile}
+            onVoiceRecorded={handleVoiceRecorded}
+          />
+        </div>
       </main>
     </div>
   );
 };
+
+const WelcomeScreen = ({ onSuggestion }: { onSuggestion: (t: string) => void }) => (
+  <div className="min-h-full flex items-center justify-center px-4 py-12">
+    <div className="w-full max-w-[760px] text-center">
+      <div className="inline-flex h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-primary text-white items-center justify-center shadow-glow mb-6">
+        <Sparkles className="h-7 w-7 sm:h-8 sm:w-8" />
+      </div>
+      <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
+        Que veux-tu structurer aujourd'hui ?
+      </h1>
+      <p className="mt-3 text-sm sm:text-base text-muted-foreground">
+        Parle, écris, prends une photo ou importe un document
+      </p>
+      <div className="mt-8 flex flex-wrap justify-center gap-2">
+        {QUICK_SUGGESTIONS.map((s) => (
+          <button
+            key={s.label}
+            onClick={() => onSuggestion(s.text)}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-muted hover:border-primary/40 transition px-4 py-2 text-sm"
+          >
+            <s.icon className="h-4 w-4 text-primary" />
+            {s.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 export default Dashboard;
