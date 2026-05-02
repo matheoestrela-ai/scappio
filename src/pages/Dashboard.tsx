@@ -664,9 +664,6 @@ const Dashboard = () => {
                       <Button size="sm" variant="outline" onClick={exportPDF}>
                         <FileDown className="h-4 w-4 mr-1.5" /> Exporter PDF
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => navigate("/studio")}>
-                        <Mic className="h-4 w-4 mr-1.5" /> Enregistrer
-                      </Button>
                       <Button size="sm" variant="outline" onClick={handleShare}>
                         <Share2 className="h-4 w-4 mr-1.5" /> Partager
                       </Button>
