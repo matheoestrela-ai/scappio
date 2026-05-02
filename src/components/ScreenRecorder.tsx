@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, Monitor, Smartphone, Square } from "lucide-react";
+import { Camera, Monitor, MonitorUp, Smartphone, Square } from "lucide-react";
 import { toast } from "sonner";
 import { setLastRecording, type RecordingFormat } from "@/lib/recording-store";
 
@@ -47,21 +47,24 @@ const restoreOverlays = (hidden: Array<{ el: HTMLElement; prev: string }>) => {
 
 const getDisplayMediaSafely = () => {
   if (typeof navigator === "undefined") return null;
-
   const mediaDevices = navigator.mediaDevices as MediaDevices | undefined;
   if (mediaDevices?.getDisplayMedia) {
     return mediaDevices.getDisplayMedia.bind(mediaDevices);
   }
-
   const legacyNavigator = navigator as Navigator & {
     getDisplayMedia?: (constraints?: DisplayMediaStreamOptions) => Promise<MediaStream>;
   };
-
   if (legacyNavigator.getDisplayMedia) {
     return legacyNavigator.getDisplayMedia.bind(legacyNavigator);
   }
-
   return null;
+};
+
+const isLikelyMobile = () => {
+  if (typeof navigator === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
 };
 
 export default function ScreenRecorder() {
@@ -73,6 +76,8 @@ export default function ScreenRecorder() {
     const stored = window.localStorage.getItem(FORMAT_STORAGE_KEY);
     return stored === "youtube" ? "youtube" : "tiktok";
   });
+  const [screenSharingActive, setScreenSharingActive] = useState(false);
+  const [screenShareSupported, setScreenShareSupported] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -82,6 +87,15 @@ export default function ScreenRecorder() {
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const hiddenOverlaysRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
   const formatRef = useRef<Format>(activeFormat);
+
+  // Refs for live screen-share toggling during a 16:9 recording.
+  const screenVideoRef = useRef<HTMLVideoElement | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    setScreenShareSupported(!!getDisplayMediaSafely() && !isLikelyMobile());
+  }, []);
 
   const reset = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -98,7 +112,11 @@ export default function ScreenRecorder() {
     hiddenOverlaysRef.current = [];
     recorderRef.current = null;
     chunksRef.current = [];
+    screenVideoRef.current = null;
+    screenStreamRef.current = null;
+    cameraVideoRef.current = null;
     setRecording(false);
+    setScreenSharingActive(false);
     setElapsed(0);
   }, []);
 
@@ -168,23 +186,18 @@ export default function ScreenRecorder() {
     [finalize, reset],
   );
 
-  // ---------- 16:9 (YouTube): screen + webcam circle overlay ----------
-  // First await MUST be getDisplayMedia. No state updates / modals before it.
+  // ---------- 16:9 (YouTube): camera-first, screen sharing optional ----------
+  // Starts recording immediately with the webcam. Screen sharing is offered
+  // afterwards via a separate button so we never block recording.
   const startYoutube = async () => {
     if (typeof MediaRecorder === "undefined") {
       toast.error("Navigateur non supporté");
       return;
     }
 
-    const requestDisplayMedia = getDisplayMediaSafely();
-    if (!requestDisplayMedia) {
-      toast.error("Le 16:9 avec partage d’écran n’est pas disponible sur ce navigateur");
-      return;
-    }
-
     formatRef.current = "youtube";
     try {
-      // 1) Caméra + micro D'ABORD (un seul prompt, geste utilisateur intact).
+      // Camera + mic (single prompt, never throws on screen-share absence).
       let camAndMic: MediaStream | null = null;
       try {
         camAndMic = await navigator.mediaDevices.getUserMedia({
@@ -192,47 +205,29 @@ export default function ScreenRecorder() {
           audio: true,
         });
       } catch {
-        // On essaie au moins le micro
         try {
           camAndMic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          toast.warning("Caméra non disponible");
+          toast.warning("Caméra non disponible — audio uniquement");
         } catch {
-          toast.warning("Caméra et microphone non disponibles");
+          toast.error("Caméra et microphone non disponibles");
+          reset();
+          return;
         }
       }
 
       const micStream: MediaStream | null =
-        camAndMic && camAndMic.getAudioTracks().length > 0
+        camAndMic.getAudioTracks().length > 0
           ? new MediaStream(camAndMic.getAudioTracks())
           : null;
       const cameraStream: MediaStream | null =
-        camAndMic && camAndMic.getVideoTracks().length > 0
+        camAndMic.getVideoTracks().length > 0
           ? new MediaStream(camAndMic.getVideoTracks())
           : null;
 
-      // 2) Écran ENSUITE — la permission précédente garde le geste valide.
-      const screenStream = await requestDisplayMedia({
-        video: { frameRate: { ideal: 30 } },
-        audio: false,
-        // @ts-ignore — Chromium hint
-        preferCurrentTab: true,
-      });
-
       hiddenOverlaysRef.current = hideOverlays();
 
-      const screenVideo = document.createElement("video");
-      screenVideo.srcObject = screenStream;
-      screenVideo.muted = true;
-      screenVideo.playsInline = true;
-      await new Promise<void>((resolve) => {
-        screenVideo.onloadedmetadata = () => {
-          screenVideo.play().catch(() => {});
-          resolve();
-        };
-      });
-
       let cameraVideo: HTMLVideoElement | null = null;
-      if (cameraStream && cameraStream.getVideoTracks().length > 0) {
+      if (cameraStream) {
         cameraVideo = document.createElement("video");
         cameraVideo.srcObject = cameraStream;
         cameraVideo.muted = true;
@@ -244,6 +239,7 @@ export default function ScreenRecorder() {
           };
         });
       }
+      cameraVideoRef.current = cameraVideo;
 
       const canvas = document.createElement("canvas");
       canvas.width = 1920;
@@ -254,12 +250,6 @@ export default function ScreenRecorder() {
       document.body.appendChild(canvas);
       offscreenCanvasRef.current = canvas;
       const ctx = canvas.getContext("2d")!;
-
-      screenStream.getVideoTracks()[0].addEventListener("ended", () => {
-        const r = recorderRef.current;
-        if (r && r.state !== "inactive") r.stop();
-        else reset();
-      });
 
       const drawContain = (
         v: HTMLVideoElement,
@@ -278,21 +268,33 @@ export default function ScreenRecorder() {
         ctx.drawImage(v, x, y, w, h);
       };
 
+      const drawCover = (v: HTMLVideoElement, dw: number, dh: number) => {
+        const sw = v.videoWidth || dw;
+        const sh = v.videoHeight || dh;
+        const scale = Math.max(dw / sw, dh / sh);
+        const w = sw * scale;
+        const h = sh * scale;
+        const x = (dw - w) / 2;
+        const y = (dh - h) / 2;
+        ctx.drawImage(v, x, y, w, h);
+      };
+
       const drawCameraCircle = () => {
-        if (!cameraVideo || cameraVideo.readyState < 2) return;
+        const cv = cameraVideoRef.current;
+        if (!cv || cv.readyState < 2) return;
         const cx = 110, cy = 970, r = 90;
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.clip();
-        const sw = cameraVideo.videoWidth || 180;
-        const sh = cameraVideo.videoHeight || 180;
+        const sw = cv.videoWidth || 180;
+        const sh = cv.videoHeight || 180;
         const scale = Math.max(180 / sw, 180 / sh);
         const w = sw * scale;
         const h = sh * scale;
         const x = 20 + (180 - w) / 2;
         const y = 880 + (180 - h) / 2;
-        ctx.drawImage(cameraVideo, x, y, w, h);
+        ctx.drawImage(cv, x, y, w, h);
         ctx.restore();
         ctx.lineWidth = 3;
         ctx.strokeStyle = "#ffffff";
@@ -304,29 +306,84 @@ export default function ScreenRecorder() {
       const draw = () => {
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        if (screenVideo.readyState >= 2) drawContain(screenVideo, 0, 0, 1920, 1080);
-        drawCameraCircle();
+        const sv = screenVideoRef.current;
+        if (sv && sv.readyState >= 2) {
+          drawContain(sv, 0, 0, 1920, 1080);
+          drawCameraCircle();
+        } else if (cameraVideoRef.current && cameraVideoRef.current.readyState >= 2) {
+          // No screen share yet → fill 16:9 with the camera.
+          drawCover(cameraVideoRef.current, 1920, 1080);
+        }
         rafRef.current = requestAnimationFrame(draw);
       };
       rafRef.current = requestAnimationFrame(draw);
 
       stopTracksRef.current = [
-        ...screenStream.getTracks(),
         ...(cameraStream ? cameraStream.getTracks() : []),
         ...(micStream ? micStream.getTracks() : []),
       ];
 
       setupCanvasRecorder(canvas, micStream, "youtube");
     } catch (err: any) {
-      if (err && (err.name === "NotAllowedError" || err.name === "AbortError")) return;
+      if (err && (err.name === "NotAllowedError" || err.name === "AbortError")) {
+        reset();
+        return;
+      }
       console.error(err);
       toast.error("Erreur lors du démarrage de l'enregistrement");
       reset();
     }
   };
 
+  // Optional: enable screen sharing live, while recording is already running.
+  const enableScreenSharing = async () => {
+    const requestDisplayMedia = getDisplayMediaSafely();
+    if (!requestDisplayMedia) {
+      toast.error("Le partage d'écran n'est pas supporté sur cet appareil");
+      return;
+    }
+    try {
+      const screenStream = await requestDisplayMedia({
+        video: { frameRate: { ideal: 30 } },
+        audio: false,
+        // @ts-ignore — Chromium hint
+        preferCurrentTab: true,
+      });
+
+      const screenVideo = document.createElement("video");
+      screenVideo.srcObject = screenStream;
+      screenVideo.muted = true;
+      screenVideo.playsInline = true;
+      await new Promise<void>((resolve) => {
+        screenVideo.onloadedmetadata = () => {
+          screenVideo.play().catch(() => {});
+          resolve();
+        };
+      });
+
+      // Stop any previous screen stream cleanly.
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+      }
+
+      screenVideoRef.current = screenVideo;
+      screenStreamRef.current = screenStream;
+      stopTracksRef.current.push(...screenStream.getTracks());
+      setScreenSharingActive(true);
+
+      screenStream.getVideoTracks()[0].addEventListener("ended", () => {
+        screenVideoRef.current = null;
+        screenStreamRef.current = null;
+        setScreenSharingActive(false);
+      });
+    } catch (err: any) {
+      if (err && (err.name === "NotAllowedError" || err.name === "AbortError")) return;
+      console.error(err);
+      toast.error("Partage d'écran indisponible — l'enregistrement continue");
+    }
+  };
+
   // ---------- 9:16 (TikTok): webcam only, vertical 720x1280 ----------
-  // First await MUST be getUserMedia.
   const startTiktok = async () => {
     if (typeof MediaRecorder === "undefined") {
       toast.error("Navigateur non supporté");
@@ -344,7 +401,6 @@ export default function ScreenRecorder() {
         audio: true,
       });
 
-      // Split audio (mic) for the recorder; keep video for compositing.
       const micStream = new MediaStream(camAndMic.getAudioTracks());
       const cameraStream = new MediaStream(camAndMic.getVideoTracks());
 
@@ -371,7 +427,6 @@ export default function ScreenRecorder() {
       offscreenCanvasRef.current = canvas;
       const ctx = canvas.getContext("2d")!;
 
-      // cover (fill 720x1280, crop overflow) so portrait webcam isn't letterboxed.
       const drawCover = (v: HTMLVideoElement) => {
         const sw = v.videoWidth || 720;
         const sh = v.videoHeight || 1280;
@@ -407,15 +462,12 @@ export default function ScreenRecorder() {
     }
   };
 
-  // Format selector — pure state change, NO permission calls. Safe.
   const selectFormat = (f: Format) => {
     setActiveFormat(f);
     formatRef.current = f;
     try { window.localStorage.setItem(FORMAT_STORAGE_KEY, f); } catch {}
   };
 
-  // Record button binds DIRECTLY to the right permission API per format.
-  // This preserves the user-gesture chain.
   const handleRecordClick = activeFormat === "youtube" ? startYoutube : startTiktok;
 
   useEffect(() => {
@@ -426,6 +478,12 @@ export default function ScreenRecorder() {
       restoreOverlays(hiddenOverlaysRef.current);
     };
   }, []);
+
+  const showScreenShareButton =
+    recording &&
+    formatRef.current === "youtube" &&
+    screenShareSupported &&
+    !screenSharingActive;
 
   return createPortal(
     <div
@@ -459,6 +517,16 @@ export default function ScreenRecorder() {
             <span>16:9</span>
           </button>
         </div>
+      )}
+
+      {showScreenShareButton && (
+        <button
+          onClick={enableScreenSharing}
+          className="flex items-center gap-2 h-12 px-4 rounded-full shadow-lg bg-white text-blue-600 font-semibold border border-blue-200 hover:bg-blue-50 transition-colors"
+        >
+          <MonitorUp className="h-4 w-4" />
+          <span>Partager l'écran</span>
+        </button>
       )}
 
       <button
