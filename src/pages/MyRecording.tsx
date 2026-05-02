@@ -53,6 +53,16 @@ const MyRecording = () => {
     };
   }, [trimmedUrl]);
 
+  useEffect(() => {
+    return () => {
+      if (processedUrl) try { URL.revokeObjectURL(processedUrl); } catch {}
+    };
+  }, [processedUrl]);
+
+  useEffect(() => {
+    noiseReductionRef.current = noiseReduction;
+  }, [noiseReduction]);
+
   // Force webm duration to be computed (MediaRecorder webm has no header).
   useEffect(() => {
     if (!data) return;
