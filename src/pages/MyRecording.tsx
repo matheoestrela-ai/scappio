@@ -81,7 +81,14 @@ const MyRecording = () => {
             data.format === "tiktok" ? "max-w-sm" : "max-w-4xl"
           } rounded-xl overflow-hidden shadow-elegant bg-black`}
         >
-          <video src={data.url} controls autoPlay playsInline className="w-full h-auto block" />
+          <video
+            ref={videoRef}
+            src={data.url}
+            controls
+            playsInline
+            preload="auto"
+            className="w-full h-auto block"
+          />
         </div>
 
         <div className="flex flex-wrap gap-3 justify-center">
