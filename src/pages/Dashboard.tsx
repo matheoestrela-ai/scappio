@@ -491,6 +491,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#FAFAF8" }}>
+      <ScreenRecorder />
       <ChatSidebar
         currentBoardId={currentBoardId}
         onNewBoard={handleNewBoard}
