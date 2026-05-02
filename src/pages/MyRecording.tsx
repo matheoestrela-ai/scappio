@@ -24,8 +24,16 @@ const MyRecording = () => {
   const [trimEnd, setTrimEnd] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [trimming, setTrimming] = useState(false);
+  const [playhead, setPlayhead] = useState(0);
+  const [noiseReduction, setNoiseReduction] = useState(false);
+  const [processingAudio, setProcessingAudio] = useState(false);
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [trimmedUrl, setTrimmedUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const outputNodeRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const noiseReductionRef = useRef(false);
 
   useEffect(() => {
     const rec = consumeLastRecording();
