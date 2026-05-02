@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Scissors, Play, Pause, RotateCcw } from "lucide-react";
+import { ArrowLeft, Download, Scissors, Play, Pause, RotateCcw, Volume2, Sparkles } from "lucide-react";
 import { consumeLastRecording, type RecordingFormat } from "@/lib/recording-store";
 import { toast } from "sonner";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 
 const formatLabel = (f: RecordingFormat) => (f === "tiktok" ? "TikTok 9:16" : "YouTube 16:9");
 
