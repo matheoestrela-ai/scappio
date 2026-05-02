@@ -491,64 +491,26 @@ export default function ScreenRecorder() {
       style={{ zIndex: 9999 }}
     >
       {!recording && (
-        <div className="flex items-center bg-white/95 backdrop-blur rounded-full shadow-md p-1 border border-black/5">
-          <button
-            onClick={() => selectFormat("tiktok")}
-            aria-pressed={activeFormat === "tiktok"}
-            className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium transition-colors ${
-              activeFormat === "tiktok"
-                ? "bg-orange-500 text-white shadow-sm"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <Smartphone className="h-3.5 w-3.5" />
-            <span>9:16</span>
-          </button>
-          <button
-            onClick={() => selectFormat("youtube")}
-            aria-pressed={activeFormat === "youtube"}
-            className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium transition-colors ${
-              activeFormat === "youtube"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <Monitor className="h-3.5 w-3.5" />
-            <span>16:9</span>
-          </button>
-        </div>
-      )}
-
-      {showScreenShareButton && (
         <button
-          onClick={enableScreenSharing}
-          className="flex items-center gap-2 h-12 px-4 rounded-full shadow-lg bg-white text-blue-600 font-semibold border border-blue-200 hover:bg-blue-50 transition-colors"
+          onClick={() => navigate("/studio")}
+          className="flex items-center gap-2 px-4 h-12 rounded-full shadow-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-transform hover:scale-105 active:scale-95"
         >
-          <MonitorUp className="h-4 w-4" />
-          <span>Partager l'écran</span>
+          <Camera className="h-5 w-5" />
+          <span>Ouvrir le Studio</span>
         </button>
       )}
 
-      <button
-        onClick={recording ? stopRecording : handleRecordClick}
-        aria-label={recording ? "Arrêter" : "Enregistrer"}
-        className={`flex items-center gap-2 px-4 h-12 rounded-full shadow-lg text-white font-semibold transition-transform hover:scale-105 active:scale-95 ${
-          recording ? "bg-red-600 animate-pulse" : "bg-red-500"
-        }`}
-      >
-        {recording ? (
-          <>
-            <Square className="h-4 w-4 fill-white" />
-            <span className="tabular-nums">{fmt(elapsed)}</span>
-            <span>Arrêter</span>
-          </>
-        ) : (
-          <>
-            <Camera className="h-5 w-5" />
-            <span>Enregistrer</span>
-          </>
-        )}
-      </button>
+      {recording && (
+        <button
+          onClick={stopRecording}
+          aria-label="Arrêter"
+          className="flex items-center gap-2 px-4 h-12 rounded-full shadow-lg bg-red-600 animate-pulse text-white font-semibold"
+        >
+          <Square className="h-4 w-4 fill-white" />
+          <span className="tabular-nums">{fmt(elapsed)}</span>
+          <span>Arrêter</span>
+        </button>
+      )}
     </div>,
     document.body,
   );

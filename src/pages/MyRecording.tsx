@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Scissors, Play, Pause, RotateCcw } from "lucide-react";
 import { consumeLastRecording, type RecordingFormat } from "@/lib/recording-store";
+import { toast } from "sonner";
 
 const formatLabel = (f: RecordingFormat) => (f === "tiktok" ? "TikTok 9:16" : "YouTube 16:9");
+
+const fmt = (s: number) => {
+  if (!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, "0");
+  return `${m}:${sec}`;
+};
 
 const MyRecording = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<{ url: string; format: RecordingFormat } | null>(null);
+  const [duration, setDuration] = useState(0);
+  const [trimStart, setTrimStart] = useState(0);
+  const [trimEnd, setTrimEnd] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [trimming, setTrimming] = useState(false);
+  const [trimmedUrl, setTrimmedUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -23,37 +37,136 @@ const MyRecording = () => {
     };
   }, [navigate]);
 
-  // Fix black preview: MediaRecorder webm blobs have no duration in their
-  // metadata, so the <video> shows a black frame until the user seeks.
-  // Seeking past the end then back to 0 forces the browser to compute the
-  // real duration and render the first frame.
+  useEffect(() => {
+    return () => {
+      if (trimmedUrl) try { URL.revokeObjectURL(trimmedUrl); } catch {}
+    };
+  }, [trimmedUrl]);
+
+  // Force webm duration to be computed (MediaRecorder webm has no header).
   useEffect(() => {
     if (!data) return;
     const v = videoRef.current;
     if (!v) return;
     let done = false;
-    const onLoaded = () => {
+    const finalize = (d: number) => {
       if (done) return;
+      done = true;
+      setDuration(d);
+      setTrimStart(0);
+      setTrimEnd(d);
+      try { v.currentTime = 0; } catch {}
+    };
+    const onLoaded = () => {
       if (v.duration === Infinity || isNaN(v.duration)) {
         const onSeeked = () => {
-          v.currentTime = 0;
           v.removeEventListener("seeked", onSeeked);
-          done = true;
+          finalize(v.duration);
         };
         v.addEventListener("seeked", onSeeked);
         try { v.currentTime = 1e101; } catch {}
       } else {
-        v.currentTime = 0;
-        done = true;
+        finalize(v.duration);
       }
     };
     v.addEventListener("loadedmetadata", onLoaded);
     return () => v.removeEventListener("loadedmetadata", onLoaded);
   }, [data]);
 
+  // Clamp playback to the trim window.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onTime = () => {
+      if (v.currentTime > trimEnd) {
+        v.pause();
+        v.currentTime = trimEnd;
+        setPlaying(false);
+      } else if (v.currentTime < trimStart) {
+        v.currentTime = trimStart;
+      }
+    };
+    v.addEventListener("timeupdate", onTime);
+    return () => v.removeEventListener("timeupdate", onTime);
+  }, [trimStart, trimEnd]);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      if (v.currentTime < trimStart || v.currentTime >= trimEnd) v.currentTime = trimStart;
+      v.play();
+      setPlaying(true);
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
+  };
+
+  // Lightweight client-side trim: re-record the played segment via captureStream
+  // into a fresh MediaRecorder. Works in all modern browsers without ffmpeg.
+  const trimClip = async () => {
+    const v = videoRef.current;
+    if (!v || !data) return;
+    if (trimEnd - trimStart < 0.2) {
+      toast.error("Sélection trop courte");
+      return;
+    }
+    setTrimming(true);
+    try {
+      // @ts-ignore captureStream is widely supported on <video>
+      const stream: MediaStream = (v as any).captureStream
+        ? (v as any).captureStream()
+        : (v as any).mozCaptureStream();
+      const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+        ? "video/webm;codecs=vp9,opus"
+        : "video/webm";
+      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+      const chunks: Blob[] = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+      const done = new Promise<Blob>((resolve) => {
+        rec.onstop = () => resolve(new Blob(chunks, { type: "video/webm" }));
+      });
+
+      v.muted = false;
+      v.currentTime = trimStart;
+      await new Promise<void>((res) => {
+        const onSeek = () => { v.removeEventListener("seeked", onSeek); res(); };
+        v.addEventListener("seeked", onSeek);
+      });
+
+      rec.start(250);
+      await v.play();
+
+      await new Promise<void>((res) => {
+        const onTime = () => {
+          if (v.currentTime >= trimEnd) {
+            v.removeEventListener("timeupdate", onTime);
+            v.pause();
+            res();
+          }
+        };
+        v.addEventListener("timeupdate", onTime);
+      });
+
+      rec.stop();
+      const blob = await done;
+      if (trimmedUrl) try { URL.revokeObjectURL(trimmedUrl); } catch {}
+      const url = URL.createObjectURL(blob);
+      setTrimmedUrl(url);
+      toast.success("Clip prêt à télécharger");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Découpe impossible sur ce navigateur");
+    } finally {
+      setTrimming(false);
+    }
+  };
+
   if (!data) return null;
 
   const filename = `scappio-${data.format}-${new Date().toISOString().slice(0, 10)}.webm`;
+  const trimmedFilename = `scappio-${data.format}-clip-${new Date().toISOString().slice(0, 10)}.webm`;
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
@@ -84,19 +197,106 @@ const MyRecording = () => {
           <video
             ref={videoRef}
             src={data.url}
-            controls
             playsInline
             preload="auto"
             className="w-full h-auto block"
           />
         </div>
 
+        {/* Timeline / trim */}
+        <div className="w-full max-w-3xl bg-card border border-border rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Scissors className="h-4 w-4" /> Découper
+            </div>
+            <div className="text-xs text-muted-foreground tabular-nums">
+              {fmt(trimStart)} → {fmt(trimEnd)}  ({fmt(trimEnd - trimStart)})
+            </div>
+          </div>
+
+          <div className="relative h-10 bg-muted rounded-md overflow-hidden">
+            <div
+              className="absolute top-0 bottom-0 bg-primary/20 border-x-2 border-primary"
+              style={{
+                left: duration > 0 ? `${(trimStart / duration) * 100}%` : "0%",
+                width: duration > 0 ? `${((trimEnd - trimStart) / duration) * 100}%` : "100%",
+              }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+              Début
+              <input
+                type="range"
+                min={0}
+                max={duration || 0}
+                step={0.05}
+                value={trimStart}
+                onChange={(e) => {
+                  const v = Math.min(Number(e.target.value), trimEnd - 0.1);
+                  setTrimStart(Math.max(0, v));
+                  if (videoRef.current) videoRef.current.currentTime = v;
+                }}
+                className="accent-primary"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+              Fin
+              <input
+                type="range"
+                min={0}
+                max={duration || 0}
+                step={0.05}
+                value={trimEnd}
+                onChange={(e) => {
+                  const v = Math.max(Number(e.target.value), trimStart + 0.1);
+                  setTrimEnd(Math.min(duration, v));
+                  if (videoRef.current) videoRef.current.currentTime = Math.max(trimStart, v - 0.5);
+                }}
+                className="accent-primary"
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={togglePlay} className="gap-2">
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              Aperçu sélection
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setTrimStart(0); setTrimEnd(duration); setTrimmedUrl(null); }}
+              className="gap-2"
+            >
+              <RotateCcw className="h-4 w-4" /> Réinitialiser
+            </Button>
+            <Button
+              size="sm"
+              onClick={trimClip}
+              disabled={trimming}
+              className="gap-2 bg-primary text-primary-foreground"
+            >
+              <Scissors className="h-4 w-4" />
+              {trimming ? "Découpe en cours…" : "Générer le clip"}
+            </Button>
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-3 justify-center">
           <Button asChild size="lg" className="bg-primary text-primary-foreground">
             <a href={data.url} download={filename}>
-              <Download className="h-4 w-4 mr-2" /> Télécharger la vidéo
+              <Download className="h-4 w-4 mr-2" /> Vidéo complète
             </a>
           </Button>
+          {trimmedUrl && (
+            <Button asChild size="lg" variant="default">
+              <a href={trimmedUrl} download={trimmedFilename}>
+                <Download className="h-4 w-4 mr-2" /> Clip découpé
+              </a>
+            </Button>
+          )}
           <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")}>
             Retour au board
           </Button>
