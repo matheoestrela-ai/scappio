@@ -9,6 +9,7 @@ const formatLabel = (f: RecordingFormat) => (f === "tiktok" ? "TikTok 9:16" : "Y
 const MyRecording = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<{ url: string; format: RecordingFormat } | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const rec = consumeLastRecording();
@@ -21,6 +22,34 @@ const MyRecording = () => {
       try { URL.revokeObjectURL(rec.url); } catch {}
     };
   }, [navigate]);
+
+  // Fix black preview: MediaRecorder webm blobs have no duration in their
+  // metadata, so the <video> shows a black frame until the user seeks.
+  // Seeking past the end then back to 0 forces the browser to compute the
+  // real duration and render the first frame.
+  useEffect(() => {
+    if (!data) return;
+    const v = videoRef.current;
+    if (!v) return;
+    let done = false;
+    const onLoaded = () => {
+      if (done) return;
+      if (v.duration === Infinity || isNaN(v.duration)) {
+        const onSeeked = () => {
+          v.currentTime = 0;
+          v.removeEventListener("seeked", onSeeked);
+          done = true;
+        };
+        v.addEventListener("seeked", onSeeked);
+        try { v.currentTime = 1e101; } catch {}
+      } else {
+        v.currentTime = 0;
+        done = true;
+      }
+    };
+    v.addEventListener("loadedmetadata", onLoaded);
+    return () => v.removeEventListener("loadedmetadata", onLoaded);
+  }, [data]);
 
   if (!data) return null;
 
