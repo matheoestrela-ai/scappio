@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { setLastRecording, type RecordingFormat } from "@/lib/recording-store";
 
 type Format = RecordingFormat;
-const ACTIVE_FORMAT: Format = "youtube"; // modal disabled for now
 
 const fmt = (s: number) =>
   `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
