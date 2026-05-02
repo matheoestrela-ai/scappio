@@ -67,9 +67,6 @@ export default function ScreenRecorder() {
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const hiddenOverlaysRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
   const cameraVideoElRef = useRef<HTMLVideoElement | null>(null);
-  const latestBoardSnapshotRef = useRef<HTMLCanvasElement | null>(null);
-  const snapshottingRef = useRef(false);
-  const lastSnapshotAtRef = useRef(0);
 
   const reset = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
