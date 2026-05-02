@@ -80,7 +80,7 @@ export default function ScreenRecorder() {
     }
     offscreenCanvasRef.current = null;
     cameraVideoElRef.current = null;
-    latestBoardSnapshotRef.current = null;
+    
     restoreOverlays(hiddenOverlaysRef.current);
     hiddenOverlaysRef.current = [];
     recorderRef.current = null;
