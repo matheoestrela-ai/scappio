@@ -13,7 +13,7 @@ import {
   Maximize2,
   Minimize2,
   Share2,
-  Mic,
+  
   Lightbulb,
   ClipboardList,
   Rocket,
