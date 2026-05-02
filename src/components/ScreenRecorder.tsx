@@ -171,82 +171,68 @@ export default function ScreenRecorder() {
       offscreenCanvasRef.current = canvas;
       const ctx = canvas.getContext("2d")!;
 
-      const captureBoard = async () => {
-        if (snapshottingRef.current) return;
-        snapshottingRef.current = true;
-        try {
-          const snap = await html2canvas(boardEl, {
-            backgroundColor: "#ffffff",
-            logging: false,
-            useCORS: true,
-            scale: 1,
-          });
-          latestBoardSnapshotRef.current = snap;
-        } catch (e) {
-          console.error(e);
-          // Don't spam toasts every frame; show once
-          if (!latestBoardSnapshotRef.current) {
-            toast.error("Erreur de capture du board");
+      // Find the native canvas the board renders to (tldraw / react-flow / fallback).
+      const findBoardCanvas = (): HTMLCanvasElement | null => {
+        return (
+          (boardEl.querySelector(".react-flow__canvas") as HTMLCanvasElement | null) ??
+          (boardEl.querySelector(".react-flow canvas") as HTMLCanvasElement | null) ??
+          (boardEl.querySelector("canvas") as HTMLCanvasElement | null) ??
+          (document.querySelector(".react-flow__canvas") as HTMLCanvasElement | null) ??
+          (document.querySelector(".react-flow canvas") as HTMLCanvasElement | null) ??
+          (document.querySelector("canvas") as HTMLCanvasElement | null)
+        );
+      };
+
+      // Wait until camera video has dimensions before drawing it.
+      cameraVideo.onloadedmetadata = () => {
+        cameraVideo.play().catch(() => {});
+      };
+
+      const drawCameraCircle = () => {
+        if (cameraVideo.readyState < 2) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(110, 970, 90, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(cameraVideo, 20, 880, 180, 180);
+        ctx.restore();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(110, 970, 90, 0, Math.PI * 2);
+        ctx.stroke();
+      };
+
+      const draw = () => {
+        const boardCanvas = findBoardCanvas();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (kind === "youtube") {
+          ctx.fillStyle = "#000";
+          ctx.fillRect(0, 0, 1920, 1080);
+          if (boardCanvas) {
+            try { ctx.drawImage(boardCanvas, 0, 0, 1920, 1080); } catch {}
           }
-        } finally {
-          snapshottingRef.current = false;
+          drawCameraCircle();
+        } else {
+          ctx.fillStyle = "#000";
+          ctx.fillRect(0, 0, 1080, 1920);
+          if (boardCanvas) {
+            try { ctx.drawImage(boardCanvas, 0, 0, 1080, 1248); } catch {}
+          }
+          ctx.fillStyle = "#F97316";
+          ctx.fillRect(0, 1248, 1080, 3);
+          if (cameraVideo.readyState >= 2) {
+            try { ctx.drawImage(cameraVideo, 0, 1251, 1080, 669); } catch {}
+          }
         }
-      };
 
-      // Initial snapshot before starting recorder
-      await captureBoard();
-
-      const drawYouTube = () => {
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, 1920, 1080);
-        const board = latestBoardSnapshotRef.current;
-        if (board) ctx.drawImage(board, 0, 0, 1920, 1080);
-        // Camera circle bottom-left
-        if (cameraVideo.readyState >= 2) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(110, 970, 90, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(cameraVideo, 20, 880, 180, 180);
-          ctx.restore();
-          // White border
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(110, 970, 90, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      };
-
-      const drawTikTok = () => {
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, 1080, 1920);
-        const board = latestBoardSnapshotRef.current;
-        if (board) ctx.drawImage(board, 0, 0, 1080, 1248);
-        // Orange separator
-        ctx.fillStyle = "#F97316";
-        ctx.fillRect(0, 1248, 1080, 3);
-        // Camera bottom 35%
-        if (cameraVideo.readyState >= 2) {
-          ctx.drawImage(cameraVideo, 0, 1251, 1080, 669);
-        }
-      };
-
-      const draw = async () => {
-        const now = performance.now();
-        // Throttle html2canvas to ~10fps to stay responsive
-        if (now - lastSnapshotAtRef.current > 100) {
-          lastSnapshotAtRef.current = now;
-          captureBoard();
-        }
-        if (kind === "youtube") drawYouTube();
-        else drawTikTok();
         rafRef.current = requestAnimationFrame(draw);
       };
       rafRef.current = requestAnimationFrame(draw);
 
-      // Recorder
-      const canvasStream = canvas.captureStream(30);
+      // Recorder — 60fps + vp9 + 8Mbps for high quality output
+      const canvasStream = canvas.captureStream(60);
       const audioTrack = cameraStream.getAudioTracks()[0] ?? null;
       if (audioTrack) canvasStream.addTrack(audioTrack);
 
@@ -255,12 +241,19 @@ export default function ScreenRecorder() {
         ...canvasStream.getVideoTracks(),
       ];
 
-      const mime = pickMime();
+      const preferredMime = "video/webm;codecs=vp9,opus";
+      const mime =
+        typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(preferredMime)
+          ? preferredMime
+          : pickMime();
       let rec: MediaRecorder;
       try {
         rec = mime
-          ? new MediaRecorder(canvasStream, { mimeType: mime })
-          : new MediaRecorder(canvasStream);
+          ? new MediaRecorder(canvasStream, {
+              mimeType: mime,
+              videoBitsPerSecond: 8_000_000,
+            })
+          : new MediaRecorder(canvasStream, { videoBitsPerSecond: 8_000_000 });
       } catch (e) {
         console.error(e);
         toast.error("Impossible de démarrer l'enregistrement");
