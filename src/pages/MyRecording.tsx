@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Scissors, Play, Pause, RotateCcw } from "lucide-react";
+import { ArrowLeft, Download, Scissors, Play, Pause, RotateCcw, Volume2, Sparkles } from "lucide-react";
 import { consumeLastRecording, type RecordingFormat } from "@/lib/recording-store";
 import { toast } from "sonner";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 
 const formatLabel = (f: RecordingFormat) => (f === "tiktok" ? "TikTok 9:16" : "YouTube 16:9");
 
@@ -22,8 +24,16 @@ const MyRecording = () => {
   const [trimEnd, setTrimEnd] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [trimming, setTrimming] = useState(false);
+  const [playhead, setPlayhead] = useState(0);
+  const [noiseReduction, setNoiseReduction] = useState(false);
+  const [processingAudio, setProcessingAudio] = useState(false);
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [trimmedUrl, setTrimmedUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const outputNodeRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const noiseReductionRef = useRef(false);
 
   useEffect(() => {
     const rec = consumeLastRecording();
@@ -42,6 +52,16 @@ const MyRecording = () => {
       if (trimmedUrl) try { URL.revokeObjectURL(trimmedUrl); } catch {}
     };
   }, [trimmedUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (processedUrl) try { URL.revokeObjectURL(processedUrl); } catch {}
+    };
+  }, [processedUrl]);
+
+  useEffect(() => {
+    noiseReductionRef.current = noiseReduction;
+  }, [noiseReduction]);
 
   // Force webm duration to be computed (MediaRecorder webm has no header).
   useEffect(() => {
@@ -78,6 +98,7 @@ const MyRecording = () => {
     const v = videoRef.current;
     if (!v) return;
     const onTime = () => {
+      setPlayhead(v.currentTime);
       if (v.currentTime > trimEnd) {
         v.pause();
         v.currentTime = trimEnd;
@@ -86,8 +107,16 @@ const MyRecording = () => {
         v.currentTime = trimStart;
       }
     };
+    const onPause = () => setPlaying(false);
+    const onPlay = () => setPlaying(true);
     v.addEventListener("timeupdate", onTime);
-    return () => v.removeEventListener("timeupdate", onTime);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("play", onPlay);
+    return () => {
+      v.removeEventListener("timeupdate", onTime);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("play", onPlay);
+    };
   }, [trimStart, trimEnd]);
 
   const togglePlay = () => {
@@ -95,12 +124,79 @@ const MyRecording = () => {
     if (!v) return;
     if (v.paused) {
       if (v.currentTime < trimStart || v.currentTime >= trimEnd) v.currentTime = trimStart;
-      v.play();
-      setPlaying(true);
+      v.play().catch(() => {
+        toast.error("Lecture impossible");
+      });
     } else {
       v.pause();
-      setPlaying(false);
     }
+  };
+
+  const connectNoiseReductionChain = async () => {
+    const v = videoRef.current;
+    if (!v) return null;
+
+    const AudioCtx = window.AudioContext || (window as typeof window & {
+      webkitAudioContext?: typeof AudioContext;
+    }).webkitAudioContext;
+
+    if (!AudioCtx) return null;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioCtx();
+    }
+
+    const ctx = audioContextRef.current;
+    if (ctx.state === "suspended") {
+      await ctx.resume().catch(() => {});
+    }
+
+    if (!sourceNodeRef.current) {
+      sourceNodeRef.current = ctx.createMediaElementSource(v);
+    }
+
+    const source = sourceNodeRef.current;
+    const destination = ctx.createMediaStreamDestination();
+    outputNodeRef.current = destination;
+
+    const inputGain = ctx.createGain();
+    inputGain.gain.value = noiseReductionRef.current ? 1.08 : 1;
+
+    if (noiseReductionRef.current) {
+      const highPass = ctx.createBiquadFilter();
+      highPass.type = "highpass";
+      highPass.frequency.value = 100;
+      highPass.Q.value = 0.8;
+
+      const lowPass = ctx.createBiquadFilter();
+      lowPass.type = "lowpass";
+      lowPass.frequency.value = 7800;
+      lowPass.Q.value = 0.8;
+
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -32;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 3;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.2;
+
+      const outputGain = ctx.createGain();
+      outputGain.gain.value = 1.05;
+
+      source.connect(inputGain);
+      inputGain.connect(highPass);
+      highPass.connect(lowPass);
+      lowPass.connect(compressor);
+      compressor.connect(outputGain);
+      outputGain.connect(ctx.destination);
+      outputGain.connect(destination);
+    } else {
+      source.connect(inputGain);
+      inputGain.connect(ctx.destination);
+      inputGain.connect(destination);
+    }
+
+    return destination.stream;
   };
 
   // Lightweight client-side trim: re-record the played segment via captureStream
@@ -114,21 +210,30 @@ const MyRecording = () => {
     }
     setTrimming(true);
     try {
+      sourceNodeRef.current?.disconnect();
+      outputNodeRef.current?.disconnect();
+
       // @ts-ignore captureStream is widely supported on <video>
       const stream: MediaStream = (v as any).captureStream
         ? (v as any).captureStream()
         : (v as any).mozCaptureStream();
+      const processedAudioStream = await connectNoiseReductionChain();
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = processedAudioStream?.getAudioTracks()[0] ?? stream.getAudioTracks()[0];
+      const exportStream = new MediaStream();
+      if (videoTrack) exportStream.addTrack(videoTrack);
+      if (audioTrack) exportStream.addTrack(audioTrack);
       const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
         ? "video/webm;codecs=vp9,opus"
         : "video/webm";
-      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+      const rec = new MediaRecorder(exportStream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
       const chunks: Blob[] = [];
       rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       const done = new Promise<Blob>((resolve) => {
         rec.onstop = () => resolve(new Blob(chunks, { type: "video/webm" }));
       });
 
-      v.muted = false;
+      v.muted = true;
       v.currentTime = trimStart;
       await new Promise<void>((res) => {
         const onSeek = () => { v.removeEventListener("seeked", onSeek); res(); };
@@ -154,11 +259,19 @@ const MyRecording = () => {
       if (trimmedUrl) try { URL.revokeObjectURL(trimmedUrl); } catch {}
       const url = URL.createObjectURL(blob);
       setTrimmedUrl(url);
+      setProcessedUrl((current) => {
+        if (current) {
+          try { URL.revokeObjectURL(current); } catch {}
+        }
+        return url;
+      });
       toast.success("Clip prêt à télécharger");
     } catch (e: any) {
       console.error(e);
       toast.error("Découpe impossible sur ce navigateur");
     } finally {
+      sourceNodeRef.current?.disconnect();
+      outputNodeRef.current?.disconnect();
       setTrimming(false);
     }
   };
@@ -167,6 +280,7 @@ const MyRecording = () => {
 
   const filename = `scappio-${data.format}-${new Date().toISOString().slice(0, 10)}.webm`;
   const trimmedFilename = `scappio-${data.format}-clip-${new Date().toISOString().slice(0, 10)}.webm`;
+  const currentExportUrl = processedUrl ?? trimmedUrl;
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
@@ -210,11 +324,14 @@ const MyRecording = () => {
               <Scissors className="h-4 w-4" /> Découper
             </div>
             <div className="text-xs text-muted-foreground tabular-nums">
-              {fmt(trimStart)} → {fmt(trimEnd)}  ({fmt(trimEnd - trimStart)})
+              {fmt(trimStart)} → {fmt(trimEnd)} ({fmt(trimEnd - trimStart)})
             </div>
           </div>
 
-          <div className="relative h-10 bg-muted rounded-md overflow-hidden">
+          <div className="relative h-12 bg-muted rounded-md overflow-hidden border border-border/60">
+            <div className="absolute inset-y-0 left-0 right-0 flex items-center px-2">
+              <div className="h-1.5 w-full rounded-full bg-secondary" />
+            </div>
             <div
               className="absolute top-0 bottom-0 bg-primary/20 border-x-2 border-primary"
               style={{
@@ -222,41 +339,54 @@ const MyRecording = () => {
                 width: duration > 0 ? `${((trimEnd - trimStart) / duration) * 100}%` : "100%",
               }}
             />
+            <div
+              className="absolute top-0 bottom-0 w-0.5 bg-foreground/80"
+              style={{ left: duration > 0 ? `${(Math.min(playhead, duration) / duration) * 100}%` : "0%" }}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              Début
-              <input
-                type="range"
+              <span className="flex items-center justify-between"><span>Début</span><span>{fmt(trimStart)}</span></span>
+              <Slider
                 min={0}
                 max={duration || 0}
                 step={0.05}
-                value={trimStart}
-                onChange={(e) => {
-                  const v = Math.min(Number(e.target.value), trimEnd - 0.1);
+                value={[trimStart]}
+                onValueChange={([value]) => {
+                  const v = Math.min(value ?? 0, trimEnd - 0.1);
                   setTrimStart(Math.max(0, v));
                   if (videoRef.current) videoRef.current.currentTime = v;
                 }}
-                className="accent-primary"
               />
             </label>
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              Fin
-              <input
-                type="range"
+              <span className="flex items-center justify-between"><span>Fin</span><span>{fmt(trimEnd)}</span></span>
+              <Slider
                 min={0}
                 max={duration || 0}
                 step={0.05}
-                value={trimEnd}
-                onChange={(e) => {
-                  const v = Math.max(Number(e.target.value), trimStart + 0.1);
+                value={[trimEnd]}
+                onValueChange={([value]) => {
+                  const v = Math.max(value ?? duration, trimStart + 0.1);
                   setTrimEnd(Math.min(duration, v));
                   if (videoRef.current) videoRef.current.currentTime = Math.max(trimStart, v - 0.5);
                 }}
-                className="accent-primary"
               />
             </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 bg-muted/20 px-3 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Volume2 className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-sm font-medium">Réduire le bruit de fond</div>
+                <div className="text-xs text-muted-foreground">Nettoyage audio appliqué au clip exporté.</div>
+              </div>
+            </div>
+            <Switch checked={noiseReduction} onCheckedChange={setNoiseReduction} />
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -274,12 +404,16 @@ const MyRecording = () => {
             </Button>
             <Button
               size="sm"
-              onClick={trimClip}
-              disabled={trimming}
+              onClick={async () => {
+                setProcessingAudio(noiseReduction);
+                await trimClip();
+                setProcessingAudio(false);
+              }}
+              disabled={trimming || processingAudio}
               className="gap-2 bg-primary text-primary-foreground"
             >
-              <Scissors className="h-4 w-4" />
-              {trimming ? "Découpe en cours…" : "Générer le clip"}
+              {noiseReduction ? <Sparkles className="h-4 w-4" /> : <Scissors className="h-4 w-4" />}
+              {trimming || processingAudio ? "Export en cours…" : "Générer le clip"}
             </Button>
           </div>
         </div>
@@ -290,9 +424,9 @@ const MyRecording = () => {
               <Download className="h-4 w-4 mr-2" /> Vidéo complète
             </a>
           </Button>
-          {trimmedUrl && (
+          {currentExportUrl && (
             <Button asChild size="lg" variant="default">
-              <a href={trimmedUrl} download={trimmedFilename}>
+              <a href={currentExportUrl} download={trimmedFilename}>
                 <Download className="h-4 w-4 mr-2" /> Clip découpé
               </a>
             </Button>

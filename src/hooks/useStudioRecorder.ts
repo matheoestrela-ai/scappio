@@ -7,6 +7,7 @@ import {
   drawCover,
   formatToRecordingFormat,
   getDisplayMediaSafely,
+  isLikelyMobile,
   pickMime,
   type StudioFormat,
 } from "@/lib/studio-recorder";
@@ -32,6 +33,8 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const [cameraOn, setCameraOn] = useState(true);
   const [screenOn, setScreenOn] = useState(false);
   const [screenSupported, setScreenSupported] = useState(false);
+  const [cameraPreviewStream, setCameraPreviewStream] = useState<MediaStream | null>(null);
+  const [screenPreviewStream, setScreenPreviewStream] = useState<MediaStream | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Streams
@@ -57,7 +60,36 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   }, [format]);
 
   useEffect(() => {
-    setScreenSupported(!!getDisplayMediaSafely());
+    setScreenSupported(!!getDisplayMediaSafely() && !isLikelyMobile());
+  }, []);
+
+  const createPlaybackVideo = useCallback(async (stream: MediaStream) => {
+    const v = document.createElement("video");
+    v.autoplay = true;
+    v.muted = true;
+    v.playsInline = true;
+    v.srcObject = stream;
+
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        v.play().catch(() => {});
+        resolve();
+      };
+
+      if (v.readyState >= 2) {
+        finish();
+        return;
+      }
+
+      v.addEventListener("loadedmetadata", finish, { once: true });
+      v.addEventListener("canplay", finish, { once: true });
+      window.setTimeout(finish, 500);
+    });
+
+    return v;
   }, []);
 
   // ----- Stream helpers -----
@@ -73,26 +105,18 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     micStreamRef.current = audio.length ? new MediaStream(audio) : null;
 
     if (cameraStreamRef.current) {
-      const v = document.createElement("video");
-      v.srcObject = cameraStreamRef.current;
-      v.muted = true;
-      v.playsInline = true;
-      await new Promise<void>((res) => {
-        v.onloadedmetadata = () => {
-          v.play().catch(() => {});
-          res();
-        };
-      });
-      cameraVideoRef.current = v;
+      cameraVideoRef.current = await createPlaybackVideo(cameraStreamRef.current);
     }
+    setCameraPreviewStream(cameraStreamRef.current);
     setCameraOn(!!cameraStreamRef.current);
     return cameraStreamRef.current;
-  }, []);
+  }, [createPlaybackVideo]);
 
   const stopCamera = useCallback(() => {
     cameraStreamRef.current?.getTracks().forEach((t) => { try { t.stop(); } catch {} });
     cameraStreamRef.current = null;
     cameraVideoRef.current = null;
+    setCameraPreviewStream(null);
     setCameraOn(false);
   }, []);
 
@@ -100,6 +124,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     screenStreamRef.current?.getTracks().forEach((t) => { try { t.stop(); } catch {} });
     screenStreamRef.current = null;
     screenVideoRef.current = null;
+    setScreenPreviewStream(null);
     setScreenOn(false);
   }, []);
 
@@ -114,18 +139,10 @@ export function useStudioRecorder({ format, onFinished }: Options) {
         video: { frameRate: { ideal: 30 } },
         audio: false,
       });
-      const v = document.createElement("video");
-      v.srcObject = screen;
-      v.muted = true;
-      v.playsInline = true;
-      await new Promise<void>((res) => {
-        v.onloadedmetadata = () => {
-          v.play().catch(() => {});
-          res();
-        };
-      });
+      const v = await createPlaybackVideo(screen);
       screenStreamRef.current = screen;
       screenVideoRef.current = v;
+      setScreenPreviewStream(screen);
       setScreenOn(true);
       screen.getVideoTracks()[0].addEventListener("ended", () => {
         stopScreen();
@@ -135,7 +152,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       console.error(err);
       toast.error("Partage d'écran indisponible");
     }
-  }, [stopScreen]);
+  }, [createPlaybackVideo, stopScreen]);
 
   const toggleCamera = useCallback(async () => {
     if (cameraOn) stopCamera();
@@ -329,8 +346,8 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     screenSupported,
     previewUrl,
     // streams (for the live preview)
-    cameraStream: cameraStreamRef,
-    screenStream: screenStreamRef,
+    cameraStream: cameraPreviewStream,
+    screenStream: screenPreviewStream,
     // controls
     start,
     stop,

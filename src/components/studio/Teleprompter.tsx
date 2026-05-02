@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, Type, Eye, EyeOff, RotateCcw } from "lucide-react";
 
@@ -9,7 +9,10 @@ type Props = {
 
 const STORAGE_KEY = "scappio:studio:script";
 
-export default function Teleprompter({ visible, onToggleVisible }: Props) {
+const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
+  { visible, onToggleVisible },
+  ref,
+) {
   const [text, setText] = useState<string>(() => {
     try { return localStorage.getItem(STORAGE_KEY) ?? ""; } catch { return ""; }
   });
@@ -65,7 +68,7 @@ export default function Teleprompter({ visible, onToggleVisible }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-card border border-border rounded-lg overflow-hidden">
+    <div ref={ref} className="flex flex-col h-full bg-card border border-border rounded-lg overflow-hidden">
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Type className="h-4 w-4" /> Téléprompteur
@@ -155,4 +158,6 @@ export default function Teleprompter({ visible, onToggleVisible }: Props) {
       </div>
     </div>
   );
-}
+});
+
+export default Teleprompter;
