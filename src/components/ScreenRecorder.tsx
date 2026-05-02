@@ -288,7 +288,6 @@ export default function ScreenRecorder() {
       return;
     }
     formatRef.current = "youtube";
-    setPickerOpen(false);
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: { ideal: 30 } },
