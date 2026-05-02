@@ -1,10 +1,12 @@
 // In-memory hand-off between the recorder and the result page.
 // Blob URLs created with URL.createObjectURL stay valid across SPA
-// navigations within the same document, so we just need to pass the URL.
+// navigations within the same document.
+
+export type RecordingFormat = "youtube" | "tiktok";
 
 export type LastRecording = {
   url: string;
-  format: "standard" | "tiktok";
+  format: RecordingFormat;
 };
 
 let last: LastRecording | null = null;

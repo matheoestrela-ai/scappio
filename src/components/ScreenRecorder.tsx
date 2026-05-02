@@ -3,9 +3,10 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Camera, Square, X, Monitor, Smartphone } from "lucide-react";
 import { toast } from "sonner";
-import { setLastRecording } from "@/lib/recording-store";
+import html2canvas from "html2canvas";
+import { setLastRecording, type RecordingFormat } from "@/lib/recording-store";
 
-type Format = "standard" | "tiktok";
+type Format = RecordingFormat;
 
 const fmt = (s: number) =>
   `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
@@ -22,6 +23,36 @@ const pickMime = () => {
   return "";
 };
 
+const findBoardElement = (): HTMLElement | null => {
+  return (
+    (document.querySelector("[data-board-capture]") as HTMLElement | null) ??
+    (document.querySelector(".tl-container") as HTMLElement | null) ??
+    (document.querySelector(".react-flow") as HTMLElement | null)
+  );
+};
+
+// Selectors of UI to hide while recording.
+const HIDE_SELECTORS = [
+  "[data-teleprompter]",
+  "[data-suggestions-panel]",
+  "[data-overlay-text]",
+];
+
+const hideOverlays = (): Array<{ el: HTMLElement; prev: string }> => {
+  const hidden: Array<{ el: HTMLElement; prev: string }> = [];
+  HIDE_SELECTORS.forEach((sel) => {
+    document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+      hidden.push({ el, prev: el.style.display });
+      el.style.display = "none";
+    });
+  });
+  return hidden;
+};
+
+const restoreOverlays = (hidden: Array<{ el: HTMLElement; prev: string }>) => {
+  hidden.forEach(({ el, prev }) => { el.style.display = prev; });
+};
+
 export default function ScreenRecorder() {
   const navigate = useNavigate();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -34,299 +65,237 @@ export default function ScreenRecorder() {
   const stopTracksRef = useRef<MediaStreamTrack[]>([]);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const formatRef = useRef<Format | null>(null);
+  const hiddenOverlaysRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
+  const cameraVideoElRef = useRef<HTMLVideoElement | null>(null);
+  const latestBoardSnapshotRef = useRef<HTMLCanvasElement | null>(null);
+  const snapshottingRef = useRef(false);
+  const lastSnapshotAtRef = useRef(0);
 
-  const resetUI = useCallback(() => {
+  const reset = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (timerRef.current) window.clearInterval(timerRef.current);
     rafRef.current = null;
     timerRef.current = null;
-    stopTracksRef.current.forEach((t) => {
-      try { t.stop(); } catch {}
-    });
+    stopTracksRef.current.forEach((t) => { try { t.stop(); } catch {} });
     stopTracksRef.current = [];
+    if (offscreenCanvasRef.current?.parentNode) {
+      offscreenCanvasRef.current.parentNode.removeChild(offscreenCanvasRef.current);
+    }
+    offscreenCanvasRef.current = null;
+    cameraVideoElRef.current = null;
+    latestBoardSnapshotRef.current = null;
+    restoreOverlays(hiddenOverlaysRef.current);
+    hiddenOverlaysRef.current = [];
     recorderRef.current = null;
     chunksRef.current = [];
-    offscreenCanvasRef.current = null;
-    formatRef.current = null;
     setRecording(false);
     setElapsed(0);
     setFormat(null);
   }, []);
 
-  const stopRecording = useCallback(() => {
-    const r = recorderRef.current;
-    if (r && r.state !== "inactive") {
-      r.stop();
-    } else {
-      resetUI();
-    }
-  }, [resetUI]);
-
   const finalize = useCallback(
-    (fmtKind: Format) => {
+    (kind: Format) => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
       if (blob.size === 0) {
         toast.error("Enregistrement vide — réessaie");
-        resetUI();
+        reset();
         return;
       }
       const url = URL.createObjectURL(blob);
-      setLastRecording({ url, format: fmtKind });
-      resetUI();
+      setLastRecording({ url, format: kind });
+      reset();
       navigate("/mon-enregistrement");
     },
-    [navigate, resetUI],
+    [navigate, reset],
   );
 
-  // ---------------- Standard 16:9 ----------------
-  const startStandard = useCallback(async () => {
-    if (typeof MediaRecorder === "undefined") {
-      toast.error("Ton navigateur ne supporte pas l'enregistrement");
-      return;
-    }
-    let display: MediaStream;
-    try {
-      display = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false,
-        // @ts-ignore — Chromium extension
-        preferCurrentTab: true,
-      });
-    } catch {
-      toast.error("Partage d'écran annulé");
-      return;
-    }
+  const stopRecording = useCallback(() => {
+    const r = recorderRef.current;
+    if (r && r.state !== "inactive") r.stop();
+    else reset();
+  }, [reset]);
 
-    let micTrack: MediaStreamTrack | null = null;
-    try {
-      const mic = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false,
-      });
-      micTrack = mic.getAudioTracks()[0] ?? null;
-    } catch {
-      toast.warning("Microphone non disponible — enregistrement sans son");
-    }
+  const startCommon = useCallback(
+    async (kind: Format) => {
+      if (typeof MediaRecorder === "undefined") {
+        toast.error("Navigateur non supporté");
+        return;
+      }
+      const boardEl = findBoardElement();
+      if (!boardEl) {
+        toast.error("Aucun board à enregistrer");
+        return;
+      }
 
-    const tracks: MediaStreamTrack[] = [...display.getVideoTracks()];
-    if (micTrack) tracks.push(micTrack);
-    const stream = new MediaStream(tracks);
-    stopTracksRef.current = [...display.getTracks(), ...(micTrack ? [micTrack] : [])];
-
-    const mime = pickMime();
-    let rec: MediaRecorder;
-    try {
-      rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
-    } catch (e) {
-      console.error(e);
-      toast.error("Impossible de démarrer l'enregistrement");
-      stopTracksRef.current.forEach((t) => t.stop());
-      stopTracksRef.current = [];
-      return;
-    }
-
-    chunksRef.current = [];
-    rec.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
-    };
-    rec.onstop = () => finalize("standard");
-    rec.onerror = (e) => {
-      console.error("Recorder error", e);
-      toast.error("Erreur d'enregistrement");
-      resetUI();
-    };
-
-    display.getVideoTracks()[0].addEventListener("ended", () => stopRecording());
-
-    recorderRef.current = rec;
-    formatRef.current = "standard";
-    setFormat("standard");
-    setRecording(true);
-    setElapsed(0);
-    timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
-    rec.start(1000);
-  }, [finalize, resetUI, stopRecording]);
-
-  // ---------------- TikTok 9:16 ----------------
-  const startTikTok = useCallback(async () => {
-    if (typeof MediaRecorder === "undefined") {
-      toast.error("Ton navigateur ne supporte pas l'enregistrement");
-      return;
-    }
-    // Step 1 — Camera + microphone FIRST, so the user explicitly grants
-    // camera access before the browser opens the screen-share picker.
-    let cameraStream: MediaStream | null = null;
-    try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-        audio: true,
-      });
-    } catch {
-      toast.warning("Caméra non disponible — enregistrement sans facecam");
-    }
-
-    // If camera failed entirely, still try to get the mic alone.
-    if (!cameraStream) {
+      // Step 1 — Camera + microphone
+      let cameraStream: MediaStream;
       try {
         cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
           audio: true,
-          video: false,
         });
       } catch {
-        toast.warning("Microphone non disponible — enregistrement sans son");
+        toast.warning("Caméra non disponible");
+        return;
       }
-    }
 
-    // Step 2 — Screen share
-    let screenStream: MediaStream;
-    try {
-      screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false,
-        // @ts-ignore — Chromium extension
-        preferCurrentTab: true,
-      });
-    } catch {
-      toast.error("Partage d'écran annulé");
-      cameraStream?.getTracks().forEach((t) => { try { t.stop(); } catch {} });
-      return;
-    }
+      if (cameraStream.getAudioTracks().length === 0) {
+        toast.warning("Microphone non disponible");
+      }
 
-    // Step 3 — Hidden canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = 1080;
-    canvas.height = 1920;
-    canvas.style.position = "fixed";
-    canvas.style.left = "-99999px";
-    canvas.style.top = "0";
-    document.body.appendChild(canvas);
-    offscreenCanvasRef.current = canvas;
-    const ctx = canvas.getContext("2d")!;
+      // Hide overlays
+      hiddenOverlaysRef.current = hideOverlays();
 
-    // Step 4 — Video elements (screen + camera)
-    const screenVideo = document.createElement("video");
-    screenVideo.srcObject = screenStream;
-    screenVideo.muted = true;
-    screenVideo.autoplay = true;
-    screenVideo.playsInline = true;
-    try { await screenVideo.play(); } catch {}
-
-    let cameraVideo: HTMLVideoElement | null = null;
-    if (cameraStream && cameraStream.getVideoTracks().length > 0) {
-      cameraVideo = document.createElement("video");
+      // Camera <video>
+      const cameraVideo = document.createElement("video");
       cameraVideo.srcObject = cameraStream;
       cameraVideo.muted = true;
       cameraVideo.autoplay = true;
       cameraVideo.playsInline = true;
       try { await cameraVideo.play(); } catch {}
-    }
+      cameraVideoElRef.current = cameraVideo;
 
-    // Aliases for the rest of the function (drawing, recorder setup, cleanup).
-    const display = screenStream;
-    const camStream = cameraStream;
-    const tabVideo = screenVideo;
-    const camVideo = cameraVideo;
-
-    const draw = () => {
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, 1080, 1920);
-      try {
-        if (tabVideo.readyState >= 2) {
-          // contain into 1080x1344
-          const tw = tabVideo.videoWidth || 16;
-          const th = tabVideo.videoHeight || 9;
-          const targetW = 1080;
-          const targetH = 1344;
-          const scale = Math.min(targetW / tw, targetH / th);
-          const w = tw * scale;
-          const h = th * scale;
-          const x = (targetW - w) / 2;
-          const y = (targetH - h) / 2;
-          ctx.drawImage(tabVideo, x, y, w, h);
-        }
-        if (camVideo && camVideo.readyState >= 2) {
-          // cover into 1080x576
-          const cw = camVideo.videoWidth || 16;
-          const ch = camVideo.videoHeight || 9;
-          const targetW = 1080;
-          const targetH = 576;
-          const scale = Math.max(targetW / cw, targetH / ch);
-          const w = cw * scale;
-          const h = ch * scale;
-          const x = (targetW - w) / 2;
-          const y = 1344 + (targetH - h) / 2;
-          ctx.drawImage(camVideo, x, y, w, h);
-        }
-      } catch {}
-      // mirror to preview
-      const pc = previewCanvasRef.current;
-      if (pc) {
-        const pctx = pc.getContext("2d");
-        if (pctx) pctx.drawImage(canvas, 0, 0, pc.width, pc.height);
+      // Hidden output canvas
+      const canvas = document.createElement("canvas");
+      if (kind === "youtube") {
+        canvas.width = 1920;
+        canvas.height = 1080;
+      } else {
+        canvas.width = 1080;
+        canvas.height = 1920;
       }
+      canvas.style.position = "fixed";
+      canvas.style.left = "-99999px";
+      canvas.style.top = "0";
+      document.body.appendChild(canvas);
+      offscreenCanvasRef.current = canvas;
+      const ctx = canvas.getContext("2d")!;
+
+      const captureBoard = async () => {
+        if (snapshottingRef.current) return;
+        snapshottingRef.current = true;
+        try {
+          const snap = await html2canvas(boardEl, {
+            backgroundColor: "#ffffff",
+            logging: false,
+            useCORS: true,
+            scale: 1,
+          });
+          latestBoardSnapshotRef.current = snap;
+        } catch (e) {
+          console.error(e);
+          // Don't spam toasts every frame; show once
+          if (!latestBoardSnapshotRef.current) {
+            toast.error("Erreur de capture du board");
+          }
+        } finally {
+          snapshottingRef.current = false;
+        }
+      };
+
+      // Initial snapshot before starting recorder
+      await captureBoard();
+
+      const drawYouTube = () => {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, 1920, 1080);
+        const board = latestBoardSnapshotRef.current;
+        if (board) ctx.drawImage(board, 0, 0, 1920, 1080);
+        // Camera circle bottom-left
+        if (cameraVideo.readyState >= 2) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(110, 970, 90, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(cameraVideo, 20, 880, 180, 180);
+          ctx.restore();
+          // White border
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(110, 970, 90, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      };
+
+      const drawTikTok = () => {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, 1080, 1920);
+        const board = latestBoardSnapshotRef.current;
+        if (board) ctx.drawImage(board, 0, 0, 1080, 1248);
+        // Orange separator
+        ctx.fillStyle = "#F97316";
+        ctx.fillRect(0, 1248, 1080, 3);
+        // Camera bottom 35%
+        if (cameraVideo.readyState >= 2) {
+          ctx.drawImage(cameraVideo, 0, 1251, 1080, 669);
+        }
+      };
+
+      const draw = async () => {
+        const now = performance.now();
+        // Throttle html2canvas to ~10fps to stay responsive
+        if (now - lastSnapshotAtRef.current > 100) {
+          lastSnapshotAtRef.current = now;
+          captureBoard();
+        }
+        if (kind === "youtube") drawYouTube();
+        else drawTikTok();
+        rafRef.current = requestAnimationFrame(draw);
+      };
       rafRef.current = requestAnimationFrame(draw);
-    };
-    rafRef.current = requestAnimationFrame(draw);
 
-    const canvasStream = canvas.captureStream(30);
-    const audioTrack = camStream?.getAudioTracks()[0] ?? null;
-    if (audioTrack) canvasStream.addTrack(audioTrack);
+      // Recorder
+      const canvasStream = canvas.captureStream(30);
+      const audioTrack = cameraStream.getAudioTracks()[0] ?? null;
+      if (audioTrack) canvasStream.addTrack(audioTrack);
 
-    stopTracksRef.current = [
-      ...display.getTracks(),
-      ...(camStream ? camStream.getTracks() : []),
-      ...canvasStream.getVideoTracks(),
-    ];
+      stopTracksRef.current = [
+        ...cameraStream.getTracks(),
+        ...canvasStream.getVideoTracks(),
+      ];
 
-    const mime = pickMime();
-    let rec: MediaRecorder;
-    try {
-      rec = mime
-        ? new MediaRecorder(canvasStream, { mimeType: mime })
-        : new MediaRecorder(canvasStream);
-    } catch (e) {
-      console.error(e);
-      toast.error("Impossible de démarrer l'enregistrement");
-      stopTracksRef.current.forEach((t) => t.stop());
-      stopTracksRef.current = [];
-      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-      return;
-    }
+      const mime = pickMime();
+      let rec: MediaRecorder;
+      try {
+        rec = mime
+          ? new MediaRecorder(canvasStream, { mimeType: mime })
+          : new MediaRecorder(canvasStream);
+      } catch (e) {
+        console.error(e);
+        toast.error("Impossible de démarrer l'enregistrement");
+        reset();
+        return;
+      }
 
-    chunksRef.current = [];
-    rec.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
-    };
-    rec.onstop = () => {
-      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-      finalize("tiktok");
-    };
-    rec.onerror = (e) => {
-      console.error("Recorder error", e);
-      toast.error("Erreur d'enregistrement");
-      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-      resetUI();
-    };
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = () => finalize(kind);
+      rec.onerror = (e) => {
+        console.error("Recorder error", e);
+        toast.error("Erreur d'enregistrement");
+        reset();
+      };
 
-    display.getVideoTracks()[0].addEventListener("ended", () => stopRecording());
-
-    recorderRef.current = rec;
-    formatRef.current = "tiktok";
-    setFormat("tiktok");
-    setRecording(true);
-    setElapsed(0);
-    timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
-    rec.start(1000);
-  }, [finalize, resetUI, stopRecording]);
+      recorderRef.current = rec;
+      setFormat(kind);
+      setRecording(true);
+      setElapsed(0);
+      timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+      rec.start(1000);
+    },
+    [finalize, reset],
+  );
 
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (timerRef.current) window.clearInterval(timerRef.current);
       stopTracksRef.current.forEach((t) => { try { t.stop(); } catch {} });
+      restoreOverlays(hiddenOverlaysRef.current);
     };
   }, []);
 
@@ -337,34 +306,7 @@ export default function ScreenRecorder() {
 
   return createPortal(
     <>
-      {/* Standard recording border */}
-      {recording && format === "standard" && (
-        <div
-          className="pointer-events-none fixed inset-0 border-4 border-red-500"
-          style={{ zIndex: 9990 }}
-        />
-      )}
-
-      {/* TikTok preview */}
-      {recording && format === "tiktok" && (
-        <div
-          className="fixed bottom-4 left-4 rounded-lg overflow-hidden shadow-2xl border border-border bg-black"
-          style={{ zIndex: 9998, width: 200 }}
-        >
-          <canvas
-            ref={previewCanvasRef}
-            width={200}
-            height={356}
-            className="block w-full h-auto"
-          />
-          <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 rounded-full px-2 py-1">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-white text-[10px] font-bold tracking-wide">REC</span>
-          </div>
-        </div>
-      )}
-
-      {/* Main button */}
+      {/* Main fixed button */}
       <button
         onClick={onMainClick}
         aria-label={recording ? "Arrêter" : "Enregistrer"}
@@ -407,30 +349,30 @@ export default function ScreenRecorder() {
             </button>
             <h2 className="text-lg font-semibold text-center mb-1">Choisis un format</h2>
             <p className="text-sm text-muted-foreground text-center mb-6">
-              Le navigateur te demandera de partager l'onglet en cours.
+              On enregistre uniquement ton board avec ta caméra.
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => {
                   setPickerOpen(false);
-                  startStandard();
+                  startCommon("youtube");
                 }}
                 className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-accent transition"
               >
                 <Monitor className="h-10 w-10" />
-                <span className="font-semibold">🖥️ Standard 16:9</span>
-                <span className="text-xs text-muted-foreground">Onglet plein écran</span>
+                <span className="font-semibold">🖥️ YouTube 16:9</span>
+                <span className="text-xs text-muted-foreground">Caméra ronde en bas</span>
               </button>
               <button
                 onClick={() => {
                   setPickerOpen(false);
-                  startTikTok();
+                  startCommon("tiktok");
                 }}
                 className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-accent transition"
               >
                 <Smartphone className="h-10 w-10" />
                 <span className="font-semibold">📱 TikTok 9:16</span>
-                <span className="text-xs text-muted-foreground">Vertical + facecam</span>
+                <span className="text-xs text-muted-foreground">Board + facecam</span>
               </button>
             </div>
           </div>

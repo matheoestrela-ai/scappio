@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
-import { consumeLastRecording } from "@/lib/recording-store";
+import { consumeLastRecording, type RecordingFormat } from "@/lib/recording-store";
+
+const formatLabel = (f: RecordingFormat) => (f === "tiktok" ? "TikTok 9:16" : "YouTube 16:9");
 
 const MyRecording = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState<{ url: string; format: "standard" | "tiktok" } | null>(null);
+  const [data, setData] = useState<{ url: string; format: RecordingFormat } | null>(null);
 
   useEffect(() => {
     const rec = consumeLastRecording();
@@ -16,10 +18,7 @@ const MyRecording = () => {
     }
     setData(rec);
     return () => {
-      // Revoke when leaving
-      try {
-        URL.revokeObjectURL(rec.url);
-      } catch {}
+      try { URL.revokeObjectURL(rec.url); } catch {}
     };
   }, [navigate]);
 
@@ -30,12 +29,14 @@ const MyRecording = () => {
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       <header className="border-b border-border bg-card/60 backdrop-blur sticky top-0 z-10">
-        <div className="container py-3 flex items-center justify-between">
+        <div className="container py-3 flex items-center justify-between gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-1.5" /> Retour au board
           </Button>
           <h1 className="text-base sm:text-lg font-semibold">Mon enregistrement</h1>
-          <div className="w-[120px]" />
+          <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+            {formatLabel(data.format)}
+          </span>
         </div>
       </header>
 
@@ -45,13 +46,7 @@ const MyRecording = () => {
             data.format === "tiktok" ? "max-w-sm" : "max-w-4xl"
           } rounded-xl overflow-hidden shadow-elegant bg-black`}
         >
-          <video
-            src={data.url}
-            controls
-            autoPlay
-            playsInline
-            className="w-full h-auto block"
-          />
+          <video src={data.url} controls autoPlay playsInline className="w-full h-auto block" />
         </div>
 
         <div className="flex flex-wrap gap-3 justify-center">
@@ -65,9 +60,7 @@ const MyRecording = () => {
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Format : {data.format === "tiktok" ? "TikTok 9:16" : "Standard 16:9"} · {filename}
-        </p>
+        <p className="text-xs text-muted-foreground">{filename}</p>
       </main>
     </div>
   );

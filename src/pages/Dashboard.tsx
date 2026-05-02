@@ -577,6 +577,7 @@ const Dashboard = () => {
                             ? "relative flex-1 min-w-0 overflow-hidden"
                             : "relative flex-1 min-w-0 rounded-2xl border border-border shadow-elegant overflow-hidden bg-card"
                         }
+                        data-board-capture
                       >
                         <TldrawBoard data={board} apiRef={boardApiRef} />
                         {!isMobile && (
