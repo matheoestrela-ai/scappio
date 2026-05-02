@@ -124,12 +124,79 @@ const MyRecording = () => {
     if (!v) return;
     if (v.paused) {
       if (v.currentTime < trimStart || v.currentTime >= trimEnd) v.currentTime = trimStart;
-      v.play();
-      setPlaying(true);
+      v.play().catch(() => {
+        toast.error("Lecture impossible");
+      });
     } else {
       v.pause();
-      setPlaying(false);
     }
+  };
+
+  const connectNoiseReductionChain = async () => {
+    const v = videoRef.current;
+    if (!v) return null;
+
+    const AudioCtx = window.AudioContext || (window as typeof window & {
+      webkitAudioContext?: typeof AudioContext;
+    }).webkitAudioContext;
+
+    if (!AudioCtx) return null;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioCtx();
+    }
+
+    const ctx = audioContextRef.current;
+    if (ctx.state === "suspended") {
+      await ctx.resume().catch(() => {});
+    }
+
+    if (!sourceNodeRef.current) {
+      sourceNodeRef.current = ctx.createMediaElementSource(v);
+    }
+
+    const source = sourceNodeRef.current;
+    const destination = ctx.createMediaStreamDestination();
+    outputNodeRef.current = destination;
+
+    const inputGain = ctx.createGain();
+    inputGain.gain.value = noiseReductionRef.current ? 1.08 : 1;
+
+    if (noiseReductionRef.current) {
+      const highPass = ctx.createBiquadFilter();
+      highPass.type = "highpass";
+      highPass.frequency.value = 100;
+      highPass.Q.value = 0.8;
+
+      const lowPass = ctx.createBiquadFilter();
+      lowPass.type = "lowpass";
+      lowPass.frequency.value = 7800;
+      lowPass.Q.value = 0.8;
+
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -32;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 3;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.2;
+
+      const outputGain = ctx.createGain();
+      outputGain.gain.value = 1.05;
+
+      source.connect(inputGain);
+      inputGain.connect(highPass);
+      highPass.connect(lowPass);
+      lowPass.connect(compressor);
+      compressor.connect(outputGain);
+      outputGain.connect(ctx.destination);
+      outputGain.connect(destination);
+    } else {
+      source.connect(inputGain);
+      inputGain.connect(ctx.destination);
+      inputGain.connect(destination);
+    }
+
+    return destination.stream;
   };
 
   // Lightweight client-side trim: re-record the played segment via captureStream
