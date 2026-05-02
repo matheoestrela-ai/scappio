@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Scissors, Play, Pause, RotateCcw, Volume2, Sparkles } from "lucide-react";
@@ -280,6 +280,7 @@ const MyRecording = () => {
 
   const filename = `scappio-${data.format}-${new Date().toISOString().slice(0, 10)}.webm`;
   const trimmedFilename = `scappio-${data.format}-clip-${new Date().toISOString().slice(0, 10)}.webm`;
+  const currentExportUrl = processedUrl ?? trimmedUrl;
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
@@ -323,11 +324,14 @@ const MyRecording = () => {
               <Scissors className="h-4 w-4" /> Découper
             </div>
             <div className="text-xs text-muted-foreground tabular-nums">
-              {fmt(trimStart)} → {fmt(trimEnd)}  ({fmt(trimEnd - trimStart)})
+              {fmt(trimStart)} → {fmt(trimEnd)} ({fmt(trimEnd - trimStart)})
             </div>
           </div>
 
-          <div className="relative h-10 bg-muted rounded-md overflow-hidden">
+          <div className="relative h-12 bg-muted rounded-md overflow-hidden border border-border/60">
+            <div className="absolute inset-y-0 left-0 right-0 flex items-center px-2">
+              <div className="h-1.5 w-full rounded-full bg-secondary" />
+            </div>
             <div
               className="absolute top-0 bottom-0 bg-primary/20 border-x-2 border-primary"
               style={{
@@ -335,41 +339,54 @@ const MyRecording = () => {
                 width: duration > 0 ? `${((trimEnd - trimStart) / duration) * 100}%` : "100%",
               }}
             />
+            <div
+              className="absolute top-0 bottom-0 w-0.5 bg-foreground/80"
+              style={{ left: duration > 0 ? `${(Math.min(playhead, duration) / duration) * 100}%` : "0%" }}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              Début
-              <input
-                type="range"
+              <span className="flex items-center justify-between"><span>Début</span><span>{fmt(trimStart)}</span></span>
+              <Slider
                 min={0}
                 max={duration || 0}
                 step={0.05}
-                value={trimStart}
-                onChange={(e) => {
-                  const v = Math.min(Number(e.target.value), trimEnd - 0.1);
+                value={[trimStart]}
+                onValueChange={([value]) => {
+                  const v = Math.min(value ?? 0, trimEnd - 0.1);
                   setTrimStart(Math.max(0, v));
                   if (videoRef.current) videoRef.current.currentTime = v;
                 }}
-                className="accent-primary"
               />
             </label>
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              Fin
-              <input
-                type="range"
+              <span className="flex items-center justify-between"><span>Fin</span><span>{fmt(trimEnd)}</span></span>
+              <Slider
                 min={0}
                 max={duration || 0}
                 step={0.05}
-                value={trimEnd}
-                onChange={(e) => {
-                  const v = Math.max(Number(e.target.value), trimStart + 0.1);
+                value={[trimEnd]}
+                onValueChange={([value]) => {
+                  const v = Math.max(value ?? duration, trimStart + 0.1);
                   setTrimEnd(Math.min(duration, v));
                   if (videoRef.current) videoRef.current.currentTime = Math.max(trimStart, v - 0.5);
                 }}
-                className="accent-primary"
               />
             </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 bg-muted/20 px-3 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Volume2 className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-sm font-medium">Réduire le bruit de fond</div>
+                <div className="text-xs text-muted-foreground">Nettoyage audio appliqué au clip exporté.</div>
+              </div>
+            </div>
+            <Switch checked={noiseReduction} onCheckedChange={setNoiseReduction} />
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -387,12 +404,16 @@ const MyRecording = () => {
             </Button>
             <Button
               size="sm"
-              onClick={trimClip}
-              disabled={trimming}
+              onClick={async () => {
+                setProcessingAudio(noiseReduction);
+                await trimClip();
+                setProcessingAudio(false);
+              }}
+              disabled={trimming || processingAudio}
               className="gap-2 bg-primary text-primary-foreground"
             >
-              <Scissors className="h-4 w-4" />
-              {trimming ? "Découpe en cours…" : "Générer le clip"}
+              {noiseReduction ? <Sparkles className="h-4 w-4" /> : <Scissors className="h-4 w-4" />}
+              {trimming || processingAudio ? "Export en cours…" : "Générer le clip"}
             </Button>
           </div>
         </div>
@@ -403,9 +424,9 @@ const MyRecording = () => {
               <Download className="h-4 w-4 mr-2" /> Vidéo complète
             </a>
           </Button>
-          {trimmedUrl && (
+          {currentExportUrl && (
             <Button asChild size="lg" variant="default">
-              <a href={trimmedUrl} download={trimmedFilename}>
+              <a href={currentExportUrl} download={trimmedFilename}>
                 <Download className="h-4 w-4 mr-2" /> Clip découpé
               </a>
             </Button>
