@@ -197,9 +197,6 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
             <DropdownMenuItem onClick={() => navigate("/history")}>
               <HistoryIcon className="h-4 w-4 mr-2" /> Historique
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/studio")}>
-              <Camera className="h-4 w-4 mr-2" /> Studio
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/recordings")}>
               <Video className="h-4 w-4 mr-2" /> Mes enregistrements
             </DropdownMenuItem>
