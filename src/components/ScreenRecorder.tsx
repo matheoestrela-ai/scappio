@@ -47,7 +47,8 @@ export default function ScreenRecorder() {
   const navigate = useNavigate();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const formatRef = useRef<Format>(ACTIVE_FORMAT);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const formatRef = useRef<Format>("youtube");
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
