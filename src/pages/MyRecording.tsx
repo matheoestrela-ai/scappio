@@ -210,21 +210,30 @@ const MyRecording = () => {
     }
     setTrimming(true);
     try {
+      sourceNodeRef.current?.disconnect();
+      outputNodeRef.current?.disconnect();
+
       // @ts-ignore captureStream is widely supported on <video>
       const stream: MediaStream = (v as any).captureStream
         ? (v as any).captureStream()
         : (v as any).mozCaptureStream();
+      const processedAudioStream = await connectNoiseReductionChain();
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = processedAudioStream?.getAudioTracks()[0] ?? stream.getAudioTracks()[0];
+      const exportStream = new MediaStream();
+      if (videoTrack) exportStream.addTrack(videoTrack);
+      if (audioTrack) exportStream.addTrack(audioTrack);
       const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
         ? "video/webm;codecs=vp9,opus"
         : "video/webm";
-      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+      const rec = new MediaRecorder(exportStream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
       const chunks: Blob[] = [];
       rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       const done = new Promise<Blob>((resolve) => {
         rec.onstop = () => resolve(new Blob(chunks, { type: "video/webm" }));
       });
 
-      v.muted = false;
+      v.muted = true;
       v.currentTime = trimStart;
       await new Promise<void>((res) => {
         const onSeek = () => { v.removeEventListener("seeked", onSeek); res(); };
@@ -250,11 +259,19 @@ const MyRecording = () => {
       if (trimmedUrl) try { URL.revokeObjectURL(trimmedUrl); } catch {}
       const url = URL.createObjectURL(blob);
       setTrimmedUrl(url);
+      setProcessedUrl((current) => {
+        if (current) {
+          try { URL.revokeObjectURL(current); } catch {}
+        }
+        return url;
+      });
       toast.success("Clip prêt à télécharger");
     } catch (e: any) {
       console.error(e);
       toast.error("Découpe impossible sur ce navigateur");
     } finally {
+      sourceNodeRef.current?.disconnect();
+      outputNodeRef.current?.disconnect();
       setTrimming(false);
     }
   };
