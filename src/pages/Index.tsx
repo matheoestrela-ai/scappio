@@ -743,14 +743,6 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Sticky mobile CTA */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
-        <Button asChild size="lg" className="w-full h-12 bg-primary text-primary-foreground shadow-glow hover:opacity-90 text-base btn-shimmer">
-          <Link to="/auth">
-            Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
       </div>
     </div>
   );
