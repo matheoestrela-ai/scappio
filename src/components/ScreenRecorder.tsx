@@ -1,25 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { Camera, Square, X, Monitor, Smartphone } from "lucide-react";
 import { toast } from "sonner";
+import { setLastRecording } from "@/lib/recording-store";
 
 type Format = "standard" | "tiktok";
 
-const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
-const ts = () => new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+const fmt = (s: number) =>
+  `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
-const download = (blob: Blob, name: string) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+const pickMime = () => {
+  const candidates = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm",
+  ];
+  for (const m of candidates) {
+    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return "";
 };
 
 export default function ScreenRecorder() {
+  const navigate = useNavigate();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -27,22 +31,26 @@ export default function ScreenRecorder() {
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const tracksRef = useRef<MediaStreamTrack[]>([]);
+  const stopTracksRef = useRef<MediaStreamTrack[]>([]);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const tiktokCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const formatRef = useRef<Format | null>(null);
 
-  const cleanup = useCallback(() => {
+  const resetUI = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (timerRef.current) window.clearInterval(timerRef.current);
     rafRef.current = null;
     timerRef.current = null;
-    tracksRef.current.forEach((t) => t.stop());
-    tracksRef.current = [];
+    stopTracksRef.current.forEach((t) => {
+      try { t.stop(); } catch {}
+    });
+    stopTracksRef.current = [];
     recorderRef.current = null;
     chunksRef.current = [];
-    tiktokCanvasRef.current = null;
+    offscreenCanvasRef.current = null;
+    formatRef.current = null;
     setRecording(false);
     setElapsed(0);
     setFormat(null);
@@ -50,12 +58,32 @@ export default function ScreenRecorder() {
 
   const stopRecording = useCallback(() => {
     const r = recorderRef.current;
-    if (r && r.state !== "inactive") r.stop();
-    else cleanup();
-  }, [cleanup]);
+    if (r && r.state !== "inactive") {
+      r.stop();
+    } else {
+      resetUI();
+    }
+  }, [resetUI]);
 
+  const finalize = useCallback(
+    (fmtKind: Format) => {
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      if (blob.size === 0) {
+        toast.error("Enregistrement vide — réessaie");
+        resetUI();
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      setLastRecording({ url, format: fmtKind });
+      resetUI();
+      navigate("/mon-enregistrement");
+    },
+    [navigate, resetUI],
+  );
+
+  // ---------------- Standard 16:9 ----------------
   const startStandard = useCallback(async () => {
-    if (!window.MediaRecorder) {
+    if (typeof MediaRecorder === "undefined") {
       toast.error("Ton navigateur ne supporte pas l'enregistrement");
       return;
     }
@@ -64,7 +92,7 @@ export default function ScreenRecorder() {
       display = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: false,
-        // @ts-ignore - non-standard but supported in Chromium
+        // @ts-ignore — Chromium extension
         preferCurrentTab: true,
       });
     } catch {
@@ -74,7 +102,10 @@ export default function ScreenRecorder() {
 
     let micTrack: MediaStreamTrack | null = null;
     try {
-      const mic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const mic = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
       micTrack = mic.getAudioTracks()[0] ?? null;
     } catch {
       toast.warning("Microphone non disponible — enregistrement sans son");
@@ -82,29 +113,46 @@ export default function ScreenRecorder() {
 
     const tracks: MediaStreamTrack[] = [...display.getVideoTracks()];
     if (micTrack) tracks.push(micTrack);
-    tracksRef.current = tracks;
-
     const stream = new MediaStream(tracks);
-    const rec = new MediaRecorder(stream, { mimeType: "video/webm" });
+    stopTracksRef.current = [...display.getTracks(), ...(micTrack ? [micTrack] : [])];
+
+    const mime = pickMime();
+    let rec: MediaRecorder;
+    try {
+      rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    } catch (e) {
+      console.error(e);
+      toast.error("Impossible de démarrer l'enregistrement");
+      stopTracksRef.current.forEach((t) => t.stop());
+      stopTracksRef.current = [];
+      return;
+    }
+
     chunksRef.current = [];
-    rec.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
-    rec.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      download(blob, `scappio-standard-${ts()}.webm`);
-      toast.success("Enregistrement sauvegardé ✓");
-      cleanup();
+    rec.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
     };
+    rec.onstop = () => finalize("standard");
+    rec.onerror = (e) => {
+      console.error("Recorder error", e);
+      toast.error("Erreur d'enregistrement");
+      resetUI();
+    };
+
     display.getVideoTracks()[0].addEventListener("ended", () => stopRecording());
+
     recorderRef.current = rec;
+    formatRef.current = "standard";
     setFormat("standard");
     setRecording(true);
     setElapsed(0);
     timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
     rec.start(1000);
-  }, [cleanup, stopRecording]);
+  }, [finalize, resetUI, stopRecording]);
 
+  // ---------------- TikTok 9:16 ----------------
   const startTikTok = useCallback(async () => {
-    if (!window.MediaRecorder) {
+    if (typeof MediaRecorder === "undefined") {
       toast.error("Ton navigateur ne supporte pas l'enregistrement");
       return;
     }
@@ -124,46 +172,85 @@ export default function ScreenRecorder() {
     let camStream: MediaStream | null = null;
     try {
       camStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
+        video: { facingMode: "user", width: 1280, height: 720 },
         audio: true,
       });
     } catch {
       toast.warning("Caméra non disponible — enregistrement sans facecam");
     }
 
-    if (camStream && camStream.getAudioTracks().length === 0) {
-      toast.warning("Microphone non disponible — enregistrement sans son");
+    if (!camStream || camStream.getAudioTracks().length === 0) {
+      // Try mic separately if camera failed or has no audio track
+      try {
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        if (camStream) {
+          mic.getAudioTracks().forEach((t) => camStream!.addTrack(t));
+        } else {
+          camStream = mic;
+        }
+      } catch {
+        toast.warning("Microphone non disponible — enregistrement sans son");
+      }
     }
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
     canvas.height = 1920;
+    canvas.style.position = "fixed";
+    canvas.style.left = "-99999px";
+    canvas.style.top = "0";
+    document.body.appendChild(canvas);
+    offscreenCanvasRef.current = canvas;
     const ctx = canvas.getContext("2d")!;
-    tiktokCanvasRef.current = canvas;
 
     const tabVideo = document.createElement("video");
     tabVideo.srcObject = display;
     tabVideo.muted = true;
     tabVideo.autoplay = true;
     tabVideo.playsInline = true;
-    await tabVideo.play().catch(() => {});
+    try { await tabVideo.play(); } catch {}
 
     let camVideo: HTMLVideoElement | null = null;
-    if (camStream) {
+    if (camStream && camStream.getVideoTracks().length > 0) {
       camVideo = document.createElement("video");
-      camVideo.srcObject = camStream;
+      const camOnly = new MediaStream(camStream.getVideoTracks());
+      camVideo.srcObject = camOnly;
       camVideo.muted = true;
       camVideo.autoplay = true;
       camVideo.playsInline = true;
-      await camVideo.play().catch(() => {});
+      try { await camVideo.play(); } catch {}
     }
 
     const draw = () => {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, 1080, 1920);
       try {
-        if (tabVideo.readyState >= 2) ctx.drawImage(tabVideo, 0, 0, 1080, 1344);
-        if (camVideo && camVideo.readyState >= 2) ctx.drawImage(camVideo, 0, 1344, 1080, 576);
+        if (tabVideo.readyState >= 2) {
+          // contain into 1080x1344
+          const tw = tabVideo.videoWidth || 16;
+          const th = tabVideo.videoHeight || 9;
+          const targetW = 1080;
+          const targetH = 1344;
+          const scale = Math.min(targetW / tw, targetH / th);
+          const w = tw * scale;
+          const h = th * scale;
+          const x = (targetW - w) / 2;
+          const y = (targetH - h) / 2;
+          ctx.drawImage(tabVideo, x, y, w, h);
+        }
+        if (camVideo && camVideo.readyState >= 2) {
+          // cover into 1080x576
+          const cw = camVideo.videoWidth || 16;
+          const ch = camVideo.videoHeight || 9;
+          const targetW = 1080;
+          const targetH = 576;
+          const scale = Math.max(targetW / cw, targetH / ch);
+          const w = cw * scale;
+          const h = ch * scale;
+          const x = (targetW - w) / 2;
+          const y = 1344 + (targetH - h) / 2;
+          ctx.drawImage(camVideo, x, y, w, h);
+        }
       } catch {}
       // mirror to preview
       const pc = previewCanvasRef.current;
@@ -176,38 +263,63 @@ export default function ScreenRecorder() {
     rafRef.current = requestAnimationFrame(draw);
 
     const canvasStream = canvas.captureStream(30);
-    const tracks: MediaStreamTrack[] = [...canvasStream.getVideoTracks()];
-    if (camStream) {
-      camStream.getAudioTracks().forEach((t) => {
-        canvasStream.addTrack(t);
-        tracks.push(t);
-      });
-    }
-    tracksRef.current = [
+    const audioTrack = camStream?.getAudioTracks()[0] ?? null;
+    if (audioTrack) canvasStream.addTrack(audioTrack);
+
+    stopTracksRef.current = [
       ...display.getTracks(),
       ...(camStream ? camStream.getTracks() : []),
       ...canvasStream.getVideoTracks(),
     ];
 
-    const rec = new MediaRecorder(canvasStream, { mimeType: "video/webm" });
+    const mime = pickMime();
+    let rec: MediaRecorder;
+    try {
+      rec = mime
+        ? new MediaRecorder(canvasStream, { mimeType: mime })
+        : new MediaRecorder(canvasStream);
+    } catch (e) {
+      console.error(e);
+      toast.error("Impossible de démarrer l'enregistrement");
+      stopTracksRef.current.forEach((t) => t.stop());
+      stopTracksRef.current = [];
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      return;
+    }
+
     chunksRef.current = [];
-    rec.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
-    rec.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      download(blob, `scappio-tiktok-${ts()}.webm`);
-      toast.success("Enregistrement TikTok sauvegardé ✓");
-      cleanup();
+    rec.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
     };
+    rec.onstop = () => {
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      finalize("tiktok");
+    };
+    rec.onerror = (e) => {
+      console.error("Recorder error", e);
+      toast.error("Erreur d'enregistrement");
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      resetUI();
+    };
+
     display.getVideoTracks()[0].addEventListener("ended", () => stopRecording());
+
     recorderRef.current = rec;
+    formatRef.current = "tiktok";
     setFormat("tiktok");
     setRecording(true);
     setElapsed(0);
     timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
     rec.start(1000);
-  }, [cleanup, stopRecording]);
+  }, [finalize, resetUI, stopRecording]);
 
-  useEffect(() => () => cleanup(), [cleanup]);
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (timerRef.current) window.clearInterval(timerRef.current);
+      stopTracksRef.current.forEach((t) => { try { t.stop(); } catch {} });
+    };
+  }, []);
 
   const onMainClick = () => {
     if (recording) stopRecording();
