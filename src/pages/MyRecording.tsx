@@ -34,7 +34,13 @@ const MyRecording = () => {
             <ArrowLeft className="h-4 w-4 mr-1.5" /> Retour au board
           </Button>
           <h1 className="text-base sm:text-lg font-semibold">Mon enregistrement</h1>
-          <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+          <span
+            className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
+              data.format === "tiktok"
+                ? "bg-orange-100 text-orange-600"
+                : "bg-primary/10 text-primary"
+            }`}
+          >
             {formatLabel(data.format)}
           </span>
         </div>
