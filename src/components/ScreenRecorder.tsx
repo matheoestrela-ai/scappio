@@ -45,6 +45,25 @@ const restoreOverlays = (hidden: Array<{ el: HTMLElement; prev: string }>) => {
   hidden.forEach(({ el, prev }) => { el.style.display = prev; });
 };
 
+const getDisplayMediaSafely = () => {
+  if (typeof navigator === "undefined") return null;
+
+  const mediaDevices = navigator.mediaDevices as MediaDevices | undefined;
+  if (mediaDevices?.getDisplayMedia) {
+    return mediaDevices.getDisplayMedia.bind(mediaDevices);
+  }
+
+  const legacyNavigator = navigator as Navigator & {
+    getDisplayMedia?: (constraints?: DisplayMediaStreamOptions) => Promise<MediaStream>;
+  };
+
+  if (legacyNavigator.getDisplayMedia) {
+    return legacyNavigator.getDisplayMedia.bind(legacyNavigator);
+  }
+
+  return null;
+};
+
 export default function ScreenRecorder() {
   const navigate = useNavigate();
   const [recording, setRecording] = useState(false);
@@ -156,6 +175,13 @@ export default function ScreenRecorder() {
       toast.error("Navigateur non supporté");
       return;
     }
+
+    const requestDisplayMedia = getDisplayMediaSafely();
+    if (!requestDisplayMedia) {
+      toast.error("Le 16:9 avec partage d’écran n’est pas disponible sur ce navigateur");
+      return;
+    }
+
     formatRef.current = "youtube";
     try {
       // 1) Caméra + micro D'ABORD (un seul prompt, geste utilisateur intact).
@@ -185,7 +211,7 @@ export default function ScreenRecorder() {
           : null;
 
       // 2) Écran ENSUITE — la permission précédente garde le geste valide.
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      const screenStream = await requestDisplayMedia({
         video: { frameRate: { ideal: 30 } },
         audio: false,
         // @ts-ignore — Chromium hint
