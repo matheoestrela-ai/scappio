@@ -323,58 +323,7 @@ export default function ScreenRecorder() {
     }
   };
 
-  const startTiktok = async () => {
-    if (typeof MediaRecorder === "undefined") {
-      toast.error("Navigateur non supporté");
-      return;
-    }
-    formatRef.current = "tiktok";
-    setPickerOpen(false);
-    try {
-      // Camera + mic together (per spec)
-      const cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-        audio: true,
-      });
-
-      let screenStream: MediaStream;
-      try {
-        screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: false,
-          // @ts-ignore — Chromium hint
-          preferCurrentTab: true,
-        });
-      } catch (err: any) {
-        cameraStream.getTracks().forEach((t) => { try { t.stop(); } catch {} });
-        if (err && (err.name === "NotAllowedError" || err.name === "AbortError")) return;
-        throw err;
-      }
-
-      // Audio comes from the camera stream (single getUserMedia call).
-      // Pass it as micStream so startCompositing wires it onto the canvas stream,
-      // and pass cameraStream with only its video track for the camera draw.
-      const micStream = new MediaStream(cameraStream.getAudioTracks());
-      const cameraVideoOnly = new MediaStream(cameraStream.getVideoTracks());
-
-      await startCompositing(screenStream, cameraVideoOnly, micStream, "tiktok");
-    } catch (err: any) {
-      if (err && (err.name === "NotAllowedError" || err.name === "AbortError")) {
-        toast.warning("Caméra non disponible");
-        return;
-      }
-      console.error(err);
-      toast.error("Erreur lors du démarrage de l'enregistrement");
-    }
-  };
-
-  const handleButtonClick = () => {
-    if (recording) {
-      stopRecording();
-    } else {
-      setPickerOpen(true);
-    }
-  };
+  // Picker disabled — modal broke the user-gesture chain. Default to YouTube.
 
   useEffect(() => {
     return () => {
