@@ -386,27 +386,71 @@ export default function ScreenRecorder() {
   }, []);
 
   return createPortal(
-    <button
-      onClick={recording ? stopRecording : handleStartRecording}
-      aria-label={recording ? "Arrêter" : "Enregistrer"}
-      className={`fixed top-4 right-4 flex items-center gap-2 px-4 h-12 rounded-full shadow-lg text-white font-semibold transition-transform hover:scale-105 active:scale-95 ${
-        recording ? "bg-red-600 animate-pulse" : "bg-red-500"
-      }`}
-      style={{ zIndex: 9999 }}
-    >
-      {recording ? (
-        <>
-          <Square className="h-4 w-4 fill-white" />
-          <span className="tabular-nums">{fmt(elapsed)}</span>
-          <span>Arrêter</span>
-        </>
-      ) : (
-        <>
-          <Camera className="h-5 w-5" />
-          <span>Enregistrer</span>
-        </>
+    <>
+      <button
+        onClick={handleButtonClick}
+        aria-label={recording ? "Arrêter" : "Enregistrer"}
+        className={`fixed top-4 right-4 flex items-center gap-2 px-4 h-12 rounded-full shadow-lg text-white font-semibold transition-transform hover:scale-105 active:scale-95 ${
+          recording ? "bg-red-600 animate-pulse" : "bg-red-500"
+        }`}
+        style={{ zIndex: 9999 }}
+      >
+        {recording ? (
+          <>
+            <Square className="h-4 w-4 fill-white" />
+            <span className="tabular-nums">{fmt(elapsed)}</span>
+            <span>Arrêter</span>
+          </>
+        ) : (
+          <>
+            <Camera className="h-5 w-5" />
+            <span>Enregistrer</span>
+          </>
+        )}
+      </button>
+
+      {pickerOpen && !recording && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 p-4"
+          style={{ zIndex: 9998 }}
+          onClick={() => setPickerOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Choisir le format</h2>
+            <p className="text-sm text-gray-500 mb-5">Sélectionne le format d'enregistrement.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={startYoutube}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 hover:border-red-500 hover:bg-red-50 transition"
+              >
+                <div className="w-20 h-12 rounded-md bg-gray-200" />
+                <span className="text-sm font-semibold text-gray-900">Standard 16:9</span>
+                <span className="text-xs text-gray-500">YouTube</span>
+              </button>
+              <button
+                onClick={startTiktok}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition"
+              >
+                <div className="w-12 h-20 rounded-md bg-gray-200" />
+                <span className="text-sm font-semibold text-gray-900">TikTok 9:16</span>
+                <span className="text-xs text-gray-500">Vertical</span>
+              </button>
+            </div>
+            <button
+              onClick={() => setPickerOpen(false)}
+              className="mt-5 w-full text-sm text-gray-500 hover:text-gray-700"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
       )}
-    </button>,
+    </>,
     document.body,
   );
 }
