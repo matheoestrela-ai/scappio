@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Camera, Square, X, Monitor, Smartphone } from "lucide-react";
 import { toast } from "sonner";
-import html2canvas from "html2canvas";
 import { setLastRecording, type RecordingFormat } from "@/lib/recording-store";
 
 type Format = RecordingFormat;
