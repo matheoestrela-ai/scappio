@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 
 import Recordings from "./pages/Recordings.tsx";
 import History from "./pages/History.tsx";
+import MyRecording from "./pages/MyRecording.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
