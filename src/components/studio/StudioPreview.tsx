@@ -31,14 +31,22 @@ export default function StudioPreview({
     const el = camRef.current;
     if (!el) return;
     el.srcObject = cameraStream;
-    if (cameraStream) el.play().catch(() => {});
+    if (cameraStream) {
+      const start = () => el.play().catch(() => {});
+      el.addEventListener("loadedmetadata", start, { once: true });
+      start();
+    }
   }, [cameraStream, cameraOn]);
 
   useEffect(() => {
     const el = scrRef.current;
     if (!el) return;
     el.srcObject = screenStream;
-    if (screenStream) el.play().catch(() => {});
+    if (screenStream) {
+      const start = () => el.play().catch(() => {});
+      el.addEventListener("loadedmetadata", start, { once: true });
+      start();
+    }
   }, [screenStream, screenOn]);
 
   // Drag bubble within container (16:9 + screen on only).
@@ -68,6 +76,8 @@ export default function StudioPreview({
   const aspect = format === "9:16" ? "aspect-[9/16]" : "aspect-video";
   const isSplit = format === "9:16" && screenOn && cameraOn;
   const isPip = format === "16:9" && screenOn && cameraOn;
+  const showCameraFull = cameraOn && !isSplit && !isPip;
+  const showScreenFull = screenOn && !cameraOn;
 
   return (
     <div className="w-full h-full flex items-center justify-center">
@@ -78,93 +88,69 @@ export default function StudioPreview({
         }`}
         style={format === "9:16" ? { width: "auto" } : { height: "auto" }}
       >
-        {/* Layer A: full / top / background */}
-        {isSplit ? (
-          <>
-            <div className="absolute inset-x-0 top-0 h-1/2 overflow-hidden bg-black">
-              {cameraOn && (
-                <video
-                  ref={camRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-            <div className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden bg-black flex items-center justify-center">
-              {screenOn && (
-                <video
-                  ref={scrRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="max-w-full max-h-full object-contain"
-                />
-              )}
-            </div>
-            <div className="absolute inset-x-0 top-1/2 h-px bg-white/20 pointer-events-none" />
-          </>
-        ) : isPip ? (
-          <>
+        <video
+          ref={camRef}
+          autoPlay
+          muted
+          playsInline
+          className={`absolute bg-black transition-opacity duration-200 ${
+            isSplit
+              ? "inset-x-0 top-0 h-1/2 w-full object-cover z-10 opacity-100"
+              : isPip
+                ? "z-20 h-full w-full object-cover pointer-events-none"
+                : showCameraFull
+                  ? "inset-0 h-full w-full object-cover z-10 opacity-100"
+                  : "opacity-0 pointer-events-none"
+          }`}
+        />
+
+        <video
+          ref={scrRef}
+          autoPlay
+          muted
+          playsInline
+          className={`absolute bg-black transition-opacity duration-200 ${
+            isSplit
+              ? "inset-x-0 bottom-0 flex h-1/2 w-full items-center justify-center object-contain z-0 opacity-100"
+              : isPip
+                ? "inset-0 h-full w-full object-contain z-0 opacity-100"
+                : showScreenFull
+                  ? "inset-0 h-full w-full object-contain z-0 opacity-100"
+                  : "opacity-0 pointer-events-none"
+          }`}
+        />
+
+        {isSplit && <div className="absolute inset-x-0 top-1/2 h-px bg-white/20 pointer-events-none z-20" />}
+
+        {isPip && (
+          <div
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            className="absolute rounded-full overflow-hidden border-2 border-white shadow-lg cursor-grab active:cursor-grabbing z-20"
+            style={{
+              left: `${bubble.xPct * 100}%`,
+              top: `${bubble.yPct * 100}%`,
+              width: `${bubble.rPct * 200}%`,
+              aspectRatio: "1 / 1",
+              touchAction: "none",
+            }}
+          >
             <video
-              ref={scrRef}
+              ref={camRef}
               autoPlay
               muted
               playsInline
-              className="absolute inset-0 w-full h-full object-contain bg-black"
+              className="h-full w-full object-cover pointer-events-none"
             />
-            <div
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setDragging(true);
-              }}
-              className="absolute rounded-full overflow-hidden border-2 border-white shadow-lg cursor-grab active:cursor-grabbing"
-              style={{
-                left: `${bubble.xPct * 100}%`,
-                top: `${bubble.yPct * 100}%`,
-                width: `${bubble.rPct * 200}%`,
-                aspectRatio: "1 / 1",
-                touchAction: "none",
-              }}
-            >
-              {cameraOn && (
-                <video
-                  ref={camRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover pointer-events-none"
-                />
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            {cameraOn && (
-              <video
-                ref={camRef}
-                autoPlay
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            )}
-            {!cameraOn && screenOn && (
-              <video
-                ref={scrRef}
-                autoPlay
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-contain bg-black"
-              />
-            )}
-            {!cameraOn && !screenOn && (
-              <div className="absolute inset-0 flex items-center justify-center text-white/50 text-sm">
-                Aucun flux actif
-              </div>
-            )}
-          </>
+          </div>
+        )}
+
+        {!cameraOn && !screenOn && (
+          <div className="absolute inset-0 flex items-center justify-center text-white/50 text-sm">
+            Aucun flux actif
+          </div>
         )}
       </div>
     </div>
