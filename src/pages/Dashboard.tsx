@@ -40,6 +40,7 @@ import {
 } from "@/lib/boards-history";
 import ChatSidebar, { SidebarToggleButton } from "@/components/ChatSidebar";
 import ChatComposer from "@/components/ChatComposer";
+import ScreenRecorder from "@/components/ScreenRecorder";
 
 const MAX_SIZE = 25 * 1024 * 1024;
 
