@@ -118,13 +118,9 @@ export default function ScreenRecorder() {
         toast.error("Navigateur non supporté");
         return;
       }
-      const boardEl = findBoardElement();
-      if (!boardEl) {
-        toast.error("Aucun board à enregistrer");
-        return;
-      }
 
-      // Step 1 — Camera + microphone
+      // Step 1 — Camera + microphone (ask first so the prompt doesn't get
+      // stolen by the screen-share picker).
       let cameraStream: MediaStream;
       try {
         cameraStream = await navigator.mediaDevices.getUserMedia({
@@ -135,22 +131,52 @@ export default function ScreenRecorder() {
         toast.warning("Caméra non disponible");
         return;
       }
-
       if (cameraStream.getAudioTracks().length === 0) {
         toast.warning("Microphone non disponible");
       }
 
-      // Hide overlays
+      // Step 2 — Screen share
+      let screenStream: MediaStream;
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false,
+          // @ts-ignore — Chromium hint
+          preferCurrentTab: true,
+        });
+      } catch {
+        toast.error("Partage d'écran annulé");
+        cameraStream.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+        return;
+      }
+
+      // Hide overlays (teleprompter, suggestions, etc.)
       hiddenOverlaysRef.current = hideOverlays();
 
-      // Camera <video>
+      // Camera <video> — wait for metadata before playing
       const cameraVideo = document.createElement("video");
       cameraVideo.srcObject = cameraStream;
       cameraVideo.muted = true;
-      cameraVideo.autoplay = true;
       cameraVideo.playsInline = true;
-      try { await cameraVideo.play(); } catch {}
+      await new Promise<void>((resolve) => {
+        cameraVideo.onloadedmetadata = () => {
+          cameraVideo.play().catch(() => {});
+          resolve();
+        };
+      });
       cameraVideoElRef.current = cameraVideo;
+
+      // Screen <video> — wait for metadata before playing
+      const screenVideo = document.createElement("video");
+      screenVideo.srcObject = screenStream;
+      screenVideo.muted = true;
+      screenVideo.playsInline = true;
+      await new Promise<void>((resolve) => {
+        screenVideo.onloadedmetadata = () => {
+          screenVideo.play().catch(() => {});
+          resolve();
+        };
+      });
 
       // Hidden output canvas
       const canvas = document.createElement("canvas");
@@ -168,60 +194,87 @@ export default function ScreenRecorder() {
       offscreenCanvasRef.current = canvas;
       const ctx = canvas.getContext("2d")!;
 
-      // Find the native canvas the board renders to (tldraw / react-flow / fallback).
-      const findBoardCanvas = (): HTMLCanvasElement | null => {
-        return (
-          (boardEl.querySelector(".react-flow__canvas") as HTMLCanvasElement | null) ??
-          (boardEl.querySelector(".react-flow canvas") as HTMLCanvasElement | null) ??
-          (boardEl.querySelector("canvas") as HTMLCanvasElement | null) ??
-          (document.querySelector(".react-flow__canvas") as HTMLCanvasElement | null) ??
-          (document.querySelector(".react-flow canvas") as HTMLCanvasElement | null) ??
-          (document.querySelector("canvas") as HTMLCanvasElement | null)
-        );
-      };
+      // Stop when user ends sharing from browser UI
+      screenStream.getVideoTracks()[0].addEventListener("ended", () => {
+        const r = recorderRef.current;
+        if (r && r.state !== "inactive") r.stop();
+        else reset();
+      });
 
-      // Wait until camera video has dimensions before drawing it.
-      cameraVideo.onloadedmetadata = () => {
-        cameraVideo.play().catch(() => {});
+      // Draw a video into a target rect using "contain" (no stretch, letterbox).
+      const drawContain = (
+        v: HTMLVideoElement,
+        dx: number,
+        dy: number,
+        dw: number,
+        dh: number,
+      ) => {
+        const sw = v.videoWidth || dw;
+        const sh = v.videoHeight || dh;
+        const scale = Math.min(dw / sw, dh / sh);
+        const w = sw * scale;
+        const h = sh * scale;
+        const x = dx + (dw - w) / 2;
+        const y = dy + (dh - h) / 2;
+        ctx.drawImage(v, x, y, w, h);
       };
 
       const drawCameraCircle = () => {
         if (cameraVideo.readyState < 2) return;
+        const cx = 110;
+        const cy = 970;
+        const r = 90;
         ctx.save();
         ctx.beginPath();
-        ctx.arc(110, 970, 90, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(cameraVideo, 20, 880, 180, 180);
+        // Cover the 180x180 square so the face fills the circle without stretch
+        const sw = cameraVideo.videoWidth || 180;
+        const sh = cameraVideo.videoHeight || 180;
+        const scale = Math.max(180 / sw, 180 / sh);
+        const w = sw * scale;
+        const h = sh * scale;
+        const x = 20 + (180 - w) / 2;
+        const y = 880 + (180 - h) / 2;
+        ctx.drawImage(cameraVideo, x, y, w, h);
         ctx.restore();
         ctx.lineWidth = 3;
         ctx.strokeStyle = "#ffffff";
         ctx.beginPath();
-        ctx.arc(110, 970, 90, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.stroke();
       };
 
+      const drawCameraBottom = () => {
+        if (cameraVideo.readyState < 2) return;
+        // Cover the 1080x669 area without stretch
+        const sw = cameraVideo.videoWidth || 1080;
+        const sh = cameraVideo.videoHeight || 669;
+        const scale = Math.max(1080 / sw, 669 / sh);
+        const w = sw * scale;
+        const h = sh * scale;
+        const x = (1080 - w) / 2;
+        const y = 1251 + (669 - h) / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 1251, 1080, 669);
+        ctx.clip();
+        ctx.drawImage(cameraVideo, x, y, w, h);
+        ctx.restore();
+      };
+
       const draw = () => {
-        const boardCanvas = findBoardCanvas();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         if (kind === "youtube") {
-          ctx.fillStyle = "#000";
-          ctx.fillRect(0, 0, 1920, 1080);
-          if (boardCanvas) {
-            try { ctx.drawImage(boardCanvas, 0, 0, 1920, 1080); } catch {}
-          }
+          if (screenVideo.readyState >= 2) drawContain(screenVideo, 0, 0, 1920, 1080);
           drawCameraCircle();
         } else {
-          ctx.fillStyle = "#000";
-          ctx.fillRect(0, 0, 1080, 1920);
-          if (boardCanvas) {
-            try { ctx.drawImage(boardCanvas, 0, 0, 1080, 1248); } catch {}
-          }
+          if (screenVideo.readyState >= 2) drawContain(screenVideo, 0, 0, 1080, 1248);
           ctx.fillStyle = "#F97316";
           ctx.fillRect(0, 1248, 1080, 3);
-          if (cameraVideo.readyState >= 2) {
-            try { ctx.drawImage(cameraVideo, 0, 1251, 1080, 669); } catch {}
-          }
+          drawCameraBottom();
         }
 
         rafRef.current = requestAnimationFrame(draw);
@@ -234,6 +287,7 @@ export default function ScreenRecorder() {
       if (audioTrack) canvasStream.addTrack(audioTrack);
 
       stopTracksRef.current = [
+        ...screenStream.getTracks(),
         ...cameraStream.getTracks(),
         ...canvasStream.getVideoTracks(),
       ];
