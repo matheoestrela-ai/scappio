@@ -723,7 +723,7 @@ const Index = () => {
 
       {/* Enriched footer */}
       <footer className="border-t border-border" style={{ backgroundColor: "#f0ebe4" }}>
-        <div className="container py-10 md:py-12 grid gap-8 md:grid-cols-3 items-start">
+        <div className="container pt-10 md:pt-12 pb-4 md:pb-6 grid gap-8 md:grid-cols-3 items-start">
           <div>
             <Link to="/" className="inline-flex items-center gap-2" aria-label="Accueil">
               <span className="text-xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
