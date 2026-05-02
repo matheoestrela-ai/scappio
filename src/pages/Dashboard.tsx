@@ -13,7 +13,7 @@ import {
   Maximize2,
   Minimize2,
   Share2,
-  Mic,
+  
   Lightbulb,
   ClipboardList,
   Rocket,
@@ -40,6 +40,7 @@ import {
 } from "@/lib/boards-history";
 import ChatSidebar, { SidebarToggleButton } from "@/components/ChatSidebar";
 import ChatComposer from "@/components/ChatComposer";
+import ScreenRecorder from "@/components/ScreenRecorder";
 
 const MAX_SIZE = 25 * 1024 * 1024;
 
@@ -490,6 +491,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#FAFAF8" }}>
+      <ScreenRecorder />
       <ChatSidebar
         currentBoardId={currentBoardId}
         onNewBoard={handleNewBoard}
@@ -663,9 +665,6 @@ const Dashboard = () => {
                       </Button>
                       <Button size="sm" variant="outline" onClick={exportPDF}>
                         <FileDown className="h-4 w-4 mr-1.5" /> Exporter PDF
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => navigate("/studio")}>
-                        <Mic className="h-4 w-4 mr-1.5" /> Enregistrer
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleShare}>
                         <Share2 className="h-4 w-4 mr-1.5" /> Partager
