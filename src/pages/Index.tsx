@@ -192,7 +192,7 @@ const Index = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden" style={{ backgroundColor: "#faf7f4" }}>
+    <div className="relative min-h-screen pb-24 md:pb-0 overflow-x-hidden" style={{ backgroundColor: "#faf7f4" }}>
       {/* FigJam-style fine grid background (parallax) */}
       <motion.div
         aria-hidden
