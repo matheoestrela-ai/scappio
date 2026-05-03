@@ -96,7 +96,12 @@ export function useStudioRecorder({ format, onFinished }: Options) {
 
   // ----- Stream helpers -----
   const ensureCamera = useCallback(async () => {
-    if (cameraStreamRef.current) return cameraStreamRef.current;
+    if (cameraStreamRef.current && micStreamRef.current) {
+      cameraStreamRef.current.getVideoTracks().forEach((t) => (t.enabled = true));
+      micStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = micOn));
+      setCameraOn(true);
+      return cameraStreamRef.current;
+    }
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: true,
@@ -105,6 +110,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     const audio = stream.getAudioTracks();
     cameraStreamRef.current = video.length ? new MediaStream(video) : null;
     micStreamRef.current = audio.length ? new MediaStream(audio) : null;
+    if (micStreamRef.current) {
+      micStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = micOn));
+    }
 
     if (cameraStreamRef.current) {
       cameraVideoRef.current = await createPlaybackVideo(cameraStreamRef.current);
@@ -112,13 +120,10 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     setCameraPreviewStream(cameraStreamRef.current);
     setCameraOn(!!cameraStreamRef.current);
     return cameraStreamRef.current;
-  }, [createPlaybackVideo]);
+  }, [createPlaybackVideo, micOn]);
 
-  const stopCamera = useCallback(() => {
-    cameraStreamRef.current?.getTracks().forEach((t) => { try { t.stop(); } catch {} });
-    cameraStreamRef.current = null;
-    cameraVideoRef.current = null;
-    setCameraPreviewStream(null);
+  const disableCamera = useCallback(() => {
+    cameraStreamRef.current?.getVideoTracks().forEach((t) => (t.enabled = false));
     setCameraOn(false);
   }, []);
 
@@ -150,22 +155,44 @@ export function useStudioRecorder({ format, onFinished }: Options) {
         stopScreen();
       });
     } catch (err: any) {
-      if (err?.name === "NotAllowedError" || err?.name === "AbortError") return;
+      if (err?.name === "NotAllowedError" || err?.name === "AbortError") {
+        toast.message("Partage d'écran annulé", { description: "Tu peux réessayer à tout moment." });
+        return;
+      }
       console.error(err);
       toast.error("Partage d'écran indisponible");
     }
   }, [createPlaybackVideo, stopScreen]);
 
   const toggleCamera = useCallback(async () => {
-    if (cameraOn) stopCamera();
-    else {
+    if (cameraOn) {
+      disableCamera();
+    } else {
       try {
         await ensureCamera();
       } catch {
-        toast.error("Caméra non disponible");
+        toast.error("Caméra refusée. Vérifie les autorisations du navigateur.");
       }
     }
-  }, [cameraOn, ensureCamera, stopCamera]);
+  }, [cameraOn, ensureCamera, disableCamera]);
+
+  const toggleMic = useCallback(() => {
+    setMicOn((on) => {
+      const next = !on;
+      micStreamRef.current?.getAudioTracks().forEach((t) => (t.enabled = next));
+      return next;
+    });
+  }, []);
+
+  const toggleScreen = useCallback(async () => {
+    if (screenOn) stopScreen();
+    else await enableScreen();
+  }, [screenOn, stopScreen, enableScreen]);
+
+  const swapStreams = useCallback(() => {
+    if (!screenOn || !cameraOn) return;
+    setSwapped((s) => !s);
+  }, [screenOn, cameraOn]);
 
   // Initialise camera on mount for live preview.
   useEffect(() => {
