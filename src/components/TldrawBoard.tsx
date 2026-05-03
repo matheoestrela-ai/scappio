@@ -502,7 +502,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
   const onChangeRef = useRef(onChange);
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
-  const isDarkBoard = bgColor === "#0D0D0D";
+  const isDarkBoard = bgColor === "#1F2937";
 
   useEffect(() => {
     dataRef.current = data;
