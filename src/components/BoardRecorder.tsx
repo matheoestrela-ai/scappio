@@ -256,7 +256,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
         <div data-recorder-ui="true" className="pointer-events-none absolute inset-0 z-40 ring-2 ring-red-500 rounded-2xl" />
       )}
 
-      <div data-recorder-ui="true" className="absolute top-3 right-16 z-50 flex items-center gap-2">
+      <div data-recorder-ui="true" className="absolute top-2 left-1/2 translate-x-[110px] z-[201] flex items-center gap-2">
         {recording && (
           <span className="text-xs font-mono text-white bg-black/70 backdrop-blur px-2 py-1 rounded">
             {fmt(elapsed)}
