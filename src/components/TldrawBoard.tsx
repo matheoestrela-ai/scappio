@@ -719,6 +719,7 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
             </div>
           </PopoverContent>
         </Popover>
+        )}
       </div>
     </div>
   );
