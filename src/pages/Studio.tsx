@@ -1,39 +1,50 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   Camera,
   CameraOff,
+  Circle,
   Mic,
   MicOff,
   Monitor,
   MonitorOff,
-  Smartphone,
   Pause,
   Play,
+  Smartphone,
   Square,
-  Circle,
-  ArrowLeftRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useStudioRecorder, type WebcamBubble } from "@/hooks/useStudioRecorder";
 import StudioPreview from "@/components/studio/StudioPreview";
 import Teleprompter from "@/components/studio/Teleprompter";
+import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useStudioRecorder, type WebcamBubble } from "@/hooks/useStudioRecorder";
 import { fmtTime, type StudioFormat } from "@/lib/studio-recorder";
 import type { LucideIcon } from "lucide-react";
 
 const FORMAT_KEY = "scappio:studio:format";
 
-type ToneTone = "emerald" | "blue";
-const toneClasses: Record<ToneTone, string> = {
-  emerald: "bg-emerald-500/90 hover:bg-emerald-500 border-emerald-400 text-white shadow-[0_0_20px_-4px_rgba(16,185,129,0.6)]",
-  blue: "bg-blue-500/90 hover:bg-blue-500 border-blue-400 text-white shadow-[0_0_20px_-4px_rgba(59,130,246,0.6)]",
+type ControlTone = "primary" | "secondary" | "destructive";
+
+const toneClasses: Record<ControlTone, string> = {
+  primary:
+    "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20 shadow-[0_0_22px_-10px_hsl(var(--primary)/0.7)]",
+  secondary:
+    "border-accent/40 bg-accent/15 text-accent hover:bg-accent/20 shadow-[0_0_22px_-10px_hsl(var(--accent)/0.6)]",
+  destructive:
+    "border-destructive/40 bg-destructive/15 text-destructive hover:bg-destructive/20 shadow-[0_0_22px_-10px_hsl(var(--destructive)/0.55)]",
 };
 
 const ControlToggle = ({
-  active, onClick, activeLabel, inactiveLabel, ActiveIcon, InactiveIcon, tone,
+  active,
+  onClick,
+  activeLabel,
+  inactiveLabel,
+  ActiveIcon,
+  InactiveIcon,
+  tone,
 }: {
   active: boolean;
   onClick: () => void;
@@ -41,17 +52,18 @@ const ControlToggle = ({
   inactiveLabel: string;
   ActiveIcon: LucideIcon;
   InactiveIcon: LucideIcon;
-  tone: ToneTone;
+  tone: ControlTone;
 }) => {
   const Icon = active ? ActiveIcon : InactiveIcon;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 h-9 px-3 rounded-full border text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${
+      className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-xs font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] ${
         active
           ? toneClasses[tone]
-          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+          : "border-border bg-muted/40 text-muted-foreground hover:bg-muted/70"
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -65,16 +77,14 @@ const Studio = () => {
   const isMobile = useIsMobile();
   const [format, setFormat] = useState<StudioFormat>(() => {
     try {
-      const v = localStorage.getItem(FORMAT_KEY);
-      return v === "16:9" ? "16:9" : "9:16";
+      const value = localStorage.getItem(FORMAT_KEY);
+      return value === "16:9" ? "16:9" : "9:16";
     } catch {
       return "9:16";
     }
   });
   const [scriptVisible, setScriptVisible] = useState(!isMobile);
-  const [bubble, setBubble] = useState<WebcamBubble>({
-    xPct: 0.78, yPct: 0.7, rPct: 0.12,
-  });
+  const [bubble, setBubble] = useState<WebcamBubble>({ xPct: 0.78, yPct: 0.7, rPct: 0.12 });
 
   const onFinished = useCallback(() => {
     navigate("/mon-enregistrement");
@@ -82,68 +92,79 @@ const Studio = () => {
 
   const studio = useStudioRecorder({ format, onFinished });
 
-  // Keep recorder bubble synced.
   useEffect(() => {
     studio.setBubble(bubble);
   }, [bubble, studio]);
 
-  const changeFormat = (f: StudioFormat) => {
+  const changeFormat = (nextFormat: StudioFormat) => {
     if (studio.recording) {
       toast.error("Arrête l'enregistrement avant de changer de format");
       return;
     }
-    setFormat(f);
-    try { localStorage.setItem(FORMAT_KEY, f); } catch {}
+    setFormat(nextFormat);
+    try {
+      localStorage.setItem(FORMAT_KEY, nextFormat);
+    } catch {
+      // ignore
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0F] text-white flex flex-col">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-black/40 backdrop-blur sticky top-0 z-20">
-        <div className="container py-3 flex items-center justify-between gap-2">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/90 backdrop-blur-xl">
+        <div className="container flex items-center justify-between gap-3 py-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/dashboard")}
-            className="text-white hover:bg-white/10"
             disabled={studio.recording}
+            className="gap-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> Quitter
+            <ArrowLeft className="h-4 w-4" />
+            Quitter
           </Button>
-          <h1 className="text-sm sm:text-base font-semibold">Studio d'enregistrement</h1>
-          <div className="flex items-center bg-white/10 rounded-full p-1">
+
+          <h1 className="text-sm font-semibold sm:text-base">Studio d&apos;enregistrement</h1>
+
+          <div className="inline-flex rounded-full border border-border bg-muted/40 p-1">
             <button
+              type="button"
               onClick={() => changeFormat("9:16")}
-              className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium transition-colors ${
-                format === "9:16" ? "bg-orange-500 text-white" : "text-white/70 hover:bg-white/10"
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${
+                format === "9:16"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-background"
               }`}
             >
-              <Smartphone className="h-3.5 w-3.5" /> 9:16
+              <Smartphone className="h-3.5 w-3.5" />
+              9:16
             </button>
             <button
+              type="button"
               onClick={() => changeFormat("16:9")}
-              className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium transition-colors ${
-                format === "16:9" ? "bg-blue-600 text-white" : "text-white/70 hover:bg-white/10"
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${
+                format === "16:9"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-background"
               }`}
             >
-              <Monitor className="h-3.5 w-3.5" /> 16:9
+              <Monitor className="h-3.5 w-3.5" />
+              16:9
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main grid */}
-      <main className="flex-1 container py-4 lg:py-6 grid gap-4 lg:grid-cols-[1fr_360px]">
-        <section className="flex items-center justify-center min-h-[55vh] lg:min-h-0">
+      <main className="container grid flex-1 gap-4 py-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-6">
+        <section className="flex min-h-[55vh] items-center justify-center lg:min-h-[calc(100vh-13rem)]">
           <StudioPreview
             format={format}
-            cameraStream={studio.cameraStream}
-            screenStream={studio.screenStream}
             cameraOn={studio.cameraOn}
             screenOn={studio.screenOn}
             swapped={studio.swapped}
             bubble={bubble}
             onBubbleChange={setBubble}
+            attachCanvas={studio.attachPreviewCanvas}
           />
         </section>
 
@@ -151,7 +172,7 @@ const Studio = () => {
           {scriptVisible ? (
             <Teleprompter
               visible={scriptVisible}
-              onToggleVisible={() => setScriptVisible((v) => !v)}
+              onToggleVisible={() => setScriptVisible(false)}
             />
           ) : (
             <div className="flex justify-end">
@@ -164,61 +185,72 @@ const Studio = () => {
         </aside>
       </main>
 
-      {/* Controls bar */}
-      <footer className="sticky bottom-0 border-t border-white/10 bg-black/70 backdrop-blur">
-        <div className="container py-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+      <footer className="sticky bottom-0 border-t border-border/60 bg-background/92 backdrop-blur-xl">
+        <div className="container flex flex-wrap items-center justify-center gap-2 py-3 sm:gap-3">
           <ControlToggle
             active={studio.cameraOn}
-            onClick={studio.toggleCamera}
+            onClick={() => {
+              void studio.toggleCamera();
+            }}
             activeLabel="Caméra"
-            inactiveLabel="Caméra off"
+            inactiveLabel="Activer caméra"
             ActiveIcon={Camera}
             InactiveIcon={CameraOff}
-            tone="emerald"
+            tone="primary"
           />
+
           <ControlToggle
             active={studio.micOn}
-            onClick={studio.toggleMic}
+            onClick={() => {
+              void studio.toggleMic();
+            }}
             activeLabel="Micro"
-            inactiveLabel="Micro off"
+            inactiveLabel="Activer micro"
             ActiveIcon={Mic}
             InactiveIcon={MicOff}
-            tone="emerald"
+            tone="secondary"
           />
+
           {studio.screenSupported && (
             <ControlToggle
               active={studio.screenOn}
-              onClick={studio.toggleScreen}
+              onClick={() => {
+                void studio.toggleScreen();
+              }}
               activeLabel="Écran partagé"
               inactiveLabel="Partager l'écran"
               ActiveIcon={Monitor}
               InactiveIcon={MonitorOff}
-              tone="blue"
+              tone="secondary"
             />
           )}
+
           {studio.cameraOn && studio.screenOn && (
             <Button
               variant="outline"
               size="sm"
               onClick={studio.swapStreams}
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2 transition-transform hover:scale-105"
-              title="Inverser caméra et écran"
+              className="gap-2 rounded-full"
+              title="Inverser la caméra et l'écran"
             >
               <ArrowLeftRight className="h-4 w-4" />
               <span className="hidden sm:inline">Inverser</span>
             </Button>
           )}
 
-          <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block" />
+          <div className="hidden h-8 w-px bg-border sm:block" />
 
           {!studio.recording ? (
             <Button
               size="lg"
-              onClick={studio.start}
-              className="bg-red-500 hover:bg-red-600 text-white gap-2 rounded-full px-5 transition-transform hover:scale-105"
+              onClick={() => {
+                void studio.start();
+              }}
+              className="gap-2 rounded-full px-5"
+              variant="destructive"
             >
-              <Circle className="h-4 w-4 fill-white" />
-              Lancer l'enregistrement
+              <Circle className="h-4 w-4 fill-current" />
+              Lancer l&apos;enregistrement
             </Button>
           ) : (
             <>
@@ -226,17 +258,19 @@ const Studio = () => {
                 size="lg"
                 variant="outline"
                 onClick={studio.togglePause}
-                className="bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2 rounded-full"
+                className="gap-2 rounded-full"
               >
                 {studio.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                 {studio.paused ? "Reprendre" : "Pause"}
               </Button>
+
               <Button
                 size="lg"
                 onClick={studio.stop}
-                className="bg-red-600 hover:bg-red-700 text-white gap-2 rounded-full px-5 animate-pulse"
+                variant="destructive"
+                className="gap-2 rounded-full px-5"
               >
-                <Square className="h-4 w-4 fill-white" />
+                <Square className="h-4 w-4 fill-current" />
                 <span className="tabular-nums">{fmtTime(studio.elapsed)}</span>
                 Stop
               </Button>
