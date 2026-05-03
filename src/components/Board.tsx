@@ -1444,6 +1444,82 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           <Maximize2 className="h-4 w-4" />
         </Button>
 
+        {/* Background color picker */}
+        <Popover open={bgOpen} onOpenChange={setBgOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              variant="outline"
+              title="Couleur de fond"
+              className="px-2 sm:px-3"
+              style={
+                isDarkBoard
+                  ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                  : undefined
+              }
+            >
+              <PaintBucket className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Fond</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="start"
+            sideOffset={8}
+            className="w-auto p-3"
+            style={
+              isDarkBoard
+                ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                : undefined
+            }
+          >
+            <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+              Fond du board
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {BG_SWATCHES.map((s) => {
+                const selected = bgColor === s.value;
+                return (
+                  <div key={s.value} className="flex flex-col items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBgColor(s.value);
+                        setBgOpen(false);
+                      }}
+                      title={s.label}
+                      className="relative flex items-center justify-center rounded-full transition hover:scale-110"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        background: s.value,
+                        border: selected
+                          ? "2px solid hsl(var(--foreground))"
+                          : s.dark
+                          ? "2px solid #FFFFFF"
+                          : "1px solid rgba(0,0,0,0.12)",
+                        boxShadow: selected ? "0 0 0 2px hsl(var(--background))" : undefined,
+                      }}
+                    >
+                      {selected && (
+                        <Check
+                          className="h-3.5 w-3.5"
+                          style={{ color: s.dark || !isLightColor(s.value) ? "#fff" : "#0F172A" }}
+                        />
+                      )}
+                    </button>
+                    {s.dark && (
+                      <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                        <Moon className="h-2.5 w-2.5" /> Sombre
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
+
         {/* Sélecteur de style de flèche par défaut */}
         <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
           {([
