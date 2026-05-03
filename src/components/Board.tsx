@@ -1043,7 +1043,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
-  const isDarkBoard = bgColor === "#0D0D0D";
+  const isDarkBoard = bgColor === "#1F2937";
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
