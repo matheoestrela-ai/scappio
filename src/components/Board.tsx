@@ -53,6 +53,9 @@ import {
   MoveHorizontal,
   Minus,
   X,
+  PaintBucket,
+  Check,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +66,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+// ============================================================
+//  Background colors (board canvas)
+// ============================================================
+
+export const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
+  { value: "#FAFAF8", label: "Blanc cassé" },
+  { value: "#F5F0E8", label: "Beige doux" },
+  { value: "#F3F4F6", label: "Gris très clair" },
+  { value: "#FFF8F0", label: "Crème" },
+  { value: "#FDE8F0", label: "Rose poudré" },
+  { value: "#FEE8D6", label: "Pêche douce" },
+  { value: "#FEF9C3", label: "Jaune pâle" },
+  { value: "#E8F8F0", label: "Vert menthe" },
+  { value: "#E8F0FE", label: "Bleu ciel pâle" },
+  { value: "#F0E8FE", label: "Lavande douce" },
+  { value: "#E8F0E8", label: "Vert sauge pâle" },
+  { value: "#0D0D0D", label: "Sombre", dark: true },
+];
+export const DEFAULT_BG = "#FAFAF8";
 
 // ============================================================
 //  Types
@@ -88,6 +112,7 @@ export type BoardNode = {
 
 export type BoardData = {
   nodes: BoardNode[];
+  bgColor?: string;
 };
 
 type EditorNodeData = {
@@ -100,6 +125,7 @@ type EditorNodeData = {
   width: number;
   height: number;
   editing?: boolean;
+  darkBoard?: boolean;
   // callbacks injected by board
   onStartEdit: (id: string) => void;
   onCommitEdit: (id: string, label: string, w: number, h: number) => void;
@@ -280,7 +306,7 @@ const EditableLabel = ({
   };
 
   const font = LEVEL_FONT[data.level];
-  const color = textColorFor(data.color);
+  const color = data.darkBoard ? "#FFFFFF" : textColorFor(data.color);
 
   // Scale font with the node's current size, so resizing the box visibly
   // grows/shrinks the text — without ever overflowing.
@@ -950,13 +976,18 @@ const buildInitial = (data: BoardData) => {
 
 type Snapshot = { nodes: Node<EditorNodeData>[]; edges: Edge[] };
 
-const snapshotToBoardData = (nodes: Node<EditorNodeData>[], edges: Edge[]): BoardData => {
+const snapshotToBoardData = (
+  nodes: Node<EditorNodeData>[],
+  edges: Edge[],
+  bgColor?: string,
+): BoardData => {
   // Reconstruct a parent for each node from incoming edges (best effort).
   const parentByChild = new Map<string, string>();
   for (const e of edges) {
     if (!parentByChild.has(e.target)) parentByChild.set(e.target, e.source);
   }
   return {
+    bgColor,
     nodes: nodes.map((n) => ({
       id: n.id,
       label: n.data.label,
@@ -1010,6 +1041,9 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
+  const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
+  const [bgOpen, setBgOpen] = useState(false);
+  const isDarkBoard = bgColor === "#0D0D0D";
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
@@ -1017,6 +1051,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
     setNodes(initial.nodes);
     setEdges(initial.edges);
     setEditingId(null);
+    setBgColor(data.bgColor ?? DEFAULT_BG);
     historyRef.current = { past: [], future: [] };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -1025,8 +1060,8 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
   useEffect(() => {
-    onChangeRef.current?.(snapshotToBoardData(nodes, edges));
-  }, [nodes, edges]);
+    onChangeRef.current?.(snapshotToBoardData(nodes, edges, bgColor));
+  }, [nodes, edges, bgColor]);
 
   // ------- Undo / redo -------
   const historyRef = useRef<{ past: Snapshot[]; future: Snapshot[] }>({
@@ -1123,6 +1158,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         data: {
           ...n.data,
           editing: editingId === n.id,
+          darkBoard: isDarkBoard,
           onStartEdit: handleStartEdit,
           onCommitEdit: handleCommitEdit,
           onPatch: handlePatch,
@@ -1130,7 +1166,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           onDelete: handleDeleteNode,
         },
       })),
-    [nodes, editingId, handleStartEdit, handleCommitEdit, handlePatch, handleDuplicateNode, handleDeleteNode],
+    [nodes, editingId, isDarkBoard, handleStartEdit, handleCommitEdit, handlePatch, handleDuplicateNode, handleDeleteNode],
   );
 
   // ------- React Flow change handlers -------
@@ -1280,8 +1316,8 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   }, [nodes, edges, fitView]);
 
   const getBoardData = useCallback(
-    () => snapshotToBoardData(nodes, edges),
-    [nodes, edges],
+    () => snapshotToBoardData(nodes, edges, bgColor),
+    [nodes, edges, bgColor],
   );
 
   // Recompute clean hierarchical layout for the current board (keeps styles + edges).
@@ -1356,9 +1392,19 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   }, []);
 
   return (
-    <div className="relative h-full w-full bg-gradient-board">
+    <div
+      className="relative h-full w-full transition-colors duration-300"
+      style={{ background: bgColor }}
+    >
       {/* Top toolbar */}
-      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border border-border bg-background/90 p-1 sm:p-1.5 shadow-elegant backdrop-blur">
+      <div
+        className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border p-1 sm:p-1.5 shadow-elegant backdrop-blur transition-colors"
+        style={
+          isDarkBoard
+            ? { background: "rgba(26,26,26,0.95)", borderColor: "#2A2A2A", color: "#fff" }
+            : { background: "rgba(255,255,255,0.9)" }
+        }
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
@@ -1397,6 +1443,82 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         >
           <Maximize2 className="h-4 w-4" />
         </Button>
+
+        {/* Background color picker */}
+        <Popover open={bgOpen} onOpenChange={setBgOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              variant="outline"
+              title="Couleur de fond"
+              className="px-2 sm:px-3"
+              style={
+                isDarkBoard
+                  ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                  : undefined
+              }
+            >
+              <PaintBucket className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Fond</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="start"
+            sideOffset={8}
+            className="w-auto p-3"
+            style={
+              isDarkBoard
+                ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                : undefined
+            }
+          >
+            <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+              Fond du board
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {BG_SWATCHES.map((s) => {
+                const selected = bgColor === s.value;
+                return (
+                  <div key={s.value} className="flex flex-col items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBgColor(s.value);
+                        setBgOpen(false);
+                      }}
+                      title={s.label}
+                      className="relative flex items-center justify-center rounded-full transition hover:scale-110"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        background: s.value,
+                        border: selected
+                          ? "2px solid hsl(var(--foreground))"
+                          : s.dark
+                          ? "2px solid #FFFFFF"
+                          : "1px solid rgba(0,0,0,0.12)",
+                        boxShadow: selected ? "0 0 0 2px hsl(var(--background))" : undefined,
+                      }}
+                    >
+                      {selected && (
+                        <Check
+                          className="h-3.5 w-3.5"
+                          style={{ color: s.dark || !isLightColor(s.value) ? "#fff" : "#0F172A" }}
+                        />
+                      )}
+                    </button>
+                    {s.dark && (
+                      <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                        <Moon className="h-2.5 w-2.5" /> Sombre
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Sélecteur de style de flèche par défaut */}
         <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
@@ -1480,7 +1602,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         minZoom={0.2}
         maxZoom={2.5}
       >
-        <Background variant={BackgroundVariant.Dots} color="#FDBA74" gap={28} size={1.5} />
+        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#2A2A2A" : "#FDBA74"} gap={28} size={1.5} />
         <Controls
           showZoom={false}
           showFitView={false}
