@@ -1559,37 +1559,6 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         </Popover>
       </div>
 
-      {/* Toolbar continued (hidden placeholder removed) */}
-      <div className="hidden">
-
-        {/* Sélecteur de style de flèche par défaut */}
-        <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
-          {([
-            { v: "arrow", icon: ArrowRight, title: "Simple arrow" },
-            { v: "double", icon: MoveHorizontal, title: "Double arrow" },
-            { v: "line", icon: Minus, title: "Line without arrow" },
-          ] as const).map(({ v, icon: Icon, title }) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setArrowVariant(v)}
-              title={title}
-              className={`flex h-7 w-7 items-center justify-center rounded transition ${
-                arrowVariant === v
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-accent"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-            </button>
-          ))}
-        </div>
-
-        <div className="hidden md:block px-2 text-xs text-muted-foreground">
-          Double-click: edit · Right-click: menu · Double-click arrow: label
-        </div>
-      </div>
-
       {/* Legend (bottom-left) — masquée sur mobile pour laisser de la place */}
       <div className="hidden md:block absolute bottom-3 left-3 z-10 rounded-xl border border-border bg-background/90 p-3 shadow-elegant backdrop-blur text-xs space-y-2 max-w-[220px]">
         <div className="flex items-center gap-1.5 font-semibold text-foreground">
