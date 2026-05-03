@@ -36,6 +36,7 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
   const camRef = useRef<HTMLVideoElement>(null);
   const bubbleCamRef = useRef<HTMLVideoElement>(null);
   const scrRef = useRef<HTMLVideoElement>(null);
+  const bubbleScrRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
 
