@@ -7,7 +7,7 @@ import {
   toRichText,
 } from "tldraw";
 import "tldraw/tldraw.css";
-import { PaintBucket, Check, Moon } from "lucide-react";
+import { PaintBucket, Check, Moon, Presentation, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type {
