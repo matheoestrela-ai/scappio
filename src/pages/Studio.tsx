@@ -106,6 +106,7 @@ const Studio = () => {
             screenStream={studio.screenStream}
             cameraOn={studio.cameraOn}
             screenOn={studio.screenOn}
+            swapped={studio.swapped}
             bubble={bubble}
             onBubbleChange={setBubble}
           />
