@@ -704,6 +704,21 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
           </PopoverContent>
         </Popover>
         )}
+        <Button
+          size="sm"
+          variant="outline"
+          title={presenting ? "Exit presentation" : "Presentation mode"}
+          onClick={() => setPresenting((v) => !v)}
+          className="shadow-md backdrop-blur"
+          style={
+            isDarkBoard
+              ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
+              : { background: "rgba(255,255,255,0.95)" }
+          }
+        >
+          {presenting ? <X className="h-4 w-4 mr-1.5" /> : <Presentation className="h-4 w-4 mr-1.5" />}
+          {presenting ? "Exit" : "Présentation"}
+        </Button>
       </div>
     </div>
   );
