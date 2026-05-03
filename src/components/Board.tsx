@@ -306,7 +306,7 @@ const EditableLabel = ({
   };
 
   const font = LEVEL_FONT[data.level];
-  const color = textColorFor(data.color);
+  const color = data.darkBoard ? "#FFFFFF" : textColorFor(data.color);
 
   // Scale font with the node's current size, so resizing the box visibly
   // grows/shrinks the text — without ever overflowing.
