@@ -492,17 +492,23 @@ export type TldrawBoardProps = {
   data: BoardData;
   apiRef?: React.MutableRefObject<BoardApi | null>;
   onChange?: (data: BoardData) => void;
+  onPresentationChange?: (active: boolean) => void;
 };
 
 const PERSIST_KEY = "gribouille-tldraw-board";
 
-const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
+const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoardProps) => {
   const editorRef = useRef<Editor | null>(null);
   const dataRef = useRef<BoardData>(data);
   const onChangeRef = useRef(onChange);
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
+  const [presenting, setPresenting] = useState(false);
   const isDarkBoard = bgColor === "#1F2937";
+
+  useEffect(() => {
+    onPresentationChange?.(presenting);
+  }, [presenting, onPresentationChange]);
 
   useEffect(() => {
     dataRef.current = data;
