@@ -182,6 +182,69 @@ html { scroll-behavior: smooth; }
 }
 .react-flow__background { background: transparent; }
 
+/* ============================================================
+   Dark mode global polish
+   ============================================================ */
+.dark body { background-color: #0D0D0D; color: #FAFAF0; }
+
+/* Smooth color transitions for interactive elements */
+.dark a, .dark button, .dark [role="button"], .dark input, .dark select, .dark textarea,
+.dark .react-flow__node, .dark .react-flow__edge-path {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, stroke 150ms ease;
+}
+
+/* React Flow — dark canvas */
+.dark .react-flow__edge-path { stroke: #383838; stroke-width: 2; }
+.dark .react-flow__edge.selected .react-flow__edge-path,
+.dark .react-flow__edge:hover .react-flow__edge-path { stroke: #F97316; }
+.dark .react-flow__background { background: #0D0D0D; }
+.dark .react-flow__controls {
+  background: #1A1A1A;
+  border-color: #242424;
+}
+.dark .react-flow__controls-button {
+  background: #1A1A1A !important;
+  border-bottom-color: #242424 !important;
+  color: #FAFAF0 !important;
+}
+.dark .react-flow__controls-button:hover { background: #242424 !important; }
+
+/* Scrollbar — dark */
+.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+.dark ::-webkit-scrollbar-track { background: #0D0D0D; }
+.dark ::-webkit-scrollbar-thumb { background: #383838; border-radius: 6px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #4A4A4A; }
+.dark { scrollbar-color: #383838 #0D0D0D; scrollbar-width: thin; }
+
+/* Sonner toasts — dark variants */
+.dark [data-sonner-toast][data-type="success"] {
+  background: #14532D !important; color: #86EFAC !important; border-color: #166534 !important;
+}
+.dark [data-sonner-toast][data-type="error"] {
+  background: #450A0A !important; color: #FCA5A5 !important; border-color: #7F1D1D !important;
+}
+.dark [data-sonner-toast][data-type="warning"] {
+  background: #431407 !important; color: #FED7AA !important; border-color: #7C2D12 !important;
+}
+.dark [data-sonner-toast][data-type="info"],
+.dark [data-sonner-toast][data-type="default"] {
+  background: #1E1B4B !important; color: #A5B4FC !important; border-color: #3730A3 !important;
+}
+
+/* Sidebar item — dark */
+.dark .sidebar-item {
+  color: #A1A1AA;
+  background: transparent;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  border-left: 2px solid transparent;
+}
+.dark .sidebar-item:hover { background: #1A1A1A; color: #FAFAF0; }
+.dark .sidebar-item.active,
+.dark .sidebar-item[data-active="true"] {
+  background: #1A1A1A; color: #F97316; border-left-color: #F97316;
+}
+
+
 /* Brand loader */
 @keyframes brand-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
