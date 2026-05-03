@@ -22,6 +22,31 @@ import type {
 // ============================================================
 // ============================================================
 //  Layout constants — hierarchical top-to-bottom tree
+const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
+  { value: "#FAFAF8", label: "Blanc cassé" },
+  { value: "#F5F0E8", label: "Beige doux" },
+  { value: "#F3F4F6", label: "Gris très clair" },
+  { value: "#FFF8F0", label: "Crème" },
+  { value: "#FDE8F0", label: "Rose poudré" },
+  { value: "#FEE8D6", label: "Pêche douce" },
+  { value: "#FEF9C3", label: "Jaune pâle" },
+  { value: "#E8F8F0", label: "Vert menthe" },
+  { value: "#E8F0FE", label: "Bleu ciel pâle" },
+  { value: "#F0E8FE", label: "Lavande douce" },
+  { value: "#E8F0E8", label: "Vert sauge pâle" },
+  { value: "#0D0D0D", label: "Sombre", dark: true },
+];
+const DEFAULT_BG = "#FAFAF8";
+
+const isLightHex = (hex: string) => {
+  const v = hex.replace("#", "");
+  if (v.length !== 6) return true;
+  const r = parseInt(v.slice(0, 2), 16);
+  const g = parseInt(v.slice(2, 4), 16);
+  const b = parseInt(v.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+};
+
 // ============================================================
 
 const NODE_GAP_X = 40; // horizontal gap between siblings
