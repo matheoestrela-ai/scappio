@@ -608,8 +608,18 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
     >
       <style>{`
         .tldraw-bg-overlay .tl-background { background-color: ${bgColor} !important; }
+        .tldraw-presenting .tlui-layout__top,
+        .tldraw-presenting .tlui-layout__bottom,
+        .tldraw-presenting .tlui-toolbar,
+        .tldraw-presenting .tlui-style-panel,
+        .tldraw-presenting .tlui-helper-buttons,
+        .tldraw-presenting .tlui-navigation-zone,
+        .tldraw-presenting .tlui-menu-zone,
+        .tldraw-presenting .tlui-debug-panel,
+        .tldraw-presenting .tlui-people-menu,
+        .tldraw-presenting .tlui-share-zone { display: none !important; }
       `}</style>
-      <div className="tldraw-bg-overlay h-full w-full">
+      <div className={`tldraw-bg-overlay h-full w-full ${presenting ? "tldraw-presenting" : ""}`}>
         <Tldraw
           persistenceKey={PERSIST_KEY}
           onMount={handleMount}
@@ -617,8 +627,24 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
         />
       </div>
 
-      {/* Background color picker — top center, next to tldraw action menu */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-2 z-[200]">
+      {/* Top-center toolbar */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-2 z-[200] flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          title={presenting ? "Exit presentation" : "Presentation mode"}
+          onClick={() => setPresenting((v) => !v)}
+          className="shadow-md backdrop-blur"
+          style={
+            isDarkBoard
+              ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
+              : { background: "rgba(255,255,255,0.95)" }
+          }
+        >
+          {presenting ? <X className="h-4 w-4 mr-1.5" /> : <Presentation className="h-4 w-4 mr-1.5" />}
+          {presenting ? "Exit" : "Présentation"}
+        </Button>
+
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
             <Button
