@@ -225,6 +225,12 @@ const Studio = () => {
             />
           )}
 
+          {!studio.screenSupported && format === "16:9" && (
+            <div className="inline-flex h-10 items-center rounded-full border border-border bg-muted/40 px-4 text-xs text-muted-foreground">
+              Partage d&apos;écran indisponible sur cet appareil
+            </div>
+          )}
+
           {studio.cameraOn && studio.screenOn && (
             <Button
               variant="outline"
