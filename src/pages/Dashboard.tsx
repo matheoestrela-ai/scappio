@@ -255,6 +255,8 @@ const Dashboard = () => {
       lastSerializedRef.current = serialized;
       if (snapshotVersion) lastVersionAtRef.current = Date.now();
       setSidebarRefreshKey((k) => k + 1);
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1800);
     } catch (e: any) {
       console.warn("Auto-save failed:", e?.message);
     }
