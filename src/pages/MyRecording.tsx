@@ -42,9 +42,8 @@ const MyRecording = () => {
       return;
     }
     setData(rec);
-    return () => {
-      try { URL.revokeObjectURL(rec.url); } catch {}
-    };
+    // Note: do NOT revoke the blob URL on unmount — it's needed for playback
+    // and the download link. StrictMode would otherwise revoke it instantly.
   }, [navigate]);
 
   useEffect(() => {
