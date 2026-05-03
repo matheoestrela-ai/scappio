@@ -34,7 +34,7 @@ const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
   { value: "#E8F0FE", label: "Pale sky blue" },
   { value: "#F0E8FE", label: "Soft lavender" },
   { value: "#E8F0E8", label: "Pale sage green" },
-  { value: "#0D0D0D", label: "Dark", dark: true },
+  { value: "#1F2937", label: "Dark", dark: true },
 ];
 const DEFAULT_BG = "#FAFAF8";
 
@@ -502,7 +502,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
   const onChangeRef = useRef(onChange);
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
-  const isDarkBoard = bgColor === "#0D0D0D";
+  const isDarkBoard = bgColor === "#1F2937";
 
   useEffect(() => {
     dataRef.current = data;
@@ -622,7 +622,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
               className="shadow-md backdrop-blur"
               style={
                 isDarkBoard
-                  ? { background: "#1A1A1A", borderColor: "#242424", color: "#FAFAF0" }
+                  ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
                   : { background: "rgba(255,255,255,0.95)" }
               }
             >
@@ -637,7 +637,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
             className="w-auto p-3"
             style={
               isDarkBoard
-                ? { background: "#1A1A1A", borderColor: "#242424", color: "#FAFAF0" }
+                ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
                 : undefined
             }
           >
