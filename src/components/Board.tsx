@@ -1041,6 +1041,9 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
+  const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
+  const [bgOpen, setBgOpen] = useState(false);
+  const isDarkBoard = bgColor === "#0D0D0D";
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
@@ -1048,6 +1051,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
     setNodes(initial.nodes);
     setEdges(initial.edges);
     setEditingId(null);
+    setBgColor(data.bgColor ?? DEFAULT_BG);
     historyRef.current = { past: [], future: [] };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -1056,8 +1060,8 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
   useEffect(() => {
-    onChangeRef.current?.(snapshotToBoardData(nodes, edges));
-  }, [nodes, edges]);
+    onChangeRef.current?.(snapshotToBoardData(nodes, edges, bgColor));
+  }, [nodes, edges, bgColor]);
 
   // ------- Undo / redo -------
   const historyRef = useRef<{ past: Snapshot[]; future: Snapshot[] }>({
