@@ -604,6 +604,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
 
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
+        previewUrlRef.current = null;
         setPreviewUrl(null);
       }
 
@@ -629,6 +630,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
           return;
         }
         const url = URL.createObjectURL(blob);
+        previewUrlRef.current = url;
         setPreviewUrl(url);
         setLastRecording({ url, format: formatToRecordingFormat(formatRef.current) });
         onFinished(url);
