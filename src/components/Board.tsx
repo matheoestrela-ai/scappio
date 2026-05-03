@@ -53,6 +53,9 @@ import {
   MoveHorizontal,
   Minus,
   X,
+  PaintBucket,
+  Check,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +66,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+// ============================================================
+//  Background colors (board canvas)
+// ============================================================
+
+export const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
+  { value: "#FAFAF8", label: "Blanc cassé" },
+  { value: "#F5F0E8", label: "Beige doux" },
+  { value: "#F3F4F6", label: "Gris très clair" },
+  { value: "#FFF8F0", label: "Crème" },
+  { value: "#FDE8F0", label: "Rose poudré" },
+  { value: "#FEE8D6", label: "Pêche douce" },
+  { value: "#FEF9C3", label: "Jaune pâle" },
+  { value: "#E8F8F0", label: "Vert menthe" },
+  { value: "#E8F0FE", label: "Bleu ciel pâle" },
+  { value: "#F0E8FE", label: "Lavande douce" },
+  { value: "#E8F0E8", label: "Vert sauge pâle" },
+  { value: "#0D0D0D", label: "Sombre", dark: true },
+];
+export const DEFAULT_BG = "#FAFAF8";
 
 // ============================================================
 //  Types
