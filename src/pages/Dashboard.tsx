@@ -494,7 +494,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: "#FAFAF8" }}>
+    <div className="min-h-screen flex" >
       <ChatSidebar
         currentBoardId={currentBoardId}
         onNewBoard={handleNewBoard}
@@ -515,7 +515,7 @@ const Dashboard = () => {
         onDrop={onDrop}
       >
         {/* Mobile top bar */}
-        <div className="lg:hidden sticky top-0 z-20 flex items-center justify-between px-3 py-2 border-b border-border/60 bg-[#FAFAF8]/90 backdrop-blur">
+        <div className="lg:hidden sticky top-0 z-20 flex items-center justify-between px-3 py-2 border-b border-border/60 bg-background/90 backdrop-blur">
           <SidebarToggleButton onClick={() => setSidebarOpen(true)} />
           <span className="font-bold text-sm"><span className="text-primary">scapp</span>io</span>
           <button onClick={() => navigate("/history")} className="text-xs text-muted-foreground hover:text-foreground">History</button>
@@ -696,7 +696,7 @@ const Dashboard = () => {
         </div>
 
         {/* Composer pinned at bottom */}
-        <div className="shrink-0 border-t border-border/40 bg-[#FAFAF8]/95 backdrop-blur py-3 sm:py-4 px-2">
+        <div className="shrink-0 border-t border-border/40 bg-background/95 backdrop-blur py-3 sm:py-4 px-2">
           <ChatComposer
             disabled={processing}
             onSendText={handleTextSend}
