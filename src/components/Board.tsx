@@ -1602,7 +1602,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         minZoom={0.2}
         maxZoom={2.5}
       >
-        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#2A2A2A" : "#FDBA74"} gap={28} size={1.5} />
+        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#4B5563" : "#FDBA74"} gap={28} size={1.5} />
         <Controls
           showZoom={false}
           showFitView={false}
