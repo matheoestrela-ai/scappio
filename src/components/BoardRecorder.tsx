@@ -142,28 +142,8 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, W, H);
       try { ctx.drawImage(sv, 0, 0, W, H); } catch {}
-      const camV = camVideoElRef.current;
-      if (camV && camV.readyState >= 2) {
-        const r = Math.round(Math.min(W, H) * 0.12);
-        const margin = Math.round(r * 0.4);
-        const c = cornerRef.current;
-        let cx = W - r - margin, cy = H - r - margin;
-        if (c === "tl") { cx = r + margin; cy = r + margin; }
-        else if (c === "tr") { cx = W - r - margin; cy = r + margin; }
-        else if (c === "bl") { cx = r + margin; cy = H - r - margin; }
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        try { ctx.drawImage(camV, cx - r, cy - r, r * 2, r * 2); } catch {}
-        ctx.restore();
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "#fff";
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      // Camera bubble is rendered as a DOM overlay and already captured by the screen stream.
+      // Do NOT redraw it here, otherwise the face appears twice in the final video.
       rafRef.current = requestAnimationFrame(draw);
     };
     draw();
