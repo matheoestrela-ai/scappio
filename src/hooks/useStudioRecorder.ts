@@ -31,7 +31,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [cameraOn, setCameraOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
   const [screenOn, setScreenOn] = useState(false);
+  const [swapped, setSwapped] = useState(false);
   const [screenSupported, setScreenSupported] = useState(false);
   const [cameraPreviewStream, setCameraPreviewStream] = useState<MediaStream | null>(null);
   const [screenPreviewStream, setScreenPreviewStream] = useState<MediaStream | null>(null);
