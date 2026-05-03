@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Square, AlertTriangle } from "lucide-react";
+import { Camera, Square } from "lucide-react";
 import { toast } from "sonner";
-import { toPng } from "html-to-image";
 import { saveRecording } from "@/lib/recordings-db";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -43,28 +42,27 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
   const [corner, setCorner] = useState<Corner>("bl");
   const [camReady, setCamReady] = useState(false);
 
+  const screenStreamRef = useRef<MediaStream | null>(null);
   const camStreamRef = useRef<MediaStream | null>(null);
   const camVideoElRef = useRef<HTMLVideoElement | null>(null);
+  const screenVideoElRef = useRef<HTMLVideoElement | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
-  const captureLoopRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
-  const lastFrameImgRef = useRef<HTMLImageElement | null>(null);
-  const captureBusyRef = useRef(false);
   const cornerRef = useRef<Corner>("bl");
   const startTimeRef = useRef(0);
-  const stoppingRef = useRef(false);
 
   useEffect(() => { cornerRef.current = corner; }, [corner]);
 
   const cleanup = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (captureLoopRef.current) clearInterval(captureLoopRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
-    rafRef.current = captureLoopRef.current = timerRef.current = null;
+    rafRef.current = timerRef.current = null;
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     camStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
     camStreamRef.current = null;
     setCamReady(false);
   }, []);
@@ -76,104 +74,92 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       toast.error("Your browser does not support recording");
       return;
     }
-    const target = targetRef.current;
-    if (!target) return;
+    if (!(navigator.mediaDevices as any).getDisplayMedia) {
+      toast.error("Screen recording is not supported on this device");
+      return;
+    }
 
-    // Request cam + mic in a single user-gesture call
-    let stream: MediaStream | null = null;
+    // 1) Screen first (must be from user gesture)
+    let screen: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      screen = await (navigator.mediaDevices as any).getDisplayMedia({
+        video: { frameRate: 30 },
+        audio: true,
+      });
+    } catch (e: any) {
+      if (e?.name === "NotAllowedError") toast.error("Screen sharing denied");
+      else toast.error("Could not start screen capture: " + (e?.message || e));
+      return;
+    }
+    screenStreamRef.current = screen;
+
+    // 2) Camera + mic (best-effort)
+    let cam: MediaStream | null = null;
+    try {
+      cam = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 480 }, height: { ideal: 480 }, facingMode: "user" },
         audio: true,
       });
-    } catch (err: any) {
-      // Try without camera (mic only)
+    } catch {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        toast.warning("Camera denied — recording board without webcam");
+        cam = await navigator.mediaDevices.getUserMedia({ audio: true });
+        toast.warning("Camera denied — recording without webcam bubble");
       } catch {
-        toast.error("Camera & microphone denied. Allow them in browser settings.");
-        return;
+        toast.warning("Camera & mic denied — recording screen only");
       }
     }
+    camStreamRef.current = cam;
 
-    const hasVideo = stream.getVideoTracks().length > 0;
-    camStreamRef.current = stream;
-
-    if (hasVideo) {
+    const camHasVideo = !!cam && cam.getVideoTracks().length > 0;
+    if (camHasVideo) {
       const v = document.createElement("video");
-      v.srcObject = new MediaStream(stream.getVideoTracks());
-      v.muted = true;
-      v.playsInline = true;
-      v.autoplay = true;
+      v.srcObject = new MediaStream(cam!.getVideoTracks());
+      v.muted = true; v.playsInline = true; v.autoplay = true;
       try { await v.play(); } catch {}
       camVideoElRef.current = v;
       setCamReady(true);
     }
 
-    const rect = target.getBoundingClientRect();
-    const W = Math.max(640, Math.floor(rect.width));
-    const H = Math.max(360, Math.floor(rect.height));
+    // Screen video element to feed canvas
+    const sv = document.createElement("video");
+    sv.srcObject = new MediaStream(screen.getVideoTracks());
+    sv.muted = true; sv.playsInline = true; sv.autoplay = true;
+    try { await sv.play(); } catch {}
+    screenVideoElRef.current = sv;
+
+    // wait one frame so videoWidth is populated
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    const sTrackSettings = screen.getVideoTracks()[0].getSettings();
+    const W = sv.videoWidth || sTrackSettings.width || 1920;
+    const H = sv.videoHeight || sTrackSettings.height || 1080;
+
     const canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
+    canvas.width = W; canvas.height = H;
     canvasRef.current = canvas;
     const ctx = canvas.getContext("2d", { alpha: false })!;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
 
-    // Capture board frames into a cached image (sequential — never overlap)
-    const captureFrame = async () => {
-      if (stoppingRef.current || captureBusyRef.current) return;
-      captureBusyRef.current = true;
-      try {
-        const dataUrl = await toPng(target, {
-          cacheBust: false,
-          pixelRatio: 1,
-          skipFonts: true,
-          backgroundColor: "#ffffff",
-          filter: (node) => {
-            // exclude the recorder UI itself from capture
-            if (!(node instanceof HTMLElement)) return true;
-            return node.dataset?.recorderUi !== "true";
-          },
-        });
-        await new Promise<void>((res) => {
-          const img = new Image();
-          img.onload = () => { lastFrameImgRef.current = img; res(); };
-          img.onerror = () => res();
-          img.src = dataUrl;
-        });
-      } catch {/* ignore */}
-      captureBusyRef.current = false;
-    };
-    await captureFrame();
-    captureLoopRef.current = window.setInterval(captureFrame, 200); // ~5fps board
-
-    // Compose at 30fps
     const draw = () => {
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, W, H);
-      const img = lastFrameImgRef.current;
-      if (img) { try { ctx.drawImage(img, 0, 0, W, H); } catch {} }
-
+      try { ctx.drawImage(sv, 0, 0, W, H); } catch {}
       const camV = camVideoElRef.current;
       if (camV && camV.readyState >= 2) {
-        const r = BUBBLE / 2;
+        const r = Math.round(Math.min(W, H) * 0.12);
+        const margin = Math.round(r * 0.4);
         const c = cornerRef.current;
-        let cx = W - r - 24, cy = H - r - 24;
-        if (c === "tl") { cx = r + 24; cy = r + 24; }
-        else if (c === "tr") { cx = W - r - 24; cy = r + 24; }
-        else if (c === "bl") { cx = r + 24; cy = H - r - 24; }
+        let cx = W - r - margin, cy = H - r - margin;
+        if (c === "tl") { cx = r + margin; cy = r + margin; }
+        else if (c === "tr") { cx = W - r - margin; cy = r + margin; }
+        else if (c === "bl") { cx = r + margin; cy = H - r - margin; }
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
-        try { ctx.drawImage(camV, cx - r, cy - r, BUBBLE, BUBBLE); } catch {}
+        try { ctx.drawImage(camV, cx - r, cy - r, r * 2, r * 2); } catch {}
         ctx.restore();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#fff";
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.stroke();
@@ -182,12 +168,24 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     };
     draw();
 
-    // Build composed stream (canvas video + mic audio)
+    // Mix audio: system (if any) + mic
     const composed = (canvas as any).captureStream(30) as MediaStream;
-    stream.getAudioTracks().forEach((t) => composed.addTrack(t));
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const dest = audioCtx.createMediaStreamDestination();
+    let hasAudio = false;
+    if (screen.getAudioTracks().length) {
+      try { audioCtx.createMediaStreamSource(new MediaStream(screen.getAudioTracks())).connect(dest); hasAudio = true; } catch {}
+    }
+    if (cam && cam.getAudioTracks().length) {
+      try { audioCtx.createMediaStreamSource(new MediaStream(cam.getAudioTracks())).connect(dest); hasAudio = true; } catch {}
+    }
+    if (hasAudio) dest.stream.getAudioTracks().forEach((t) => composed.addTrack(t));
+
+    // If user stops sharing via browser UI, finalize
+    screen.getVideoTracks()[0].addEventListener("ended", () => stopRecording());
 
     const mimeType = pickMime();
-    const rec = new MediaRecorder(composed, mimeType ? { mimeType, videoBitsPerSecond: 2_500_000 } : undefined);
+    const rec = new MediaRecorder(composed, mimeType ? { mimeType, videoBitsPerSecond: 4_000_000 } : undefined);
     chunksRef.current = [];
     rec.ondataavailable = (e) => { if (e.data && e.data.size) chunksRef.current.push(e.data); };
     rec.onstop = async () => {
@@ -198,7 +196,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       try {
         await saveRecording({
           id: crypto.randomUUID(),
-          title: boardTitle || "Board recording",
+          title: boardTitle || "Screen recording",
           boardId,
           durationSec: duration,
           createdAt: Date.now(),
@@ -211,8 +209,8 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       } catch (e: any) {
         toast.error("Save failed: " + (e?.message || e));
       }
+      try { audioCtx.close(); } catch {}
       cleanup();
-      stoppingRef.current = false;
     };
     rec.start(250);
     recorderRef.current = rec;
@@ -223,14 +221,15 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
   };
 
   const stopRecording = () => {
-    if (!recorderRef.current) return;
-    stoppingRef.current = true;
+    const rec = recorderRef.current;
     setRecording(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    try { recorderRef.current.stop(); } catch {}
+    if (rec && rec.state !== "inactive") {
+      try { rec.stop(); } catch {}
+    }
   };
 
-  // Attach the cam video element to the JSX bubble container
+  // Mount cam <video> into the visible bubble
   const bubbleHostRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!camReady) return;
@@ -246,7 +245,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     return () => { try { v.remove(); } catch {} };
   }, [camReady]);
 
-  // Drag bubble to nearest corner
+  // Drag bubble between corners
   const dragRef = useRef(false);
   const onBubbleDown = (e: React.PointerEvent) => {
     dragRef.current = true;
@@ -288,7 +287,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
             <TooltipTrigger asChild>
               <button
                 onClick={recording ? stopRecording : startRecording}
-                aria-label={recording ? "Stop recording" : "Record board"}
+                aria-label={recording ? "Stop recording" : "Record screen"}
                 className={`h-9 w-9 inline-flex items-center justify-center rounded-full shadow-md transition text-white ${
                   recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-red-600 hover:bg-red-500"
                 }`}
@@ -297,13 +296,12 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              {recording ? "Arrêter l'enregistrement" : "Enregistrer le tableau"}
+              {recording ? "Arrêter l'enregistrement" : "Enregistrer l'écran"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
 
-      {/* Camera bubble overlay (also drawn into the recorded canvas) */}
       {camReady && (
         <div
           data-recorder-ui="true"
