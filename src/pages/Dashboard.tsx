@@ -494,7 +494,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex" >
+    <div className="min-h-screen flex bg-background">
       <ChatSidebar
         currentBoardId={currentBoardId}
         onNewBoard={handleNewBoard}
