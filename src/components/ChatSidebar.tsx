@@ -97,7 +97,7 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
   const groups = groupBoards(boards);
 
   const content = (
-    <div className="flex h-full w-full flex-col bg-[#f4f1ec] border-r border-border/60">
+    <div className="flex h-full w-full flex-col bg-sidebar border-r border-border/60">
       {/* Header */}
       <div className="p-3 flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 px-1">

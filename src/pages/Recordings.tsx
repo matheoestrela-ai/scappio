@@ -91,8 +91,8 @@ const Recordings = () => {
   const active = items.find((i) => i.id === activeId) ?? null;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
-      <header className="sticky top-0 z-10 bg-[#FAFAF8]/90 backdrop-blur border-b border-border/60">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border/60">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
