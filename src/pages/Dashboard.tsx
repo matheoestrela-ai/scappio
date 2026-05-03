@@ -518,8 +518,15 @@ const Dashboard = () => {
         <div className="lg:hidden sticky top-0 z-20 flex items-center justify-between px-3 py-2 border-b border-border/60 bg-[#FAFAF8]/90 backdrop-blur">
           <SidebarToggleButton onClick={() => setSidebarOpen(true)} />
           <span className="font-bold text-sm"><span className="text-primary">scapp</span>io</span>
-          <div className="w-9" />
+          <button onClick={() => navigate("/history")} className="text-xs text-muted-foreground hover:text-foreground">History</button>
         </div>
+
+        {/* Saved indicator */}
+        {savedFlash && (
+          <div className="fixed top-4 right-4 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground/90 text-background px-3 py-1 text-xs shadow-lg animate-fade-in">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Sauvegardé
+          </div>
+        )}
 
         {/* Drag overlay */}
         {dragActive && (
