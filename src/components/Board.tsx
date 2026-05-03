@@ -976,13 +976,18 @@ const buildInitial = (data: BoardData) => {
 
 type Snapshot = { nodes: Node<EditorNodeData>[]; edges: Edge[] };
 
-const snapshotToBoardData = (nodes: Node<EditorNodeData>[], edges: Edge[]): BoardData => {
+const snapshotToBoardData = (
+  nodes: Node<EditorNodeData>[],
+  edges: Edge[],
+  bgColor?: string,
+): BoardData => {
   // Reconstruct a parent for each node from incoming edges (best effort).
   const parentByChild = new Map<string, string>();
   for (const e of edges) {
     if (!parentByChild.has(e.target)) parentByChild.set(e.target, e.source);
   }
   return {
+    bgColor,
     nodes: nodes.map((n) => ({
       id: n.id,
       label: n.data.label,
