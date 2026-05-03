@@ -607,6 +607,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       recorder.onstop = () => {
         stopElapsedTimer();
         stopCombinedStream();
+        recorderRef.current = null;
+        setRecording(false);
+        setPaused(false);
         const blob = new Blob(chunksRef.current, { type: mime || "video/webm" });
         if (blob.size === 0) {
           toast.error("Enregistrement vide");
@@ -698,9 +701,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       disconnectAudioNode(screenAudioSourceRef.current);
       disconnectAudioNode(screenGainRef.current);
       audioContextRef.current?.close().catch(() => {});
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
-  }, [ensureCamera, previewUrl, startRenderLoop, stopCombinedStream, stopElapsedTimer]);
+  }, [ensureCamera, startRenderLoop, stopCombinedStream, stopElapsedTimer]);
 
   return {
     recording,
