@@ -40,7 +40,7 @@ import {
 } from "@/lib/boards-history";
 import ChatSidebar, { SidebarToggleButton } from "@/components/ChatSidebar";
 import ChatComposer from "@/components/ChatComposer";
-import ScreenRecorder from "@/components/ScreenRecorder";
+
 
 const MAX_SIZE = 25 * 1024 * 1024;
 
@@ -491,7 +491,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#FAFAF8" }}>
-      <ScreenRecorder />
       <ChatSidebar
         currentBoardId={currentBoardId}
         onNewBoard={handleNewBoard}
