@@ -1469,7 +1469,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             className="w-auto p-3"
             style={
               isDarkBoard
-                ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
                 : undefined
             }
           >
