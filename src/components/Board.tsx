@@ -84,7 +84,7 @@ export const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
   { value: "#E8F0FE", label: "Pale sky blue" },
   { value: "#F0E8FE", label: "Soft lavender" },
   { value: "#E8F0E8", label: "Pale sage green" },
-  { value: "#1F2937", label: "Dark", dark: true },
+  { value: "#0D0D0D", label: "Dark", dark: true },
 ];
 export const DEFAULT_BG = "#FAFAF8";
 
@@ -1043,7 +1043,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
-  const isDarkBoard = bgColor === "#1F2937";
+  const isDarkBoard = bgColor === "#0D0D0D";
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
@@ -1613,7 +1613,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         minZoom={0.2}
         maxZoom={2.5}
       >
-        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#4B5563" : "#FDBA74"} gap={28} size={1.5} />
+        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#242424" : "#FDBA74"} gap={28} size={1.5} />
         <Controls
           showZoom={false}
           showFitView={false}
