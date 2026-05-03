@@ -33,7 +33,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
   const navigate = useNavigate();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [corner, setCorner] = useState<Corner>("br");
+  const [corner, setCorner] = useState<Corner>("bl");
   const [hasCam, setHasCam] = useState(false);
 
   const camStreamRef = useRef<MediaStream | null>(null);
