@@ -622,7 +622,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
               className="shadow-md backdrop-blur"
               style={
                 isDarkBoard
-                  ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                  ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
                   : { background: "rgba(255,255,255,0.95)" }
               }
             >
