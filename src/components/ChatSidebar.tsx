@@ -27,17 +27,17 @@ const groupBoards = (boards: BoardRow[]): Group[] => {
   const sevenDays = today - 7 * 24 * 60 * 60 * 1000;
 
   const g: Record<string, BoardRow[]> = {
-    "Aujourd'hui": [],
-    "Hier": [],
-    "7 derniers jours": [],
-    "Plus ancien": [],
+    "Today": [],
+    "Yesterday": [],
+    "Last 7 days": [],
+    "Older": [],
   };
   for (const b of boards) {
     const t = new Date(b.updated_at).getTime();
-    if (t >= today) g["Aujourd'hui"].push(b);
-    else if (t >= yesterday) g["Hier"].push(b);
-    else if (t >= sevenDays) g["7 derniers jours"].push(b);
-    else g["Plus ancien"].push(b);
+    if (t >= today) g["Today"].push(b);
+    else if (t >= yesterday) g["Yesterday"].push(b);
+    else if (t >= sevenDays) g["Last 7 days"].push(b);
+    else g["Older"].push(b);
   }
   return Object.entries(g)
     .filter(([, list]) => list.length > 0)
@@ -79,14 +79,14 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Supprimer ce board ?")) return;
+    if (!confirm("Delete this board?")) return;
     try {
       await deleteBoard(id);
       setBoards((prev) => prev.filter((b) => b.id !== id));
       if (id === currentBoardId) onNewBoard();
-      toast.success("Board supprimé");
+      toast.success("Board deleted");
     } catch (e: any) {
-      toast.error(e.message ?? "Suppression impossible");
+      toast.error(e.message ?? "Unable to delete");
     }
   };
 
@@ -106,7 +106,7 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
         <button
           className="lg:hidden inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted/70"
           onClick={() => onOpenChange(false)}
-          aria-label="Fermer"
+          aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>
@@ -122,7 +122,7 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
           className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-medium text-sm h-10 hover:opacity-90 transition shadow-sm"
         >
           <PenLine className="h-4 w-4" />
-          Nouveau board
+          New board
         </button>
       </div>
 
@@ -134,7 +134,7 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
           </div>
         ) : groups.length === 0 ? (
           <p className="text-xs text-muted-foreground px-3 py-6 text-center">
-            Pas encore de board.<br />Crée ton premier !
+            No board yet.<br />Create your first!
           </p>
         ) : (
           groups.map((g) => (
@@ -159,13 +159,13 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
                             : "text-foreground/80 hover:bg-black/5",
                         )}
                       >
-                        <span className="truncate flex-1">{b.title || "Sans titre"}</span>
+                        <span className="truncate flex-1">{b.title || "Untitled"}</span>
                         <span
                           role="button"
                           tabIndex={0}
                           onClick={(e) => handleDelete(b.id, e)}
                           className="opacity-0 group-hover:opacity-100 transition inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          aria-label="Supprimer"
+                          aria-label="Delete"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </span>
@@ -188,21 +188,21 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
                 {(email[0] ?? "U").toUpperCase()}
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium truncate">{email || "Utilisateur"}</p>
+                <p className="text-xs font-medium truncate">{email || "User"}</p>
               </div>
               <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-56">
             <DropdownMenuItem onClick={() => navigate("/history")}>
-              <HistoryIcon className="h-4 w-4 mr-2" /> Historique
+              <HistoryIcon className="h-4 w-4 mr-2" /> History
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/recordings")}>
-              <Video className="h-4 w-4 mr-2" /> Mes enregistrements
+              <Video className="h-4 w-4 mr-2" /> My recordings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
-              <LogOut className="h-4 w-4 mr-2" /> Se déconnecter
+              <LogOut className="h-4 w-4 mr-2" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -237,7 +237,7 @@ export const SidebarToggleButton = ({ onClick }: { onClick: () => void }) => (
   <button
     onClick={onClick}
     className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card hover:bg-muted transition"
-    aria-label="Ouvrir le menu"
+    aria-label="Open menu"
   >
     <Menu className="h-5 w-5" />
   </button>

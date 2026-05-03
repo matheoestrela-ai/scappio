@@ -416,8 +416,8 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       videoTrack.onended = () => {
         cameraOnRef.current = false;
         setCameraOn(false);
-        toast.error("Caméra interrompue", {
-          description: "Le studio continue sans caméra.",
+        toast.error("Camera interrupted", {
+          description: "Studio continues without camera.",
         });
       };
       cameraStreamRef.current = new MediaStream([videoTrack]);
@@ -460,8 +460,8 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     screenOnRef.current = false;
     setScreenOn(false);
     if (notify) {
-      toast.message("Partage d'écran arrêté", {
-        description: "Le studio repasse automatiquement sur la caméra.",
+      toast.message("Screen sharing stopped", {
+        description: "Studio switches back to the camera.",
       });
     }
     await syncAudioGraph();
@@ -470,7 +470,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const enableScreen = useCallback(async () => {
     const requestDisplayMedia = getDisplayMediaSafely();
     if (!requestDisplayMedia || isLikelyMobile()) {
-      toast.error("Le partage d'écran n'est pas disponible sur cet appareil");
+      toast.error("Screen sharing is not available on this device");
       return null;
     }
 
@@ -493,7 +493,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
 
       if (!videoTrack) {
         stopStream(capture);
-        toast.error("Aucun flux écran détecté");
+        toast.error("No screen stream detected");
         return null;
       }
 
@@ -512,14 +512,14 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       return screenStreamRef.current;
     } catch (error: any) {
       if (error?.name === "NotAllowedError" || error?.name === "AbortError") {
-        toast.message("Partage d'écran annulé", {
-          description: "Tu peux continuer avec la caméra seule.",
+        toast.message("Screen sharing cancelled", {
+          description: "You can continue with the camera only.",
         });
         return null;
       }
 
       console.error(error);
-      toast.error("Impossible d'activer le partage d'écran");
+      toast.error("Unable to enable screen sharing");
       return null;
     }
   }, [createPlaybackVideo, stopScreen, syncAudioGraph]);
@@ -533,8 +533,8 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     try {
       await ensureCamera();
     } catch {
-      toast.error("Accès caméra refusé", {
-        description: "Le studio continue, mais sans flux caméra.",
+      toast.error("Camera access denied", {
+        description: "Studio continues without camera feed.",
       });
     }
   }, [disableCamera, ensureCamera]);
@@ -572,7 +572,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const start = useCallback(async () => {
     if (recordingRef.current) return;
     if (typeof MediaRecorder === "undefined") {
-      toast.error("Navigateur non supporté");
+      toast.error("Browser not supported");
       return;
     }
 
@@ -580,7 +580,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       try {
         await ensureCamera();
       } catch {
-        toast.error("Aucune source vidéo active");
+        toast.error("No active video source");
         return;
       }
     }
@@ -588,7 +588,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     try {
       const stream = await buildCombinedStream();
       if (!stream) {
-        toast.error("Aperçu indisponible");
+        toast.error("Preview unavailable");
         return;
       }
 
@@ -616,7 +616,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       };
       recorder.onerror = (event) => {
         console.error("Recorder error", event);
-        toast.error("Erreur pendant l'enregistrement");
+        toast.error("Error during recording");
       };
       recorder.onstop = () => {
         stopElapsedTimer();
@@ -626,7 +626,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
         setPaused(false);
         const blob = new Blob(chunksRef.current, { type: mime || "video/webm" });
         if (blob.size === 0) {
-          toast.error("Enregistrement vide");
+          toast.error("Recording is empty");
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -648,7 +648,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     } catch (error) {
       console.error(error);
       stopCombinedStream();
-      toast.error("Impossible de démarrer l'enregistrement");
+      toast.error("Unable to start recording");
     }
   }, [buildCombinedStream, ensureCamera, onFinished, previewUrl, startElapsedTimer, stopCombinedStream, stopElapsedTimer]);
 
@@ -694,7 +694,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     startRenderLoop();
     ensureCamera().catch(() => {
       setCameraOn(false);
-      toast.warning("Autorise la caméra pour profiter du studio complet");
+      toast.warning("Allow the camera to use the full studio");
     });
 
     return () => {

@@ -69,11 +69,11 @@ const Recordings = () => {
   };
 
   const handleDelete = async (rec: Recording) => {
-    if (!confirm(`Supprimer "${rec.name}" ? Cette action est définitive.`)) return;
+    if (!confirm(`Delete "${rec.name}"? This action is permanent.`)) return;
     await deleteRecording(rec.id);
     if (selectedId === rec.id) setSelectedId(null);
     await refresh();
-    toast.success("Enregistrement supprimé");
+    toast.success("Recording deleted");
   };
 
   const handleShare = async (rec: Recording) => {
@@ -87,7 +87,7 @@ const Recordings = () => {
       }
     } catch { /* ignore */ }
     handleDownload(rec);
-    toast.message("Partage non supporté ici — fichier téléchargé pour partage manuel.");
+    toast.message("Sharing unsupported here — file downloaded for manual sharing.");
   };
 
   return (
@@ -97,30 +97,30 @@ const Recordings = () => {
           <div className="flex items-center gap-3">
             <Link to="/dashboard">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Retour
+                <ArrowLeft className="h-4 w-4 mr-2" /> Back
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold tracking-tight">Mes enregistrements</h1>
+            <h1 className="text-lg font-semibold tracking-tight">My recordings</h1>
           </div>
-          <span className="text-xs text-muted-foreground">{items.length} vidéo{items.length > 1 ? "s" : ""}</span>
+          <span className="text-xs text-muted-foreground">{items.length} video{items.length > 1 ? "s" : ""}</span>
         </div>
       </header>
 
       <main className="container py-6 sm:py-8">
         {loading ? (
-          <p className="text-muted-foreground">Chargement…</p>
+          <p className="text-muted-foreground">Loading…</p>
         ) : items.length === 0 ? (
           <div className="mx-auto max-w-md text-center py-20">
             <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
               <VideoIcon className="h-6 w-6" />
             </div>
-            <h2 className="mt-4 text-xl font-semibold">Aucun enregistrement</h2>
+            <h2 className="mt-4 text-xl font-semibold">No recordings</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Passe un tableau en plein écran et clique sur le bouton rouge en haut à droite pour démarrer.
+              Open a board in fullscreen and click the red button in the top right to start.
             </p>
             <Link to="/dashboard">
               <Button className="mt-6 bg-gradient-primary shadow-glow hover:opacity-90">
-                Aller au tableau
+                Go to board
               </Button>
             </Link>
           </div>
@@ -147,25 +147,25 @@ const Recordings = () => {
                     <div>
                       <h2 className="font-semibold text-lg">{selected.name}</h2>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(selected.createdAt).toLocaleString("fr-FR")} · {formatDuration(selected.duration)} · {formatBytes(selected.size)}
+                        {new Date(selected.createdAt).toLocaleString()} · {formatDuration(selected.duration)} · {formatBytes(selected.size)}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => handleShare(selected)}>
-                        <Share2 className="h-4 w-4 mr-2" /> Partager
+                        <Share2 className="h-4 w-4 mr-2" /> Share
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => handleDownload(selected)}>
-                        <Download className="h-4 w-4 mr-2" /> Télécharger
+                        <Download className="h-4 w-4 mr-2" /> Download
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => handleDelete(selected)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4 mr-2" /> Supprimer
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete
                       </Button>
                     </div>
                   </div>
                 </>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                  Sélectionne un enregistrement.
+                  Select a recording.
                 </div>
               )}
             </div>
@@ -204,7 +204,7 @@ const Recordings = () => {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(rec.createdAt).toLocaleDateString("fr-FR")}
+                        {new Date(rec.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </button>

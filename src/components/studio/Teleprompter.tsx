@@ -71,7 +71,7 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
     <div ref={ref} className="flex flex-col h-full bg-card border border-border rounded-lg overflow-hidden">
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Type className="h-4 w-4" /> Téléprompteur
+          <Type className="h-4 w-4" /> Teleprompter
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -79,9 +79,9 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
             size="sm"
             onClick={() => setEditing((e) => !e)}
           >
-            {editing ? "Aperçu" : "Éditer"}
+            {editing ? "Preview" : "Edit"}
           </Button>
-          <Button variant="ghost" size="icon" onClick={onToggleVisible} title="Masquer">
+          <Button variant="ghost" size="icon" onClick={onToggleVisible} title="Hide">
             <EyeOff className="h-4 w-4" />
           </Button>
         </div>
@@ -91,7 +91,7 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Écris ou colle ton script ici…"
+          placeholder="Write or paste your script here…"
           className="flex-1 w-full p-3 text-sm bg-background outline-none resize-none"
         />
       ) : (
@@ -102,7 +102,7 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
         >
           {text || (
             <p className="text-muted-foreground italic">
-              Ajoute du texte en mode « Éditer » pour le faire défiler ici.
+              Add text in "Edit" mode to scroll it here.
             </p>
           )}
           <div className="h-1/2" />
@@ -120,7 +120,7 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
           disabled={!text}
         >
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          {playing ? "Pause" : "Lecture"}
+          {playing ? "Pause" : "Play"}
         </Button>
         <Button
           size="sm"
@@ -129,12 +129,12 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
             scrollerRef.current && (scrollerRef.current.scrollTop = 0);
             setPlaying(false);
           }}
-          title="Revenir au début"
+          title="Back to start"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
         <label className="flex items-center gap-2 text-xs text-muted-foreground ml-2">
-          Vitesse
+          Speed
           <input
             type="range"
             min={10}
@@ -145,7 +145,7 @@ const Teleprompter = forwardRef<HTMLDivElement, Props>(function Teleprompter(
           />
         </label>
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          Taille
+          Size
           <input
             type="range"
             min={16}

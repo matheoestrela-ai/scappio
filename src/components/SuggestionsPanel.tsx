@@ -43,25 +43,25 @@ const CATEGORY_META: Record<
   { title: string; icon: typeof Lightbulb; color: string; bg: string }
 > = {
   missing_idea: {
-    title: "Idées manquantes",
+    title: "Missing ideas",
     icon: Lightbulb,
     color: "text-[#F97316]",
     bg: "bg-[#EEF2FF]",
   },
   connection: {
-    title: "Connexions utiles",
+    title: "Useful connections",
     icon: Link2,
     color: "text-[#F97316]",
     bg: "bg-[#F3E8FF]",
   },
   question: {
-    title: "Questions à explorer",
+    title: "Questions to explore",
     icon: HelpCircle,
     color: "text-[#B45309]",
     bg: "bg-[#FEF3C7]",
   },
   resource: {
-    title: "Ressources à ajouter",
+    title: "Resources to add",
     icon: BookOpen,
     color: "text-[#0E7490]",
     bg: "bg-[#CFFAFE]",
@@ -100,8 +100,8 @@ export const SuggestionsPanel = ({
         type="button"
         onClick={() => setOpen(true)}
         className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background/90 shadow-elegant backdrop-blur transition hover:bg-accent"
-        aria-label="Ouvrir les suggestions"
-        title="Ouvrir les suggestions"
+        aria-label="Open suggestions"
+        title="Open suggestions"
       >
         <Sparkles className="h-4 w-4 text-primary" />
       </button>
@@ -120,13 +120,13 @@ export const SuggestionsPanel = ({
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-primary text-white shadow-glow">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
-          <h2 className="text-sm font-semibold tracking-tight">Agent IA</h2>
+          <h2 className="text-sm font-semibold tracking-tight">AI Agent</h2>
         </div>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-md p-1 text-muted-foreground transition hover:bg-accent"
-          aria-label="Fermer le panneau"
+          aria-label="Close panel"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -146,7 +146,7 @@ export const SuggestionsPanel = ({
             ) : (
               <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
             )}
-            Actualiser
+            Refresh
           </Button>
           <Button
             size="sm"
@@ -159,7 +159,7 @@ export const SuggestionsPanel = ({
             ) : (
               <Wand2 className="mr-1.5 h-3.5 w-3.5" />
             )}
-            Auto-améliorer
+            Auto-improve
           </Button>
         </div>
       </div>
@@ -167,20 +167,20 @@ export const SuggestionsPanel = ({
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
         {!insights && !loading && (
           <p className="text-sm text-muted-foreground">
-            Aucune suggestion pour le moment. Clique sur « Actualiser » pour analyser ton board.
+            No suggestions yet. Click "Refresh" to analyze your board.
           </p>
         )}
 
         {loading && !insights && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Analyse du board…
+            <Loader2 className="h-4 w-4 animate-spin" /> Analyzing board…
           </div>
         )}
 
         {insights?.summary && (
           <section>
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Résumé
+              Summary
             </h3>
             <p className="mt-1.5 text-sm leading-relaxed">{insights.summary}</p>
           </section>
@@ -226,17 +226,17 @@ export const SuggestionsPanel = ({
                         type="button"
                         onClick={() => onReject(s.id)}
                         className="flex h-7 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:bg-accent"
-                        aria-label="Rejeter"
+                        aria-label="Reject"
                       >
-                        <X className="h-3 w-3" /> Rejeter
+                        <X className="h-3 w-3" /> Reject
                       </button>
                       <button
                         type="button"
                         onClick={() => onAccept(s)}
                         className="flex h-7 items-center gap-1 rounded-md bg-gradient-primary px-2 text-xs font-medium text-white shadow-sm transition hover:opacity-90"
-                        aria-label="Accepter"
+                        aria-label="Accept"
                       >
-                        <Check className="h-3 w-3" /> Accepter
+                        <Check className="h-3 w-3" /> Accept
                       </button>
                     </div>
                   </li>

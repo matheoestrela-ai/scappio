@@ -124,7 +124,7 @@ export default function ScreenRecorder() {
     (kind: Format) => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
       if (blob.size === 0) {
-        toast.error("Enregistrement vide — réessaie");
+        toast.error("Empty recording — please retry");
         reset();
         return;
       }
@@ -161,7 +161,7 @@ export default function ScreenRecorder() {
           : new MediaRecorder(canvasStream, { videoBitsPerSecond: 8_000_000 });
       } catch (e) {
         console.error(e);
-        toast.error("Impossible de démarrer l'enregistrement");
+        toast.error("Unable to start recording");
         reset();
         return;
       }
@@ -173,7 +173,7 @@ export default function ScreenRecorder() {
       rec.onstop = () => finalize(kind);
       rec.onerror = (e) => {
         console.error("Recorder error", e);
-        toast.error("Erreur d'enregistrement");
+        toast.error("Recording error");
         reset();
       };
 
@@ -191,7 +191,7 @@ export default function ScreenRecorder() {
   // afterwards via a separate button so we never block recording.
   const startYoutube = async () => {
     if (typeof MediaRecorder === "undefined") {
-      toast.error("Navigateur non supporté");
+      toast.error("Browser not supported");
       return;
     }
 
@@ -207,9 +207,9 @@ export default function ScreenRecorder() {
       } catch {
         try {
           camAndMic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          toast.warning("Caméra non disponible — audio uniquement");
+          toast.warning("Camera unavailable — audio only");
         } catch {
-          toast.error("Caméra et microphone non disponibles");
+          toast.error("Camera and microphone unavailable");
           reset();
           return;
         }
@@ -330,7 +330,7 @@ export default function ScreenRecorder() {
         return;
       }
       console.error(err);
-      toast.error("Erreur lors du démarrage de l'enregistrement");
+      toast.error("Failed to start the recording");
       reset();
     }
   };
@@ -339,7 +339,7 @@ export default function ScreenRecorder() {
   const enableScreenSharing = async () => {
     const requestDisplayMedia = getDisplayMediaSafely();
     if (!requestDisplayMedia) {
-      toast.error("Le partage d'écran n'est pas supporté sur cet appareil");
+      toast.error("Screen sharing is not supported on this device");
       return;
     }
     try {
@@ -379,14 +379,14 @@ export default function ScreenRecorder() {
     } catch (err: any) {
       if (err && (err.name === "NotAllowedError" || err.name === "AbortError")) return;
       console.error(err);
-      toast.error("Partage d'écran indisponible — l'enregistrement continue");
+      toast.error("Screen sharing unavailable — recording continues");
     }
   };
 
   // ---------- 9:16 (TikTok): webcam only, vertical 720x1280 ----------
   const startTiktok = async () => {
     if (typeof MediaRecorder === "undefined") {
-      toast.error("Navigateur non supporté");
+      toast.error("Browser not supported");
       return;
     }
     formatRef.current = "tiktok";
@@ -451,13 +451,13 @@ export default function ScreenRecorder() {
       setupCanvasRecorder(canvas, micStream, "tiktok");
     } catch (err: any) {
       if (err && err.name === "NotAllowedError") {
-        toast.error("Caméra non disponible");
+        toast.error("Camera unavailable");
         reset();
         return;
       }
       if (err && err.name === "AbortError") return;
       console.error(err);
-      toast.error("Erreur lors du démarrage de l'enregistrement");
+      toast.error("Failed to start the recording");
       reset();
     }
   };
@@ -496,19 +496,19 @@ export default function ScreenRecorder() {
           className="flex items-center gap-2 px-4 h-12 rounded-full shadow-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-transform hover:scale-105 active:scale-95"
         >
           <Camera className="h-5 w-5" />
-          <span>Ouvrir le Studio</span>
+          <span>Open Studio</span>
         </button>
       )}
 
       {recording && (
         <button
           onClick={stopRecording}
-          aria-label="Arrêter"
+          aria-label="Stop"
           className="flex items-center gap-2 px-4 h-12 rounded-full shadow-lg bg-red-600 animate-pulse text-white font-semibold"
         >
           <Square className="h-4 w-4 fill-white" />
           <span className="tabular-nums">{fmt(elapsed)}</span>
-          <span>Arrêter</span>
+          <span>Stop</span>
         </button>
       )}
     </div>,

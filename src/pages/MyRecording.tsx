@@ -124,7 +124,7 @@ const MyRecording = () => {
     if (v.paused) {
       if (v.currentTime < trimStart || v.currentTime >= trimEnd) v.currentTime = trimStart;
       v.play().catch(() => {
-        toast.error("Lecture impossible");
+        toast.error("Playback failed");
       });
     } else {
       v.pause();
@@ -204,7 +204,7 @@ const MyRecording = () => {
     const v = videoRef.current;
     if (!v || !data) return;
     if (trimEnd - trimStart < 0.2) {
-      toast.error("Sélection trop courte");
+      toast.error("Selection too short");
       return;
     }
     setTrimming(true);
@@ -264,10 +264,10 @@ const MyRecording = () => {
         }
         return url;
       });
-      toast.success("Clip prêt à télécharger");
+      toast.success("Clip ready to download");
     } catch (e: any) {
       console.error(e);
-      toast.error("Découpe impossible sur ce navigateur");
+      toast.error("Trim not supported in this browser");
     } finally {
       sourceNodeRef.current?.disconnect();
       outputNodeRef.current?.disconnect();
@@ -286,9 +286,9 @@ const MyRecording = () => {
       <header className="border-b border-border bg-card/60 backdrop-blur sticky top-0 z-10">
         <div className="container py-3 flex items-center justify-between gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> Retour au board
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to board
           </Button>
-          <h1 className="text-base sm:text-lg font-semibold">Mon enregistrement</h1>
+          <h1 className="text-base sm:text-lg font-semibold">My recording</h1>
           <span
             className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
               data.format === "tiktok"
@@ -320,7 +320,7 @@ const MyRecording = () => {
         <div className="w-full max-w-3xl bg-card border border-border rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Scissors className="h-4 w-4" /> Découper
+              <Scissors className="h-4 w-4" /> Trim
             </div>
             <div className="text-xs text-muted-foreground tabular-nums">
               {fmt(trimStart)} → {fmt(trimEnd)} ({fmt(trimEnd - trimStart)})
@@ -346,7 +346,7 @@ const MyRecording = () => {
 
           <div className="space-y-4">
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              <span className="flex items-center justify-between"><span>Début</span><span>{fmt(trimStart)}</span></span>
+              <span className="flex items-center justify-between"><span>Start</span><span>{fmt(trimStart)}</span></span>
               <Slider
                 min={0}
                 max={duration || 0}
@@ -360,7 +360,7 @@ const MyRecording = () => {
               />
             </label>
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              <span className="flex items-center justify-between"><span>Fin</span><span>{fmt(trimEnd)}</span></span>
+              <span className="flex items-center justify-between"><span>End</span><span>{fmt(trimEnd)}</span></span>
               <Slider
                 min={0}
                 max={duration || 0}
@@ -381,8 +381,8 @@ const MyRecording = () => {
                 <Volume2 className="h-4 w-4" />
               </div>
               <div>
-                <div className="text-sm font-medium">Réduire le bruit de fond</div>
-                <div className="text-xs text-muted-foreground">Nettoyage audio appliqué au clip exporté.</div>
+                <div className="text-sm font-medium">Reduce background noise</div>
+                <div className="text-xs text-muted-foreground">Audio cleanup applied to the exported clip.</div>
               </div>
             </div>
             <Switch checked={noiseReduction} onCheckedChange={setNoiseReduction} />
@@ -391,7 +391,7 @@ const MyRecording = () => {
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={togglePlay} className="gap-2">
               {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              Aperçu sélection
+              Preview selection
             </Button>
             <Button
               size="sm"
@@ -399,7 +399,7 @@ const MyRecording = () => {
               onClick={() => { setTrimStart(0); setTrimEnd(duration); setTrimmedUrl(null); }}
               className="gap-2"
             >
-              <RotateCcw className="h-4 w-4" /> Réinitialiser
+              <RotateCcw className="h-4 w-4" /> Reset
             </Button>
             <Button
               size="sm"
@@ -412,7 +412,7 @@ const MyRecording = () => {
               className="gap-2 bg-primary text-primary-foreground"
             >
               {noiseReduction ? <Sparkles className="h-4 w-4" /> : <Scissors className="h-4 w-4" />}
-              {trimming || processingAudio ? "Export en cours…" : "Générer le clip"}
+              {trimming || processingAudio ? "Exporting…" : "Generate clip"}
             </Button>
           </div>
         </div>
@@ -420,18 +420,18 @@ const MyRecording = () => {
         <div className="flex flex-wrap gap-3 justify-center">
           <Button asChild size="lg" className="bg-primary text-primary-foreground">
             <a href={data.url} download={filename}>
-              <Download className="h-4 w-4 mr-2" /> Vidéo complète
+              <Download className="h-4 w-4 mr-2" /> Full video
             </a>
           </Button>
           {currentExportUrl && (
             <Button asChild size="lg" variant="default">
               <a href={currentExportUrl} download={trimmedFilename}>
-                <Download className="h-4 w-4 mr-2" /> Clip découpé
+                <Download className="h-4 w-4 mr-2" /> Trimmed clip
               </a>
             </Button>
           )}
           <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")}>
-            Retour au board
+            Back to board
           </Button>
         </div>
 

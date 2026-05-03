@@ -53,7 +53,7 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
   const aspect = format === "9:16" ? "aspect-[9/16]" : "aspect-video";
   const isSplit = format === "9:16" && cameraOn && screenOn;
   const isPip = format === "16:9" && cameraOn && screenOn;
-  const bubbleLabel = swapped ? "Zone écran" : "Zone caméra";
+  const bubbleLabel = swapped ? "Screen area" : "Camera area";
 
   return (
     <div className="w-full h-full flex items-center justify-center">
@@ -75,7 +75,7 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] text-foreground/80 backdrop-blur">
-            {screenOn ? "Écran actif" : "Caméra active"}
+            {screenOn ? "Screen active" : "Camera active"}
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur">
             {format}
@@ -88,21 +88,21 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
               <CameraOff className="h-6 w-6" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium">Aucune source active</p>
-              <p className="text-xs text-muted-foreground">Active la caméra ou partage ton écran pour voir le live.</p>
+              <p className="text-sm font-medium">No active source</p>
+              <p className="text-xs text-muted-foreground">Enable the camera or share your screen to see the live view.</p>
             </div>
           </div>
         )}
 
         {!cameraOn && screenOn && (
           <div className="pointer-events-none absolute left-3 bottom-3 z-10 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur">
-            <CameraOff className="h-3.5 w-3.5" /> Caméra coupée
+            <CameraOff className="h-3.5 w-3.5" /> Camera off
           </div>
         )}
 
         {cameraOn && !screenOn && format === "16:9" && (
           <div className="pointer-events-none absolute left-3 bottom-3 z-10 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur">
-            <MonitorOff className="h-3.5 w-3.5" /> Partage d'écran inactif
+            <MonitorOff className="h-3.5 w-3.5" /> Screen sharing inactive
           </div>
         )}
 
