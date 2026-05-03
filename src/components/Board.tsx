@@ -1158,6 +1158,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         data: {
           ...n.data,
           editing: editingId === n.id,
+          darkBoard: isDarkBoard,
           onStartEdit: handleStartEdit,
           onCommitEdit: handleCommitEdit,
           onPatch: handlePatch,
@@ -1165,7 +1166,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           onDelete: handleDeleteNode,
         },
       })),
-    [nodes, editingId, handleStartEdit, handleCommitEdit, handlePatch, handleDuplicateNode, handleDeleteNode],
+    [nodes, editingId, isDarkBoard, handleStartEdit, handleCommitEdit, handlePatch, handleDuplicateNode, handleDeleteNode],
   );
 
   // ------- React Flow change handlers -------
