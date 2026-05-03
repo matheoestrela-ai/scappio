@@ -34,7 +34,7 @@ const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
   { value: "#E8F0FE", label: "Pale sky blue" },
   { value: "#F0E8FE", label: "Soft lavender" },
   { value: "#E8F0E8", label: "Pale sage green" },
-  { value: "#0D0D0D", label: "Dark", dark: true },
+  { value: "#1F2937", label: "Dark", dark: true },
 ];
 const DEFAULT_BG = "#FAFAF8";
 
