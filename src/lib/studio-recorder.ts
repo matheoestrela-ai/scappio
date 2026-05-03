@@ -10,10 +10,18 @@ export const pickMime = () => {
   const candidates = [
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
     "video/webm",
+    "video/mp4",
   ];
+  if (typeof MediaRecorder === "undefined") return "";
   for (const m of candidates) {
-    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)) return m;
+    try {
+      if (MediaRecorder.isTypeSupported(m)) return m;
+    } catch {
+      // ignore
+    }
   }
   return "";
 };
