@@ -449,6 +449,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   }, [syncAudioGraph]);
 
   const stopScreen = useCallback(async ({ notify = false }: StopScreenOptions = {}) => {
+    screenCaptureRef.current?.getTracks().forEach((track) => {
+      track.onended = null;
+    });
     stopStream(screenCaptureRef.current);
     screenCaptureRef.current = null;
     screenStreamRef.current = null;
@@ -472,6 +475,10 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     }
 
     try {
+      if (screenCaptureRef.current) {
+        await stopScreen();
+      }
+
       const capture = await requestDisplayMedia({
         video: {
           frameRate: { ideal: TARGET_FPS, max: TARGET_FPS },
