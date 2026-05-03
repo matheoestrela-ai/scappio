@@ -118,6 +118,7 @@ const Dashboard = () => {
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
   const [composerPrefill, setComposerPrefill] = useState(0);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [presenting, setPresenting] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const boardApiRef = useRef<BoardApi | null>(null);
