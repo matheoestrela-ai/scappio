@@ -611,8 +611,8 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
         />
       </div>
 
-      {/* Background color picker — top-left overlay */}
-      <div className="absolute left-3 top-3 z-[200]">
+      {/* Background color picker — top center, next to tldraw action menu */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-2 z-[200]">
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
             <Button
