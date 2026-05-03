@@ -1401,7 +1401,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border p-1 sm:p-1.5 shadow-elegant backdrop-blur transition-colors"
         style={
           isDarkBoard
-            ? { background: "rgba(26,26,26,0.95)", borderColor: "#2A2A2A", color: "#fff" }
+            ? { background: "rgba(45,55,72,0.95)", borderColor: "#4B5563", color: "#F9FAFB" }
             : { background: "rgba(255,255,255,0.9)" }
         }
       >
