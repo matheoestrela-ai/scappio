@@ -204,6 +204,9 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
             <DropdownMenuItem onClick={() => navigate("/history")}>
               <HistoryIcon className="h-4 w-4 mr-2" /> History
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/recordings")}>
+              <Video className="h-4 w-4 mr-2" /> Mes enregistrements
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
               <LogOut className="h-4 w-4 mr-2" /> Sign out
