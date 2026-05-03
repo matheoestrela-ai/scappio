@@ -590,8 +590,8 @@ const Dashboard = () => {
                         }
                         data-board-capture
                       >
-                        <TldrawBoard data={board} apiRef={boardApiRef} />
-                        {!isMobile && (
+                        <TldrawBoard data={board} apiRef={boardApiRef} onPresentationChange={setPresenting} />
+                        {!isMobile && !presenting && (
                           <button
                             type="button"
                             onClick={() => setPanelFullscreen((v) => !v)}
