@@ -187,7 +187,7 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
           >
             {pipBgIsCamera ? (
               <video
-                ref={scrRef as any}
+                ref={bubbleScrRef}
                 autoPlay
                 muted
                 playsInline
