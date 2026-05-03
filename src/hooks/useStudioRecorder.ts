@@ -366,22 +366,24 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   }, []);
 
   return {
-    // state
     recording,
     paused,
     elapsed,
     cameraOn,
+    micOn,
     screenOn,
+    swapped,
     screenSupported,
     previewUrl,
-    // streams (for the live preview)
     cameraStream: cameraPreviewStream,
     screenStream: screenPreviewStream,
-    // controls
     start,
     stop,
     togglePause,
     toggleCamera,
+    toggleMic,
+    toggleScreen,
+    swapStreams,
     enableScreen,
     stopScreen,
     setBubble,
