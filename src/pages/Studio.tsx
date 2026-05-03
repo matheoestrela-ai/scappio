@@ -22,8 +22,43 @@ import { useStudioRecorder, type WebcamBubble } from "@/hooks/useStudioRecorder"
 import StudioPreview from "@/components/studio/StudioPreview";
 import Teleprompter from "@/components/studio/Teleprompter";
 import { fmtTime, type StudioFormat } from "@/lib/studio-recorder";
+import type { LucideIcon } from "lucide-react";
 
 const FORMAT_KEY = "scappio:studio:format";
+
+type ToneTone = "emerald" | "blue";
+const toneClasses: Record<ToneTone, string> = {
+  emerald: "bg-emerald-500/90 hover:bg-emerald-500 border-emerald-400 text-white shadow-[0_0_20px_-4px_rgba(16,185,129,0.6)]",
+  blue: "bg-blue-500/90 hover:bg-blue-500 border-blue-400 text-white shadow-[0_0_20px_-4px_rgba(59,130,246,0.6)]",
+};
+
+const ControlToggle = ({
+  active, onClick, activeLabel, inactiveLabel, ActiveIcon, InactiveIcon, tone,
+}: {
+  active: boolean;
+  onClick: () => void;
+  activeLabel: string;
+  inactiveLabel: string;
+  ActiveIcon: LucideIcon;
+  InactiveIcon: LucideIcon;
+  tone: ToneTone;
+}) => {
+  const Icon = active ? ActiveIcon : InactiveIcon;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 h-9 px-3 rounded-full border text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${
+        active
+          ? toneClasses[tone]
+          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      <span className="hidden sm:inline">{active ? activeLabel : inactiveLabel}</span>
+    </button>
+  );
+};
 
 const Studio = () => {
   const navigate = useNavigate();
