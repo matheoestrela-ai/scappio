@@ -247,14 +247,18 @@ export function useStudioRecorder({ format, onFinished }: Options) {
 
       const cam = cameraVideoRef.current;
       const scr = screenVideoRef.current;
-      const camReady = cam && cam.readyState >= 2;
-      const scrReady = scr && scr.readyState >= 2;
+      const camReady = !!(cam && cam.readyState >= 2 && cameraOnRef.current);
+      const scrReady = !!(scr && scr.readyState >= 2);
+      const swapped = swappedRef.current;
 
       if (fmt === "9:16") {
         if (scrReady && camReady) {
-          // Camera top half, screen bottom half.
-          drawCover(ctx, cam!, 0, 0, w, h / 2);
-          drawContain(ctx, scr!, 0, h / 2, w, h / 2);
+          const top = swapped ? scr! : cam!;
+          const bot = swapped ? cam! : scr!;
+          if (swapped) drawContain(ctx, top, 0, 0, w, h / 2);
+          else drawCover(ctx, top, 0, 0, w, h / 2);
+          if (swapped) drawCover(ctx, bot, 0, h / 2, w, h / 2);
+          else drawContain(ctx, bot, 0, h / 2, w, h / 2);
           ctx.fillStyle = "rgba(255,255,255,0.15)";
           ctx.fillRect(0, h / 2 - 1, w, 2);
         } else if (camReady) {
@@ -263,14 +267,16 @@ export function useStudioRecorder({ format, onFinished }: Options) {
           drawContain(ctx, scr!, 0, 0, w, h);
         }
       } else {
-        // 16:9
         if (scrReady && camReady) {
-          drawContain(ctx, scr!, 0, 0, w, h);
+          const bg = swapped ? cam! : scr!;
+          const pip = swapped ? scr! : cam!;
+          if (swapped) drawCover(ctx, bg, 0, 0, w, h);
+          else drawContain(ctx, bg, 0, 0, w, h);
           const b = bubbleRef.current;
           const r = b.rPct * h;
           const cx = b.xPct * w + r;
           const cy = b.yPct * h + r;
-          drawCircle(ctx, cam!, cx, cy, r);
+          drawCircle(ctx, pip, cx, cy, r);
         } else if (camReady) {
           drawCover(ctx, cam!, 0, 0, w, h);
         } else if (scrReady) {
