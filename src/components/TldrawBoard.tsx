@@ -628,7 +628,7 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
       </div>
 
       {/* Top-center toolbar */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-2 z-[200] flex items-center gap-2">
+      <div className={`absolute top-2 z-[200] flex items-center gap-2 left-1/2 ${presenting ? "translate-x-[110px]" : "-translate-x-1/2"}`}>
         {!presenting && (
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
