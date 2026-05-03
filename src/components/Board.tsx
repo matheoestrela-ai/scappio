@@ -125,6 +125,7 @@ type EditorNodeData = {
   width: number;
   height: number;
   editing?: boolean;
+  darkBoard?: boolean;
   // callbacks injected by board
   onStartEdit: (id: string) => void;
   onCommitEdit: (id: string, label: string, w: number, h: number) => void;
