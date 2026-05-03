@@ -7,7 +7,7 @@ import {
   toRichText,
 } from "tldraw";
 import "tldraw/tldraw.css";
-import { PaintBucket, Check, Moon } from "lucide-react";
+import { PaintBucket, Check, Moon, Presentation, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type {
@@ -492,17 +492,23 @@ export type TldrawBoardProps = {
   data: BoardData;
   apiRef?: React.MutableRefObject<BoardApi | null>;
   onChange?: (data: BoardData) => void;
+  onPresentationChange?: (active: boolean) => void;
 };
 
 const PERSIST_KEY = "gribouille-tldraw-board";
 
-const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
+const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoardProps) => {
   const editorRef = useRef<Editor | null>(null);
   const dataRef = useRef<BoardData>(data);
   const onChangeRef = useRef(onChange);
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
+  const [presenting, setPresenting] = useState(false);
   const isDarkBoard = bgColor === "#1F2937";
+
+  useEffect(() => {
+    onPresentationChange?.(presenting);
+  }, [presenting, onPresentationChange]);
 
   useEffect(() => {
     dataRef.current = data;
@@ -602,8 +608,18 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
     >
       <style>{`
         .tldraw-bg-overlay .tl-background { background-color: ${bgColor} !important; }
+        .tldraw-presenting .tlui-layout__top,
+        .tldraw-presenting .tlui-layout__bottom,
+        .tldraw-presenting .tlui-toolbar,
+        .tldraw-presenting .tlui-style-panel,
+        .tldraw-presenting .tlui-helper-buttons,
+        .tldraw-presenting .tlui-navigation-zone,
+        .tldraw-presenting .tlui-menu-zone,
+        .tldraw-presenting .tlui-debug-panel,
+        .tldraw-presenting .tlui-people-menu,
+        .tldraw-presenting .tlui-share-zone { display: none !important; }
       `}</style>
-      <div className="tldraw-bg-overlay h-full w-full">
+      <div className={`tldraw-bg-overlay h-full w-full ${presenting ? "tldraw-presenting" : ""}`}>
         <Tldraw
           persistenceKey={PERSIST_KEY}
           onMount={handleMount}
@@ -611,8 +627,25 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
         />
       </div>
 
-      {/* Background color picker — top center, next to tldraw action menu */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-2 z-[200]">
+      {/* Top-center toolbar */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-2 z-[200] flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          title={presenting ? "Exit presentation" : "Presentation mode"}
+          onClick={() => setPresenting((v) => !v)}
+          className="shadow-md backdrop-blur"
+          style={
+            isDarkBoard
+              ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
+              : { background: "rgba(255,255,255,0.95)" }
+          }
+        >
+          {presenting ? <X className="h-4 w-4 mr-1.5" /> : <Presentation className="h-4 w-4 mr-1.5" />}
+          {presenting ? "Exit" : "Présentation"}
+        </Button>
+
+        {!presenting && (
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -686,6 +719,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
             </div>
           </PopoverContent>
         </Popover>
+        )}
       </div>
     </div>
   );
