@@ -44,10 +44,20 @@ export const listRecordings = async (): Promise<Recording[]> => {
   return new Promise((resolve, reject) => {
     const out: Recording[] = [];
     const tx = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).openCursor(null, "prev");
+    const store = tx.objectStore(STORE);
+    let req: IDBRequest<IDBCursorWithValue | null>;
+    try {
+      req = store.index("createdAt").openCursor(null, "prev");
+    } catch {
+      req = store.openCursor();
+    }
     req.onsuccess = () => {
       const cur = req.result;
-      if (cur) { out.push(cur.value as Recording); cur.continue(); } else resolve(out);
+      if (cur) { out.push(cur.value as Recording); cur.continue(); }
+      else {
+        out.sort((a, b) => b.createdAt - a.createdAt);
+        resolve(out);
+      }
     };
     req.onerror = () => reject(req.error);
   });

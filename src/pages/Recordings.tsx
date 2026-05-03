@@ -22,8 +22,12 @@ const Recordings = () => {
     setLoading(true);
     try {
       const r = await listRecordings();
+      console.log("[Recordings] loaded", r.length, "items");
       setItems(r);
       if (r[0] && !activeId) selectItem(r[0]);
+    } catch (e) {
+      console.error("[Recordings] load failed", e);
+      toast.error("Could not load recordings");
     } finally {
       setLoading(false);
     }
@@ -31,7 +35,12 @@ const Recordings = () => {
 
   useEffect(() => {
     refresh();
-    return () => { if (activeUrl) URL.revokeObjectURL(activeUrl); };
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      if (activeUrl) URL.revokeObjectURL(activeUrl);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
