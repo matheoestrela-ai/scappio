@@ -99,6 +99,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const screenGainRef = useRef<GainNode | null>(null);
   const connectedMicTrackIdRef = useRef<string | null>(null);
   const connectedScreenTrackIdRef = useRef<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     formatRef.current = format;
@@ -134,6 +135,10 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
+
+  useEffect(() => {
+    previewUrlRef.current = previewUrl;
+  }, [previewUrl]);
 
   useEffect(() => {
     setScreenSupported(!!getDisplayMediaSafely() && !isLikelyMobile());
