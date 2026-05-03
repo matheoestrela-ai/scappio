@@ -24,9 +24,9 @@ import { toast } from "sonner";
 
 // Typewriter hook
 const PLACEHOLDERS = [
-  "Décris ton idée, colle tes notes...",
-  "Résume ta dernière réunion...",
-  "Dis-le à voix haute ou en photo...",
+  "Describe your idea, paste your notes...",
+  "Summarize your last meeting...",
+  "Say it aloud or take a photo...",
 ];
 
 function useTypewriter(reducedMotion: boolean) {
@@ -178,10 +178,10 @@ const Index = () => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!email.includes("@")) {
-      toast.error("Entre un email valide");
+      toast.error("Enter a valid email");
       return;
     }
-    toast.success("Inscription confirmée — on te tient au courant !");
+    toast.success("Signup confirmed — we'll keep you posted!");
     setEmail("");
   };
 
@@ -209,25 +209,25 @@ const Index = () => {
       <div className="relative z-10">
       {/* Nav */}
       <header className="container flex items-center justify-between py-5 md:py-6">
-        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Accueil">
+        <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)} aria-label="Home">
           <span className="text-xl md:text-2xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-4">
-          <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">Comment ça marche</a>
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Fonctionnalités</a>
-          <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Témoignages</a>
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition">Connexion</Link>
+          <a href="#how" className="text-sm text-muted-foreground hover:text-foreground transition">How it works</a>
+          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition">Features</a>
+          <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition">Testimonials</a>
+          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition">Sign in</Link>
           <Button asChild size="sm" className="bg-primary text-primary-foreground shadow-glow hover:opacity-90 btn-shimmer">
-            <Link to="/auth">Commencer gratuitement</Link>
+            <Link to="/auth">Get started free</Link>
           </Button>
         </nav>
 
         {/* Mobile/Tablet actions */}
         <div className="lg:hidden flex items-center gap-2">
           <Button asChild size="sm" variant="outline" className="h-10">
-            <Link to="/auth">Connexion</Link>
+            <Link to="/auth">Sign in</Link>
           </Button>
           <button
             aria-label="Menu"
@@ -243,11 +243,11 @@ const Index = () => {
       {menuOpen && (
         <div className="lg:hidden container pb-4">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-elegant flex flex-col gap-1 text-base">
-            <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Comment ça marche</a>
-            <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Le problème</a>
-            <a href="#features" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Fonctionnalités</a>
-            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Témoignages</a>
-            <Link to="/auth" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Connexion</Link>
+            <a href="#how" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">How it works</a>
+            <a href="#problem" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">The problem</a>
+            <a href="#features" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Features</a>
+            <a href="#testimonials" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Testimonials</a>
+            <Link to="/auth" onClick={() => setMenuOpen(false)} className="px-3 py-3 rounded-lg hover:bg-muted transition">Sign in</Link>
           </div>
         </div>
       )}
@@ -257,13 +257,13 @@ const Index = () => {
         <motion.div initial="hidden" animate="show" variants={heroContainer}>
           <motion.h1 variants={fadeUp} className="mx-auto max-w-4xl text-[2rem] font-bold tracking-tight leading-[1.08] sm:text-5xl sm:leading-[1.05] md:text-7xl md:leading-[1.02]" style={{ color: "#1a1a1a" }}>
             <span className="block">
-              Transforme tes{" "}
+              Turn your{" "}
               <span className="relative inline-block">
                 <span
                   className="inline-flex whitespace-nowrap align-baseline text-primary font-medium italic leading-none -rotate-[4deg] translate-y-[0.08em] text-[1.16em] sm:text-[1.14em] md:text-[1.18em]"
                   style={{ fontFamily: "'Bradley Hand', 'Segoe Print', 'Comic Sans MS', 'Caveat', cursive" }}
                 >
-                  idées
+                  ideas
                 </span>
                 <svg
                   aria-hidden
@@ -281,12 +281,12 @@ const Index = () => {
                   />
                 </svg>
               </span>
-              {" "}en vidéos publiées.
+              {" "}into published videos.
             </span>
-            <span className="block mt-1 sm:mt-1.5 md:mt-2">En <span style={{ color: "#e8732a", fontWeight: 900 }}>15 minutes</span>.</span>
+            <span className="block mt-1 sm:mt-1.5 md:mt-2">In <span style={{ color: "#e8732a", fontWeight: 900 }}>15 minutes</span>.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-5 md:mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-            Tu parles de ton idée, Scappio structure ton board et s'occupe du reste, tu n'as plus qu'à filmer.
+            You speak your idea, Scappio structures your board and handles the rest — you just need to film.
           </motion.p>
 
           {/* Chat-style prompt bar */}
@@ -297,10 +297,10 @@ const Index = () => {
               const fd = new FormData(e.currentTarget as HTMLFormElement);
               const value = String(fd.get("prompt") || "").trim();
               if (!value) {
-                toast.error("Écris quelque chose pour commencer");
+                toast.error("Write something to get started");
                 return;
               }
-              toast.success("On t'emmène créer ton board !");
+              toast.success("Taking you to create your board!");
               window.location.href = "/auth";
             }}
             className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-1 sm:gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-1.5 sm:p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
@@ -308,8 +308,8 @@ const Index = () => {
             <PenLine className="ml-1 sm:ml-2 h-5 w-5 text-muted-foreground shrink-0 hidden sm:block" />
             <button
               type="button"
-              aria-label="Glisser-déposer un fichier"
-              onClick={() => toast.info("Glisse un fichier ou une image ici")}
+              aria-label="Drag and drop a file"
+              onClick={() => toast.info("Drop a file or image here")}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition shrink-0"
             >
               <Upload className="h-5 w-5" />
@@ -322,8 +322,8 @@ const Index = () => {
             />
             <button
               type="button"
-              aria-label="Message vocal"
-              onClick={() => toast.info("Enregistrement vocal bientôt disponible")}
+              aria-label="Voice message"
+              onClick={() => toast.info("Voice recording coming soon")}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition shrink-0"
             >
               <Mic className="h-5 w-5" />
@@ -336,11 +336,11 @@ const Index = () => {
           <motion.div variants={fadeUp} className="mt-5 md:mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="w-full sm:w-auto bg-primary text-primary-foreground shadow-glow hover:opacity-90 btn-shimmer">
               <Link to="/auth">
-                Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
+                Get started free <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-              <a href="#how">Voir comment ça marche</a>
+              <a href="#how">See how it works</a>
             </Button>
           </motion.div>
 
@@ -349,7 +349,7 @@ const Index = () => {
             className="mt-5 text-center text-muted-foreground"
             style={{ fontSize: "14px" }}
           >
-            Du contenu illimité. <span className="text-primary">Sans</span> travailler plus.
+            Unlimited content. <span className="text-primary">Without</span> working more.
           </motion.p>
 
           <motion.div
@@ -403,7 +403,7 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} className="container py-10">
         <div className="rounded-2xl border border-border bg-card/60 backdrop-blur py-6 md:py-7 text-center shadow-elegant overflow-hidden">
           <p className="px-6 text-xs md:text-sm uppercase tracking-widest text-muted-foreground">
-            Utilisé par des équipes qui viennent de
+            Used by teams from
           </p>
           <div
             className="mt-5 relative w-full overflow-hidden"
@@ -433,18 +433,18 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} id="how" className="py-16 md:py-20" style={{ backgroundColor: "#1c1917" }}>
         <div className="container">
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">De l'idée à la vidéo publiée. Sans changer d'onglet.</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">From idea to published video. Without switching tabs.</h2>
           <p className="mt-3 text-white/70 max-w-xl mx-auto">
-            Fini la perte de temps.
+            No more wasted time.
           </p>
         </div>
 
         <div className="relative mt-10 md:mt-12">
           {(() => {
             const steps = [
-              { num: "01", title: "Capture", desc: <>Vocal, texte, photo ou PDF. Tu captures une idée en moins de 10 secondes, depuis ton téléphone, sans friction.</> },
-              { num: "02", title: "Structure IA", desc: <>En 10 secondes, ton idée devient un board structuré. L'agent IA détecte les angles forts, complète les manques et écrit ton script automatiquement.</> },
-              { num: "03", title: "Enregistre", desc: <>Lance l'enregistrement. Ton script défile en direct, invisible dans la vidéo. Tu parles naturellement, face caméra, devant ton board. Sous format <span style={{ color: "#f97316", fontWeight: 600 }}>TikTok</span> ou YouTube.</> },
+              { num: "01", title: "Capture", desc: <>Voice, text, photo or PDF. Capture an idea in under 10 seconds, from your phone, without friction.</> },
+              { num: "02", title: "AI Structure", desc: <>In 10 seconds, your idea becomes a structured board. The AI agent detects strong angles, fills the gaps and writes your script automatically.</> },
+              { num: "03", title: "Record", desc: <>Hit record. Your script scrolls live, invisible in the video. You speak naturally, facing the camera, in front of your board. In <span style={{ color: "#f97316", fontWeight: 600 }}>TikTok</span> or YouTube format.</> },
             ];
             return (
               <motion.div
@@ -498,12 +498,12 @@ const Index = () => {
             </span>
           </div>
           <p className="mt-4 text-white" style={{ fontSize: "20px", opacity: 0.8 }}>
-            par vidéo. Soit 9 fois plus rapide.
+            per video. That's 9× faster.
           </p>
           <p className="mt-6 max-w-2xl mx-auto text-white" style={{ fontSize: "18px", letterSpacing: "0.01em", opacity: 0.8 }}>
-            À 5 vidéos par semaine : tu récupères{" "}
+            At 5 videos a week: you get back{" "}
             <span className="relative inline-block whitespace-nowrap">
-              10 heures
+              10 hours
               <motion.svg
                 aria-hidden
                 viewBox="0 0 200 14"
@@ -542,17 +542,17 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} id="problem" className="container py-16 md:py-20">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Tu perds 2h15 par vidéo. <span className="text-primary">Toutes les semaines.</span>
+            You lose 2h15 per video. <span className="text-primary">Every week.</span>
           </h2>
           <p className="mt-3 text-base text-muted-foreground" style={{ fontSize: "16px" }}>
-            Ce n'est pas un manque d'idées. C'est un problème de production.
+            It's not a lack of ideas. It's a production problem.
           </p>
         </div>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-3">
           {[
-            { emoji: "⏱️", title: "2h15 pour 1 vidéo", desc: "Miro pour structurer. Loom pour filmer. CapCut pour monter. 3 outils. 3 onglets. 3 fois plus de friction pour chaque vidéo que tu publies." },
-            { emoji: "💨", title: "Des idées qui s'évaporent", desc: "Ton meilleur contenu naît sous la douche ou en voiture. Entre l'idée et l'enregistrement, il disparaît. Pour toujours." },
-            { emoji: "🧱", title: "Le plafond qui bloque ta croissance", desc: "Tu as des idées pour 30 vidéos. Tu en publies 4 par semaine. Pendant ce temps, d'autres créateurs publient 2× plus avec la moitié de tes idées." },
+            { emoji: "⏱️", title: "2h15 for 1 video", desc: "Miro to structure. Loom to film. CapCut to edit. 3 tools. 3 tabs. 3× the friction for every video you publish." },
+            { emoji: "💨", title: "Ideas that vanish", desc: "Your best content is born in the shower or in the car. Between idea and recording, it disappears. Forever." },
+            { emoji: "🧱", title: "The ceiling blocking your growth", desc: "You have ideas for 30 videos. You publish 4 a week. Meanwhile, other creators ship 2× more with half your ideas." },
           ].map((f, i) => (
             <motion.div
               key={i}
@@ -569,8 +569,8 @@ const Index = () => {
 
       {/* Features — bento asymmetric grid, dark grey icons */}
       <motion.section {...inViewProps} variants={sectionFade} id="features" className="container py-16 md:py-20">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Tout ce qu'il te faut pour publier sans limite.</h2>
-        <p className="mt-3 text-center text-muted-foreground">Ce que Miro, Loom et CapCut auraient dû être en un seul.</p>
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight">Everything you need to publish without limits.</h2>
+        <p className="mt-3 text-center text-muted-foreground">What Miro, Loom and CapCut should have been, in one tool.</p>
 
         <motion.div
           {...inViewProps}
@@ -589,9 +589,9 @@ const Index = () => {
               UNIQUE
             </span>
             <Mic className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-            <h3 className="mt-4 text-lg font-semibold text-foreground">Enregistreur + téléprompter</h3>
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Recorder + teleprompter</h3>
             <p className="mt-2 text-sm md:text-base text-muted-foreground">
-              Filme devant ton board. Ton script défile en surimpression, invisible dans la capture. Export TikTok, Reels ou YouTube.
+              Film in front of your board. Your script scrolls overlaid, invisible in the capture. Export TikTok, Reels or YouTube.
             </p>
           </motion.div>
 
@@ -601,15 +601,15 @@ const Index = () => {
             className="card-lift rounded-2xl border border-border bg-card p-6 shadow-elegant"
           >
             <Sparkles className="card-icon" style={{ color: "#1a1a1a", width: 24, height: 24 }} />
-            <h3 className="mt-4 text-lg font-semibold text-foreground">IA Vision avancée</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">Détecte mots, flèches et hiérarchie même sur une écriture brouillonne.</p>
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Advanced Vision AI</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">Detects words, arrows and hierarchy even on messy handwriting.</p>
           </motion.div>
 
           {/* Row 2: 3 equal cards */}
           {[
-            { Icon: Mic, title: "Vocal → Board", desc: "Parle librement 30 secondes. L'IA transcrit, hiérarchise et génère ton board. Le before/after le plus viral du marché." },
-            { Icon: Wand2, title: "Script IA", desc: "L'agent transforme ta mindmap en script prêt à lire. Naturel, structuré, dans ta logique." },
-            { Icon: Pencil, title: "Édition complète", desc: "Édite, déplace, redimensionne, change couleurs et formes en direct." },
+            { Icon: Mic, title: "Voice → Board", desc: "Speak freely for 30 seconds. AI transcribes, structures and generates your board. The most viral before/after on the market." },
+            { Icon: Wand2, title: "AI Script", desc: "The agent turns your mindmap into a ready-to-read script. Natural, structured, in your own logic." },
+            { Icon: Pencil, title: "Full editing", desc: "Edit, move, resize, change colors and shapes live." },
           ].map(({ Icon, title, desc }, i) => (
             <motion.div
               key={i}
@@ -624,9 +624,9 @@ const Index = () => {
 
           {/* Row 3: remaining cards */}
           {[
-            { Icon: MousePointer2, title: "Drag & drop intuitif", desc: "Crée des liens en glissant. Multi-sélection, undo/redo, raccourcis." },
-            { Icon: Download, title: "Export multi-format", desc: "TikTok, Reels, YouTube. Un board. Toutes les plateformes. En 1 clic." },
-            { Icon: Zap, title: "Rapide comme l'éclair", desc: "10 secondes entre la capture et un mindmap propre, prêt à présenter." },
+            { Icon: MousePointer2, title: "Intuitive drag & drop", desc: "Create links by dragging. Multi-select, undo/redo, shortcuts." },
+            { Icon: Download, title: "Multi-format export", desc: "TikTok, Reels, YouTube. One board. Every platform. In 1 click." },
+            { Icon: Zap, title: "Lightning fast", desc: "10 seconds from capture to a clean mindmap, ready to present." },
           ].map(({ Icon, title, desc }, i) => (
             <motion.div
               key={`r3-${i}`}
@@ -644,12 +644,12 @@ const Index = () => {
       {/* Testimonials — dark section */}
       <motion.section {...inViewProps} variants={sectionFade} id="testimonials" className="py-16 md:py-20" style={{ backgroundColor: "#1c1917" }}>
         <div className="container">
-        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight text-white">Ils ont arrêté de choisir entre leurs idées.</h2>
-        <p className="mt-3 text-center text-white/70">Maintenant ils les publient toutes.</p>
+        <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight text-white">They stopped choosing between their ideas.</h2>
+        <p className="mt-3 text-center text-white/70">Now they publish them all.</p>
         <motion.div {...inViewProps} variants={gridContainer} className="mt-10 md:mt-12 grid gap-6 md:grid-cols-2">
           {[
-            { name: "Camille D.", role: "Product Manager, Paris", text: "Je sors d'atelier avec 4 photos de paperboard. Avant je passais 1h à recopier dans Miro. Maintenant c'est fait avant que j'arrive au bureau." },
-            { name: "Thomas R.", role: "Fondateur, Lyon", text: "J'ai testé tous les outils de mindmap. scappio c'est le seul qui comprend mon écriture pourrie. Bluffant." },
+            { name: "Camille D.", role: "Product Manager, Paris", text: "I leave a workshop with 4 flipchart photos. Before, I spent an hour copying them into Miro. Now it's done before I get to the office." },
+            { name: "Thomas R.", role: "Founder, Lyon", text: "I tried every mindmap tool. scappio is the only one that understands my terrible handwriting. Mind-blowing." },
           ].map((t, i) => (
             <motion.div
               key={i}
@@ -687,11 +687,11 @@ const Index = () => {
       <motion.section {...inViewProps} variants={sectionFade} className="container py-16 md:py-20">
         <div className="rounded-3xl border border-border bg-gradient-card p-8 md:p-12 text-center shadow-elegant">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Arrête de choisir entre tes idées.<br />
-            <span className="text-primary">Publie-les toutes.</span>
+            Stop choosing between your ideas.<br />
+            <span className="text-primary">Publish them all.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Ton premier board en 10 secondes. Gratuit. Sans carte bancaire. Sans installation.
+            Your first board in 10 seconds. Free. No credit card. No install.
           </p>
           <form
             onSubmit={handleSubmit}
@@ -700,23 +700,23 @@ const Index = () => {
             <Input
               type="email"
               required
-              placeholder="ton@email.com"
+              placeholder="you@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="h-12 text-base"
-              aria-label="Adresse email"
+              aria-label="Email address"
             />
             <Button
               type="submit"
               size="lg"
               className="h-12 bg-primary text-primary-foreground shadow-glow hover:opacity-90 shrink-0 btn-shimmer"
             >
-              Commencer gratuitement
+              Get started free
             </Button>
           </form>
-          <p className="mt-3 text-xs text-muted-foreground">Aucun spam. Gratuit pendant la bêta.</p>
+          <p className="mt-3 text-xs text-muted-foreground">No spam. Free during beta.</p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Rejoins les créateurs qui publient sans limite, sans travailler plus.
+            Join creators who publish without limits, without working more.
           </p>
         </div>
       </motion.section>
@@ -725,20 +725,20 @@ const Index = () => {
       <footer className="border-t border-border" style={{ backgroundColor: "#f0ebe4" }}>
         <div className="container pt-10 md:pt-12 pb-4 md:pb-6 grid gap-8 md:grid-cols-3 items-start">
           <div>
-            <Link to="/" className="inline-flex items-center gap-2" aria-label="Accueil">
+            <Link to="/" className="inline-flex items-center gap-2" aria-label="Home">
               <span className="text-xl font-bold tracking-tight"><span className="text-primary">scapp</span>io</span>
             </Link>
             <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-              Du contenu illimité. Sans jamais manquer d'idées.
+              Unlimited content. Never run out of ideas.
             </p>
           </div>
           <nav className="flex flex-col gap-2 text-sm md:items-center">
-            <a href="/privacy" className="text-muted-foreground hover:text-foreground transition">Politique de confidentialité</a>
-            <a href="/terms" className="text-muted-foreground hover:text-foreground transition">CGU</a>
+            <a href="/privacy" className="text-muted-foreground hover:text-foreground transition">Privacy Policy</a>
+            <a href="/terms" className="text-muted-foreground hover:text-foreground transition">Terms</a>
             <a href="mailto:hello@scappio.com" className="text-muted-foreground hover:text-foreground transition">Contact</a>
           </nav>
           <div className="text-sm text-muted-foreground md:text-right">
-            © 2026 scappio · <a href="/privacy" className="hover:text-foreground transition">Confidentialité</a> · <a href="/terms" className="hover:text-foreground transition">CGU</a>
+            © 2026 scappio · <a href="/privacy" className="hover:text-foreground transition">Privacy</a> · <a href="/terms" className="hover:text-foreground transition">Terms</a>
           </div>
         </div>
       </footer>
@@ -747,7 +747,7 @@ const Index = () => {
       <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-elegant">
         <Button asChild size="lg" className="w-full h-12 bg-primary text-primary-foreground shadow-glow hover:opacity-90 text-base btn-shimmer">
           <Link to="/auth">
-            Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
+            Get started free <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       </div>

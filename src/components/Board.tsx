@@ -73,18 +73,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 // ============================================================
 
 export const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
-  { value: "#FAFAF8", label: "Blanc cassé" },
-  { value: "#F5F0E8", label: "Beige doux" },
-  { value: "#F3F4F6", label: "Gris très clair" },
-  { value: "#FFF8F0", label: "Crème" },
-  { value: "#FDE8F0", label: "Rose poudré" },
-  { value: "#FEE8D6", label: "Pêche douce" },
-  { value: "#FEF9C3", label: "Jaune pâle" },
-  { value: "#E8F8F0", label: "Vert menthe" },
-  { value: "#E8F0FE", label: "Bleu ciel pâle" },
-  { value: "#F0E8FE", label: "Lavande douce" },
-  { value: "#E8F0E8", label: "Vert sauge pâle" },
-  { value: "#0D0D0D", label: "Sombre", dark: true },
+  { value: "#FAFAF8", label: "Off-white" },
+  { value: "#F5F0E8", label: "Soft beige" },
+  { value: "#F3F4F6", label: "Very light gray" },
+  { value: "#FFF8F0", label: "Cream" },
+  { value: "#FDE8F0", label: "Powder pink" },
+  { value: "#FEE8D6", label: "Soft peach" },
+  { value: "#FEF9C3", label: "Pale yellow" },
+  { value: "#E8F8F0", label: "Mint green" },
+  { value: "#E8F0FE", label: "Pale sky blue" },
+  { value: "#F0E8FE", label: "Soft lavender" },
+  { value: "#E8F0E8", label: "Pale sage green" },
+  { value: "#0D0D0D", label: "Dark", dark: true },
 ];
 export const DEFAULT_BG = "#FAFAF8";
 
@@ -158,7 +158,7 @@ const LEVEL_TO_SHAPE: Record<BoardLevel, BoardShape> = {
 const LEVEL_COLOR: Record<BoardLevel, string> = {
   1: "#F97316", // indigo-900 — sujet principal, dense et profond
   2: "#F97316", // violet-600 — idées clés
-  3: "#FDBA74", // lavande (violet-300) — détails
+  3: "#FDBA74", // lavande (violet-300) — details
 };
 
 // Texte par niveau : niveau 3 (lavande clair) doit avoir du texte sombre
@@ -375,7 +375,7 @@ const InlineToolbar = ({
         className={`flex h-7 w-7 items-center justify-center rounded-md transition hover:bg-accent ${
           data.bold ? "bg-accent" : ""
         }`}
-        title="Gras"
+        title="Bold"
       >
         <Bold className="h-3.5 w-3.5" />
       </button>
@@ -385,7 +385,7 @@ const InlineToolbar = ({
         className={`flex h-7 w-7 items-center justify-center rounded-md transition hover:bg-accent ${
           data.italic ? "bg-accent" : ""
         }`}
-        title="Italique"
+        title="Italic"
       >
         <Italic className="h-3.5 w-3.5" />
       </button>
@@ -397,14 +397,14 @@ const InlineToolbar = ({
           <button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md transition hover:bg-accent"
-            title="Couleur"
+            title="Color"
           >
             <Palette className="h-3.5 w-3.5" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="center" className="w-auto p-2">
           <DropdownMenuLabel className="px-1 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-            Couleur
+            Color
           </DropdownMenuLabel>
           <div className="grid grid-cols-4 gap-1.5 p-1">
             {PALETTE.map((c) => (
@@ -424,7 +424,7 @@ const InlineToolbar = ({
         type="button"
         onClick={() => data.onDuplicate(id)}
         className="flex h-7 w-7 items-center justify-center rounded-md transition hover:bg-accent"
-        title="Dupliquer"
+        title="Duplicate"
       >
         <Copy className="h-3.5 w-3.5" />
       </button>
@@ -435,7 +435,7 @@ const InlineToolbar = ({
         type="button"
         onClick={() => data.onDelete(id)}
         className="flex h-7 w-7 items-center justify-center rounded-md text-destructive transition hover:bg-destructive/10"
-        title="Supprimer"
+        title="Delete"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -873,7 +873,7 @@ const SmartEdge = ({
                 setEditing(true);
               }}
               className="rounded-md border border-border bg-background/95 px-2 py-0.5 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
-              title="Double-clic pour modifier"
+              title="Double-click to edit"
             >
               {data.label}
             </button>
@@ -882,7 +882,7 @@ const SmartEdge = ({
               type="button"
               onClick={() => setEditing(true)}
               className="rounded-md border border-dashed border-border bg-background/90 px-2 py-0.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur"
-              title="Ajouter un label"
+              title="Add a label"
             >
               + label
             </button>
@@ -893,7 +893,7 @@ const SmartEdge = ({
               type="button"
               onClick={removeEdge}
               className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-destructive shadow-sm transition hover:bg-destructive hover:text-white"
-              title="Supprimer la connexion"
+              title="Delete connection"
             >
               <X className="h-3 w-3" />
             </button>
@@ -1227,7 +1227,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         position: { x: 220 + Math.random() * 240, y: 180 + Math.random() * 200 },
         selected: true,
         data: {
-          label: "Nouveau nœud",
+          label: "New node",
           level,
           shape,
           color: def.color,
@@ -1409,7 +1409,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           <DropdownMenuTrigger asChild>
             <Button size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
               <Plus className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Ajouter une forme</span>
+              <span className="hidden sm:inline">Add shape</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
@@ -1417,10 +1417,10 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
               <Square className="mr-2 h-4 w-4 text-[#F97316]" /> Rectangle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addNode("circle")}>
-              <CircleIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Cercle
+              <CircleIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Circle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addNode("diamond")}>
-              <DiamondIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Diamant
+              <DiamondIcon className="mr-2 h-4 w-4 text-[#F97316]" /> Diamond
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1428,17 +1428,17 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           size="sm"
           variant="outline"
           onClick={relayout}
-          title="Réorganiser le board"
+          title="Reorganize board"
           className="px-2 sm:px-3"
         >
           <LayoutGrid className="h-4 w-4 sm:mr-1" />
-          <span className="hidden sm:inline">Réorganiser</span>
+          <span className="hidden sm:inline">Reorganize</span>
         </Button>
         <Button
           size="sm"
           variant="outline"
           onClick={() => fitView({ padding: 0.18, duration: 400 })}
-          title="Adapter à l'écran"
+          title="Fit to screen"
           className="px-2 sm:hidden"
         >
           <Maximize2 className="h-4 w-4" />
@@ -1450,7 +1450,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             <Button
               size="sm"
               variant="outline"
-              title="Couleur de fond"
+              title="Background color"
               className="px-2 sm:px-3"
               style={
                 isDarkBoard
@@ -1459,7 +1459,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
               }
             >
               <PaintBucket className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Fond</span>
+              <span className="hidden sm:inline">Background</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -1474,7 +1474,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             }
           >
             <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-              Fond du board
+              Board background
             </div>
             <div className="grid grid-cols-4 gap-2">
               {BG_SWATCHES.map((s) => {
@@ -1510,7 +1510,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
                     </button>
                     {s.dark && (
                       <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
-                        <Moon className="h-2.5 w-2.5" /> Sombre
+                        <Moon className="h-2.5 w-2.5" /> Dark
                       </span>
                     )}
                   </div>
@@ -1523,9 +1523,9 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         {/* Sélecteur de style de flèche par défaut */}
         <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
           {([
-            { v: "arrow", icon: ArrowRight, title: "Flèche simple" },
-            { v: "double", icon: MoveHorizontal, title: "Flèche double" },
-            { v: "line", icon: Minus, title: "Ligne sans flèche" },
+            { v: "arrow", icon: ArrowRight, title: "Simple arrow" },
+            { v: "double", icon: MoveHorizontal, title: "Double arrow" },
+            { v: "line", icon: Minus, title: "Line without arrow" },
           ] as const).map(({ v, icon: Icon, title }) => (
             <button
               key={v}
@@ -1544,37 +1544,37 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         </div>
 
         <div className="hidden md:block px-2 text-xs text-muted-foreground">
-          Double-clic : éditer · Clic droit : menu · Double-clic sur flèche : label
+          Double-click: edit · Right-click: menu · Double-click arrow: label
         </div>
       </div>
 
       {/* Legend (bottom-left) — masquée sur mobile pour laisser de la place */}
       <div className="hidden md:block absolute bottom-3 left-3 z-10 rounded-xl border border-border bg-background/90 p-3 shadow-elegant backdrop-blur text-xs space-y-2 max-w-[220px]">
         <div className="flex items-center gap-1.5 font-semibold text-foreground">
-          <Info className="h-3.5 w-3.5" /> Légende
+          <Info className="h-3.5 w-3.5" /> Legend
         </div>
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="inline-block h-3 w-5 rounded-sm" style={{ background: LEVEL_COLOR[1] }} />
-            <span className="font-semibold">Sujet principal</span>
+            <span className="font-semibold">Main topic</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block h-3 w-3 rounded-full" style={{ background: LEVEL_COLOR[2] }} />
-            <span>Idées clés</span>
+            <span>Key ideas</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block h-3 w-5 rounded-sm" style={{ background: LEVEL_COLOR[3] }} />
-            <span>Détails</span>
+            <span>Details</span>
           </div>
         </div>
         <div className="pt-1 border-t border-border space-y-1 text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="inline-block h-[3px] w-6 rounded" style={{ background: "#F97316" }} />
-            <span>Lien principal</span>
+            <span>Main link</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block h-[1.5px] w-6 rounded" style={{ background: "#94A3B8" }} />
-            <span>Lien secondaire</span>
+            <span>Secondary link</span>
           </div>
         </div>
       </div>
@@ -1610,15 +1610,15 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           position="bottom-right"
           className="!flex-row !rounded-xl !border !border-border !bg-background/90 !p-1 !shadow-elegant !backdrop-blur"
         >
-          <ControlButton onClick={() => zoomIn({ duration: 200 })} title="Zoom avant">
+          <ControlButton onClick={() => zoomIn({ duration: 200 })} title="Zoom in">
             <ZoomIn className="h-3.5 w-3.5" />
           </ControlButton>
-          <ControlButton onClick={() => zoomOut({ duration: 200 })} title="Zoom arrière">
+          <ControlButton onClick={() => zoomOut({ duration: 200 })} title="Zoom out">
             <ZoomOut className="h-3.5 w-3.5" />
           </ControlButton>
           <ControlButton
             onClick={() => fitView({ padding: 0.18, duration: 400 })}
-            title="Adapter à l'écran"
+            title="Fit to screen"
           >
             <Maximize2 className="h-3.5 w-3.5" />
           </ControlButton>
@@ -1636,13 +1636,13 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             onClick={() => { handleStartEdit(ctxMenu.nodeId); setCtxMenu(null); }}
             className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent"
           >
-            <SparklesIcon className="h-3.5 w-3.5" /> Éditer le texte
+            <SparklesIcon className="h-3.5 w-3.5" /> Edit text
           </button>
           <button
             onClick={() => { handleDuplicateNode(ctxMenu.nodeId); setCtxMenu(null); }}
             className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent"
           >
-            <Copy className="h-3.5 w-3.5" /> Dupliquer
+            <Copy className="h-3.5 w-3.5" /> Duplicate
           </button>
           <button
             onClick={() => {
@@ -1651,7 +1651,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             }}
             className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent"
           >
-            <Bold className="h-3.5 w-3.5" /> Gras
+            <Bold className="h-3.5 w-3.5" /> Bold
           </button>
           <button
             onClick={() => {
@@ -1660,10 +1660,10 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             }}
             className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent"
           >
-            <Italic className="h-3.5 w-3.5" /> Italique
+            <Italic className="h-3.5 w-3.5" /> Italic
           </button>
           <DropdownMenuSeparator />
-          <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">Couleur</div>
+          <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">Color</div>
           <div className="grid grid-cols-4 gap-1.5 p-2">
             {PALETTE.map((c) => (
               <button
@@ -1678,7 +1678,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             onClick={() => { handleDeleteNode(ctxMenu.nodeId); setCtxMenu(null); }}
             className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Supprimer
+            <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
         </div>
       )}

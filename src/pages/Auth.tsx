@@ -11,20 +11,20 @@ import { Loader2, Mail, Lock, User, Eye, EyeOff, Sparkles, ArrowRight } from "lu
 type Mode = "signin" | "signup";
 
 const signinSchema = z.object({
-  email: z.string().trim().email("Email invalide").max(255),
-  password: z.string().min(6, "6 caractères minimum").max(72),
+  email: z.string().trim().email("Invalid email").max(255),
+  password: z.string().min(6, "Minimum 6 characters").max(72),
 });
 
 const signupSchema = z
   .object({
-    firstName: z.string().trim().min(1, "Prénom requis").max(60),
-    lastName: z.string().trim().min(1, "Nom requis").max(60),
-    email: z.string().trim().email("Email invalide").max(255),
-    password: z.string().min(6, "6 caractères minimum").max(72),
+    firstName: z.string().trim().min(1, "First name required").max(60),
+    lastName: z.string().trim().min(1, "Last name required").max(60),
+    email: z.string().trim().email("Invalid email").max(255),
+    password: z.string().min(6, "Minimum 6 characters").max(72),
     confirmPassword: z.string().min(6).max(72),
   })
   .refine((d) => d.password === d.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
@@ -89,7 +89,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Compte créé ! Vérifie ton email.");
+        toast.success("Account created! Check your email.");
       } else {
         const parsed = signinSchema.safeParse({ email, password });
         if (!parsed.success) {
@@ -106,7 +106,7 @@ const Auth = () => {
         if (error) throw error;
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Erreur");
+      toast.error(err.message ?? "Error");
     } finally {
       setLoading(false);
     }
@@ -114,14 +114,14 @@ const Auth = () => {
 
   const handleForgot = async () => {
     if (!email) {
-      toast.error("Entre ton email d'abord");
+      toast.error("Enter your email first");
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth`,
     });
     if (error) toast.error(error.message);
-    else toast.success("Email de réinitialisation envoyé");
+    else toast.success("Password reset email sent");
   };
 
   return (
@@ -147,31 +147,31 @@ const Auth = () => {
                 onClick={() => switchMode("signin")}
                 className={`relative z-10 py-2.5 rounded-full transition-colors ${mode === "signin" ? "text-foreground" : "text-muted-foreground"}`}
               >
-                Connexion
+                Sign in
               </button>
               <button
                 type="button"
                 onClick={() => switchMode("signup")}
                 className={`relative z-10 py-2.5 rounded-full transition-colors ${mode === "signup" ? "text-foreground" : "text-muted-foreground"}`}
               >
-                Inscription
+                Sign up
               </button>
             </div>
 
             <div key={mode} className="animate-fade-in">
               <h1 className="text-3xl font-bold tracking-tight">
-                {mode === "signin" ? "Bon retour 👋" : "Crée ton compte"}
+                {mode === "signin" ? "Welcome back 👋" : "Create your account"}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 {mode === "signin"
-                  ? "Connecte-toi pour reprendre tes mindmaps."
-                  : "Quelques secondes pour démarrer gratuitement."}
+                  ? "Sign in to resume your mindmaps."
+                  : "A few seconds to start for free."}
               </p>
 
               <form onSubmit={handleSubmit} className="mt-8 space-y-4">
                 {mode === "signup" && (
                   <div className="grid grid-cols-2 gap-3 animate-fade-in">
-                    <FieldWrap label="Prénom" htmlFor="firstName" error={errors.firstName}>
+                    <FieldWrap label="First name" htmlFor="firstName" error={errors.firstName}>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -184,7 +184,7 @@ const Auth = () => {
                         />
                       </div>
                     </FieldWrap>
-                    <FieldWrap label="Nom" htmlFor="lastName" error={errors.lastName}>
+                    <FieldWrap label="Last name" htmlFor="lastName" error={errors.lastName}>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -209,14 +209,14 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-9 h-11 rounded-xl transition-all focus-visible:ring-primary/40"
-                      placeholder="toi@exemple.com"
+                      placeholder="you@example.com"
                       maxLength={255}
                       autoComplete="email"
                     />
                   </div>
                 </FieldWrap>
 
-                <FieldWrap label="Mot de passe" htmlFor="password" error={errors.password}>
+                <FieldWrap label="Password" htmlFor="password" error={errors.password}>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -234,7 +234,7 @@ const Auth = () => {
                       onClick={() => setShowPw((s) => !s)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
-                      aria-label="Afficher le mot de passe"
+                      aria-label="Show password"
                     >
                       {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -242,7 +242,7 @@ const Auth = () => {
                 </FieldWrap>
 
                 {mode === "signup" && (
-                  <FieldWrap label="Confirmer le mot de passe" htmlFor="confirmPassword" error={errors.confirmPassword}>
+                  <FieldWrap label="Confirm password" htmlFor="confirmPassword" error={errors.confirmPassword}>
                     <div className="relative animate-fade-in">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -262,13 +262,13 @@ const Auth = () => {
                         onClick={() => setShowPw2((s) => !s)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         tabIndex={-1}
-                        aria-label="Afficher le mot de passe"
+                        aria-label="Show password"
                       >
                         {showPw2 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     {confirmPassword.length > 0 && !passwordMatch && !errors.confirmPassword && (
-                      <p className="text-xs text-destructive mt-1">Les mots de passe ne correspondent pas</p>
+                      <p className="text-xs text-destructive mt-1">Passwords do not match</p>
                     )}
                   </FieldWrap>
                 )}
@@ -280,7 +280,7 @@ const Auth = () => {
                       onClick={handleForgot}
                       className="text-xs text-muted-foreground hover:text-primary transition-colors"
                     >
-                      Mot de passe oublié ?
+                      Forgot password?
                     </button>
                   </div>
                 )}
@@ -294,20 +294,20 @@ const Auth = () => {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      {mode === "signin" ? "Se connecter" : "Créer mon compte"}
+                      {mode === "signin" ? "Sign in" : "Create my account"}
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </>
                   )}
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground pt-2">
-                  {mode === "signin" ? "Pas encore de compte ?" : "Déjà inscrit ?"}{" "}
+                  {mode === "signin" ? "No account yet?" : "Already registered?"}{" "}
                   <button
                     type="button"
                     onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
                     className="text-primary font-medium hover:underline"
                   >
-                    {mode === "signin" ? "Inscris-toi" : "Connecte-toi"}
+                    {mode === "signin" ? "Sign up" : "Sign in"}
                   </button>
                 </p>
               </form>
@@ -316,7 +316,7 @@ const Auth = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} scappio. Tous droits réservés.
+          © {new Date().getFullYear()} scappio. All rights reserved.
         </p>
       </div>
 
@@ -347,12 +347,12 @@ const Auth = () => {
         <div className="relative z-10 h-full flex flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-2 text-sm font-medium opacity-90">
             <Sparkles className="h-4 w-4 animate-sparkle-spin" />
-            Propulsé par scappio
+            Powered by scappio
           </div>
 
           <div className="space-y-6 max-w-lg">
             <h2 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight">
-              Transforme tes idées en{" "}
+              Turn your ideas into{" "}
               <span className="relative inline-block">
                 mindmaps
                 <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 200 10">
@@ -366,10 +366,10 @@ const Auth = () => {
                   />
                 </svg>
               </span>{" "}
-              en quelques secondes.
+              in seconds.
             </h2>
             <p className="text-white/80 text-lg leading-relaxed">
-              Capture, organise et partage tes notes avec l'IA. Une expérience pensée pour les créateurs.
+              Capture, organize and share your notes with AI. Built for creators.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <div className="flex -space-x-2">
@@ -381,15 +381,15 @@ const Auth = () => {
                   />
                 ))}
               </div>
-              <p className="text-sm text-white/80">+ 1000 créateurs nous font confiance</p>
+              <p className="text-sm text-white/80">1000+ creators trust us</p>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             {[
-              { v: "10x", l: "Plus rapide" },
-              { v: "0€", l: "Pour démarrer" },
-              { v: "24/7", l: "Disponible" },
+              { v: "10x", l: "Faster" },
+              { v: "$0", l: "To get started" },
+              { v: "24/7", l: "Available" },
             ].map((s, i) => (
               <div
                 key={i}

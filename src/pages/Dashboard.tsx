@@ -53,17 +53,17 @@ const normalizeImageFile = async (file: File): Promise<File> => {
   try {
     const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
     const output = Array.isArray(converted) ? converted[0] : converted;
-    if (!(output instanceof Blob)) throw new Error("Conversion HEIC impossible");
+    if (!(output instanceof Blob)) throw new Error("HEIC conversion failed");
     const safeName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
     return new File([output], safeName, { type: "image/jpeg" });
   } catch (err: any) {
     const msg = String(err?.message ?? err ?? "");
     if (msg.includes("ERR_LIBHEIF") || msg.toLowerCase().includes("format not supported")) {
       throw new Error(
-        "Ce fichier HEIC n'est pas lisible. Sur iPhone : Réglages > Appareil photo > Formats > « Le plus compatible », ou exporte en JPG/PNG.",
+        "This HEIC file is not readable. On iPhone: Settings > Camera > Formats > 'Most compatible', or export as JPG/PNG.",
       );
     }
-    throw new Error("Impossible de convertir l'image HEIC. Réessaie en JPG ou PNG.");
+    throw new Error("Unable to convert HEIC image. Try JPG or PNG.");
   }
 };
 
@@ -93,10 +93,10 @@ const parseBoardData = (input: unknown): BoardData | null => {
 };
 
 const QUICK_SUGGESTIONS = [
-  { icon: Lightbulb, label: "Une idée de vidéo", text: "J'ai une idée de vidéo : " },
-  { icon: ClipboardList, label: "Mes notes de réunion", text: "Voici mes notes de réunion : " },
-  { icon: Rocket, label: "Mon plan de lancement", text: "Voici mon plan de lancement : " },
-  { icon: Target, label: "Ma stratégie de contenu", text: "Ma stratégie de contenu : " },
+  { icon: Lightbulb, label: "A video idea", text: "I have a video idea: " },
+  { icon: ClipboardList, label: "My meeting notes", text: "Here are my meeting notes: " },
+  { icon: Rocket, label: "My launch plan", text: "Here is my launch plan: " },
+  { icon: Target, label: "My content strategy", text: "My content strategy: " },
 ];
 
 const Dashboard = () => {
@@ -138,9 +138,9 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase.functions.invoke("board-suggest", { body: { board: current } });
       if (error) {
-        const msg = (error as any)?.message ?? "Erreur de suggestions";
-        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
-        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        const msg = (error as any)?.message ?? "Suggestion error";
+        if (msg.includes("429")) toast.error("Too many requests, please retry shortly.");
+        else if (msg.includes("402")) toast.error("AI credits exhausted.");
         else toast.error(msg);
         return;
       }
@@ -162,7 +162,7 @@ const Dashboard = () => {
           : [],
       });
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
+      toast.error(e.message ?? "Unexpected error");
     } finally {
       setSuggestionsLoading(false);
     }
@@ -177,23 +177,23 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase.functions.invoke("board-improve", { body: { board: current } });
       if (error) {
-        const msg = (error as any)?.message ?? "Erreur Auto-améliorer";
-        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
-        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        const msg = (error as any)?.message ?? "Auto-improve error";
+        if (msg.includes("429")) toast.error("Too many requests, please retry shortly.");
+        else if (msg.includes("402")) toast.error("AI credits exhausted.");
         else toast.error(msg);
         return;
       }
       const nodes = (data as any)?.nodes;
       if (!Array.isArray(nodes) || !nodes.length) {
-        toast.error("L'IA n'a pas pu restructurer le board.");
+        toast.error("AI could not restructure the board.");
         return;
       }
       api.replaceBoard({ nodes });
       setBoard({ nodes });
-      toast.success("Board restructuré par l'IA");
+      toast.success("Board restructured by AI");
       setTimeout(() => refreshSuggestions(), 200);
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
+      toast.error(e.message ?? "Unexpected error");
     } finally {
       setImproving(false);
     }
@@ -210,7 +210,7 @@ const Dashboard = () => {
       prev ? { ...prev, suggestions: prev.suggestions.filter((x) => x.id !== s.id) } : prev,
     );
     setTimeout(() => boardApiRef.current?.relayout(), 50);
-    toast.success("Ajouté au board");
+    toast.success("Added to board");
   }, []);
 
   const rejectSuggestion = useCallback((id: string) => {
@@ -254,7 +254,7 @@ const Dashboard = () => {
       if (snapshotVersion) lastVersionAtRef.current = Date.now();
       setSidebarRefreshKey((k) => k + 1);
     } catch (e: any) {
-      console.warn("Auto-save échouée:", e?.message);
+      console.warn("Auto-save failed:", e?.message);
     }
   }, [currentBoardId, generateThumbnail]);
 
@@ -266,7 +266,7 @@ const Dashboard = () => {
       try {
         const row = await getBoard(id);
         if (!row) {
-          toast.error("Tableau introuvable");
+          toast.error("Board not found");
           setSearchParams({}, { replace: true });
           return;
         }
@@ -277,7 +277,7 @@ const Dashboard = () => {
         setInsights(null);
         lastSerializedRef.current = JSON.stringify(row.data);
       } catch {
-        toast.error("Impossible d'ouvrir ce tableau");
+        toast.error("Unable to open this board");
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -328,17 +328,17 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase.functions.invoke("analyze-notes", { body: payload });
       if (error) {
-        const msg = (error as any)?.message ?? "Erreur d'analyse";
-        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
-        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        const msg = (error as any)?.message ?? "Analysis error";
+        if (msg.includes("429")) toast.error("Too many requests, please retry shortly.");
+        else if (msg.includes("402")) toast.error("AI credits exhausted.");
         else if (msg.toLowerCase().includes("unsupported image format")) {
-          toast.error("Cette image n'est pas encore lisible. Essaie une photo JPG ou PNG.");
+          toast.error("This image is not readable yet. Try a JPG or PNG.");
         } else toast.error(msg);
         return;
       }
       const parsedBoard = parseBoardData(data);
       if (!parsedBoard) {
-        toast.error("L'IA n'a pas renvoyé un diagramme valide. Essaie un contenu plus clair.");
+        toast.error("AI did not return a valid diagram. Try clearer content.");
         return;
       }
       setBoard(parsedBoard);
@@ -351,12 +351,12 @@ const Dashboard = () => {
         setSearchParams({ board: created.id }, { replace: true });
         setSidebarRefreshKey((k) => k + 1);
       } catch (e: any) {
-        console.warn("Auto-save initial échouée:", e?.message);
+        console.warn("Initial auto-save failed:", e?.message);
       }
-      toast.success(`${parsedBoard.nodes.length} nœuds extraits !`);
+      toast.success(`${parsedBoard.nodes.length} nodes extraits !`);
       setTimeout(() => refreshSuggestions(), 400);
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
+      toast.error(e.message ?? "Unexpected error");
     } finally {
       setProcessing(false);
     }
@@ -364,11 +364,11 @@ const Dashboard = () => {
 
   const handleImageFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
-      toast.error("Format non supporté. Utilise JPG, PNG ou HEIC.");
+      toast.error("Unsupported format. Use JPG, PNG or HEIC.");
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast.error("Image trop lourde (max 25 MB).");
+      toast.error("Image too large (max 25 MB).");
       return;
     }
     try {
@@ -376,24 +376,24 @@ const Dashboard = () => {
       const dataUrl = await fileToBase64(normalized);
       await runAnalysis({ image: dataUrl }, "photo", `📸 Photo : ${file.name}`);
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
+      toast.error(e.message ?? "Unexpected error");
     }
   }, [runAnalysis]);
 
   const handlePdfFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
-      toast.error("Format non supporté. Choisis un PDF.");
+      toast.error("Unsupported format. Choose a PDF.");
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast.error("PDF trop lourd (max 25 MB).");
+      toast.error("PDF too large (max 25 MB).");
       return;
     }
     try {
       const dataUrl = await fileToBase64(file);
       await runAnalysis({ pdf: dataUrl }, "pdf", `📄 PDF : ${file.name}`);
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
+      toast.error(e.message ?? "Unexpected error");
     }
   }, [runAnalysis]);
 
@@ -405,27 +405,27 @@ const Dashboard = () => {
     setProcessing(true);
     setBoard(null);
     setInsights(null);
-    setUserMessage("🎙️ Message vocal en cours de transcription…");
+    setUserMessage("🎙️ Transcribing voice message…");
     try {
       const { data, error } = await supabase.functions.invoke("transcribe-audio", { body: { audio: audioDataUrl } });
       if (error) {
-        const msg = (error as any)?.message ?? "Erreur de transcription";
-        if (msg.includes("429")) toast.error("Trop de requêtes, réessaie dans un instant.");
-        else if (msg.includes("402")) toast.error("Crédits IA épuisés.");
+        const msg = (error as any)?.message ?? "Transcription error";
+        if (msg.includes("429")) toast.error("Too many requests, please retry shortly.");
+        else if (msg.includes("402")) toast.error("AI credits exhausted.");
         else toast.error(msg);
         setProcessing(false);
         return;
       }
       const transcript = (data as any)?.transcript;
       if (typeof transcript !== "string" || !transcript.trim()) {
-        toast.error("Aucun texte détecté dans l'audio.");
+        toast.error("No text detected in the audio.");
         setProcessing(false);
         return;
       }
-      toast.success("Transcription terminée, analyse…");
+      toast.success("Transcription done, analyzing…");
       await runAnalysis({ text: transcript }, "voice", `🎙️ ${transcript}`);
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur inattendue");
+      toast.error(e.message ?? "Unexpected error");
       setProcessing(false);
     }
   }, [runAnalysis]);
@@ -441,15 +441,15 @@ const Dashboard = () => {
 
   const exportPDF = async () => {
     if (!boardRef.current) return;
-    toast.info("Génération du PDF…");
+    toast.info("Generating PDF…");
     try {
       const dataUrl = await toPng(boardRef.current, { backgroundColor: "#F5F3FF", pixelRatio: 2 });
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1600, 1000] });
       pdf.addImage(dataUrl, "PNG", 0, 0, 1600, 1000);
       pdf.save("scappio-board.pdf");
-      toast.success("PDF exporté !");
+      toast.success("PDF exported!");
     } catch (e: any) {
-      toast.error("Erreur d'export: " + e.message);
+      toast.error("Export error: " + e.message);
     }
   };
 
@@ -475,9 +475,9 @@ const Dashboard = () => {
     const url = `${window.location.origin}/dashboard?board=${currentBoardId}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Lien copié !");
+      toast.success("Link copied!");
     } catch {
-      toast.error("Impossible de copier le lien");
+      toast.error("Unable to copy link");
     }
   };
 
@@ -521,7 +521,7 @@ const Dashboard = () => {
         {/* Drag overlay */}
         {dragActive && (
           <div className="absolute inset-0 z-30 m-4 rounded-2xl border-2 border-dashed border-primary bg-primary/5 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-            <p className="text-lg font-semibold text-primary">Dépose ici</p>
+            <p className="text-lg font-semibold text-primary">Drop here</p>
           </div>
         )}
 
@@ -547,7 +547,7 @@ const Dashboard = () => {
                   </div>
                   <div className="rounded-2xl rounded-tl-sm bg-card border border-border px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    L'IA structure ton board…
+                    AI is structuring your board…
                   </div>
                 </div>
               )}
@@ -560,7 +560,7 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0 space-y-3">
                     <div className="text-xs text-muted-foreground flex items-center gap-2">
                       <ImageIcon className="h-3.5 w-3.5" />
-                      {board.nodes.length} nœuds · {board.nodes.filter((n) => n.level === 2).length} idées · {board.nodes.filter((n) => n.level === 3).length} détails
+                      {board.nodes.length} nodes · {board.nodes.filter((n) => n.level === 2).length} ideas · {board.nodes.filter((n) => n.level === 3).length} details
                     </div>
 
                     <div
@@ -585,7 +585,7 @@ const Dashboard = () => {
                             type="button"
                             onClick={() => setPanelFullscreen((v) => !v)}
                             className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-background/95 backdrop-blur border border-border shadow-md hover:bg-accent transition"
-                            aria-label={panelFullscreen ? "Réduire" : "Agrandir"}
+                            aria-label={panelFullscreen ? "Collapse" : "Expand"}
                           >
                             {panelFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                           </button>
@@ -610,7 +610,7 @@ const Dashboard = () => {
                             <button
                               type="button"
                               className="absolute bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition hover:scale-105"
-                              aria-label="Ouvrir l'agent IA"
+                              aria-label="Open AI agent"
                             >
                               <Sparkles className="h-6 w-6" />
                             </button>
@@ -637,7 +637,7 @@ const Dashboard = () => {
                             <button
                               type="button"
                               className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow transition active:scale-95"
-                              aria-label="Ouvrir l'agent IA"
+                              aria-label="Open AI agent"
                             >
                               <Sparkles className="h-5 w-5" />
                             </button>
@@ -662,13 +662,13 @@ const Dashboard = () => {
                     {/* Action buttons */}
                     <div className="flex flex-wrap gap-2 pt-1">
                       <Button size="sm" variant="outline" onClick={() => boardApiRef.current?.relayout()}>
-                        <Pencil className="h-4 w-4 mr-1.5" /> Éditer
+                        <Pencil className="h-4 w-4 mr-1.5" /> Edit
                       </Button>
                       <Button size="sm" variant="outline" onClick={exportPDF}>
-                        <FileDown className="h-4 w-4 mr-1.5" /> Exporter PDF
+                        <FileDown className="h-4 w-4 mr-1.5" /> Export PDF
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleShare}>
-                        <Share2 className="h-4 w-4 mr-1.5" /> Partager
+                        <Share2 className="h-4 w-4 mr-1.5" /> Share
                       </Button>
                     </div>
                   </div>
@@ -700,10 +700,10 @@ const WelcomeScreen = ({ onSuggestion }: { onSuggestion: (t: string) => void }) 
         <Sparkles className="h-7 w-7 sm:h-8 sm:w-8" />
       </div>
       <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
-        Que veux-tu structurer aujourd'hui ?
+        What do you want to structure today?
       </h1>
       <p className="mt-3 text-sm sm:text-base text-muted-foreground">
-        Parle, écris, prends une photo ou importe un document
+        Speak, write, take a photo or import a document
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-2">
         {QUICK_SUGGESTIONS.map((s) => (

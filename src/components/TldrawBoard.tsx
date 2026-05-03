@@ -23,18 +23,18 @@ import type {
 // ============================================================
 //  Layout constants — hierarchical top-to-bottom tree
 const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
-  { value: "#FAFAF8", label: "Blanc cassé" },
-  { value: "#F5F0E8", label: "Beige doux" },
-  { value: "#F3F4F6", label: "Gris très clair" },
-  { value: "#FFF8F0", label: "Crème" },
-  { value: "#FDE8F0", label: "Rose poudré" },
-  { value: "#FEE8D6", label: "Pêche douce" },
-  { value: "#FEF9C3", label: "Jaune pâle" },
-  { value: "#E8F8F0", label: "Vert menthe" },
-  { value: "#E8F0FE", label: "Bleu ciel pâle" },
-  { value: "#F0E8FE", label: "Lavande douce" },
-  { value: "#E8F0E8", label: "Vert sauge pâle" },
-  { value: "#0D0D0D", label: "Sombre", dark: true },
+  { value: "#FAFAF8", label: "Off-white" },
+  { value: "#F5F0E8", label: "Soft beige" },
+  { value: "#F3F4F6", label: "Very light gray" },
+  { value: "#FFF8F0", label: "Cream" },
+  { value: "#FDE8F0", label: "Powder pink" },
+  { value: "#FEE8D6", label: "Soft peach" },
+  { value: "#FEF9C3", label: "Pale yellow" },
+  { value: "#E8F8F0", label: "Mint green" },
+  { value: "#E8F0FE", label: "Pale sky blue" },
+  { value: "#F0E8FE", label: "Soft lavender" },
+  { value: "#E8F0E8", label: "Pale sage green" },
+  { value: "#0D0D0D", label: "Dark", dark: true },
 ];
 const DEFAULT_BG = "#FAFAF8";
 
@@ -551,7 +551,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
           const id = `node-${Date.now()}`;
           const newNode: BoardNode = {
             id,
-            label: "Nouvelle idée",
+            label: "New idea",
             level: 2,
             parent: null,
             shape,
@@ -618,7 +618,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
             <Button
               size="sm"
               variant="outline"
-              title="Couleur de fond"
+              title="Background color"
               className="shadow-md backdrop-blur"
               style={
                 isDarkBoard
@@ -627,7 +627,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
               }
             >
               <PaintBucket className="h-4 w-4 mr-1.5" />
-              Fond
+              Background
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -642,7 +642,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
             }
           >
             <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-              Fond du board
+              Board background
             </div>
             <div className="grid grid-cols-4 gap-2">
               {BG_SWATCHES.map((s) => {
@@ -677,7 +677,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
                     </button>
                     {s.dark && (
                       <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
-                        <Moon className="h-2.5 w-2.5" /> Sombre
+                        <Moon className="h-2.5 w-2.5" /> Dark
                       </span>
                     )}
                   </div>

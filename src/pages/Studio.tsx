@@ -98,7 +98,7 @@ const Studio = () => {
 
   const changeFormat = (nextFormat: StudioFormat) => {
     if (studio.recording) {
-      toast.error("Arrête l'enregistrement avant de changer de format");
+      toast.error("Stop the recording before changing format");
       return;
     }
     setFormat(nextFormat);
@@ -121,10 +121,10 @@ const Studio = () => {
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Quitter
+            Quit
           </Button>
 
-          <h1 className="text-sm font-semibold sm:text-base">Studio d&apos;enregistrement</h1>
+          <h1 className="text-sm font-semibold sm:text-base">Recording studio</h1>
 
           <div className="inline-flex rounded-full border border-border bg-muted/40 p-1">
             <button
@@ -192,8 +192,8 @@ const Studio = () => {
             onClick={() => {
               void studio.toggleCamera();
             }}
-            activeLabel="Caméra"
-            inactiveLabel="Activer caméra"
+            activeLabel="Camera"
+            inactiveLabel="Enable camera"
             ActiveIcon={Camera}
             InactiveIcon={CameraOff}
             tone="primary"
@@ -204,8 +204,8 @@ const Studio = () => {
             onClick={() => {
               void studio.toggleMic();
             }}
-            activeLabel="Micro"
-            inactiveLabel="Activer micro"
+            activeLabel="Mic"
+            inactiveLabel="Enable mic"
             ActiveIcon={Mic}
             InactiveIcon={MicOff}
             tone="secondary"
@@ -217,8 +217,8 @@ const Studio = () => {
               onClick={() => {
                 void studio.toggleScreen();
               }}
-              activeLabel="Écran partagé"
-              inactiveLabel="Partager l'écran"
+              activeLabel="Screen sharing"
+              inactiveLabel="Share screen"
               ActiveIcon={Monitor}
               InactiveIcon={MonitorOff}
               tone="secondary"
@@ -227,7 +227,7 @@ const Studio = () => {
 
           {!studio.screenSupported && format === "16:9" && (
             <div className="inline-flex h-10 items-center rounded-full border border-border bg-muted/40 px-4 text-xs text-muted-foreground">
-              Partage d&apos;écran indisponible sur cet appareil
+              Screen sharing unavailable on this device
             </div>
           )}
 
@@ -237,10 +237,10 @@ const Studio = () => {
               size="sm"
               onClick={studio.swapStreams}
               className="gap-2 rounded-full"
-              title="Inverser la caméra et l'écran"
+              title="Swap camera and screen"
             >
               <ArrowLeftRight className="h-4 w-4" />
-              <span className="hidden sm:inline">Inverser</span>
+              <span className="hidden sm:inline">Swap</span>
             </Button>
           )}
 
@@ -256,7 +256,7 @@ const Studio = () => {
               variant="destructive"
             >
               <Circle className="h-4 w-4 fill-current" />
-              Lancer l&apos;enregistrement
+              Start recording
             </Button>
           ) : (
             <>
@@ -267,7 +267,7 @@ const Studio = () => {
                 className="gap-2 rounded-full"
               >
                 {studio.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                {studio.paused ? "Reprendre" : "Pause"}
+                {studio.paused ? "Resume" : "Pause"}
               </Button>
 
               <Button

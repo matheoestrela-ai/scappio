@@ -91,7 +91,9 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
       const r = new SR();
       r.continuous = true;
       r.interimResults = true;
-      r.lang = "fr-FR";
+      // multilingual: use browser default; Gemini detects language server-side
+      try { r.lang = (navigator.language || "en-US"); } catch { r.lang = "en-US"; }
+      // Note: no fixed lang lock — server-side transcription is fully multilingual
       r.onresult = (event: any) => {
         let txt = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -123,12 +125,12 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
         setLevels(Array(18).fill(0.1));
         setInterim("");
         if (blob.size === 0) {
-          toast.error("Aucun son capté.");
+          toast.error("No audio captured.");
           return;
         }
         const reader = new FileReader();
         reader.onload = () => onVoiceRecorded(reader.result as string, type);
-        reader.onerror = () => toast.error("Lecture audio impossible.");
+        reader.onerror = () => toast.error("Audio playback failed.");
         reader.readAsDataURL(blob);
       };
       mediaRecorderRef.current = rec;
@@ -139,8 +141,8 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
     } catch (e: any) {
       toast.error(
         e?.name === "NotAllowedError"
-          ? "Accès au micro refusé."
-          : "Impossible d'accéder au micro.",
+          ? "Microphone access denied."
+          : "Unable to access microphone.",
       );
       cleanupAudio();
       setRecording(false);
@@ -184,7 +186,7 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
               type="button"
               disabled={disabled || recording}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition disabled:opacity-50"
-              aria-label="Joindre un fichier"
+              aria-label="Attach file"
             >
               <Paperclip className="h-5 w-5" />
             </button>
@@ -194,7 +196,7 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
               <ImageIcon className="h-4 w-4 mr-2" /> Photo
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => pdfInputRef.current?.click()}>
-              <FileText className="h-4 w-4 mr-2" /> Document PDF
+              <FileText className="h-4 w-4 mr-2" /> PDF document
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -235,7 +237,7 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
                   />
                 ))}
               </div>
-              <span className="text-xs font-medium text-primary shrink-0">Enregistrement…</span>
+              <span className="text-xs font-medium text-primary shrink-0">Recording…</span>
             </div>
             {interim && (
               <p className="mt-1 text-sm text-foreground/80 line-clamp-2">{interim}</p>
@@ -249,7 +251,7 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={onKeyDown}
             disabled={disabled}
-            placeholder="Décris ton idée, colle tes notes ou parle…"
+            placeholder="Describe your idea, paste your notes or speak…"
             className="flex-1 min-w-0 resize-none bg-transparent border-0 outline-none text-sm sm:text-base placeholder:text-muted-foreground px-2 py-2 max-h-[200px] leading-relaxed"
           />
         )}
@@ -265,7 +267,7 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
               ? "bg-primary text-primary-foreground animate-pulse"
               : "text-muted-foreground hover:bg-muted hover:text-foreground",
           )}
-          aria-label={recording ? "Arrêter et envoyer" : "Démarrer l'enregistrement"}
+          aria-label={recording ? "Stop and send" : "Start recording"}
         >
           {recording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-5 w-5" />}
         </button>
@@ -284,7 +286,7 @@ const ChatComposer = ({ disabled, onSendText, onPickImage, onPickPdf, onVoiceRec
         )}
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground/70 text-center">
-        Scappio peut faire des erreurs. Vérifie les informations importantes.
+        Scappio can make mistakes. Verify important information.
       </p>
     </div>
   );
