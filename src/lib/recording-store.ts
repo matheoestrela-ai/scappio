@@ -10,13 +10,17 @@ export type LastRecording = {
 };
 
 let last: LastRecording | null = null;
+let lastConsumed: LastRecording | null = null;
 
 export const setLastRecording = (rec: LastRecording) => {
   last = rec;
+  lastConsumed = rec;
 };
 
 export const consumeLastRecording = (): LastRecording | null => {
-  const r = last;
+  // Keep a fallback copy so React StrictMode's double-invocation
+  // (or a quick remount) still finds the recording on the second pass.
+  const r = last ?? lastConsumed;
   last = null;
   return r;
 };
