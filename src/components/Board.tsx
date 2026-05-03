@@ -84,7 +84,7 @@ export const BG_SWATCHES: { value: string; label: string; dark?: boolean }[] = [
   { value: "#E8F0FE", label: "Pale sky blue" },
   { value: "#F0E8FE", label: "Soft lavender" },
   { value: "#E8F0E8", label: "Pale sage green" },
-  { value: "#0D0D0D", label: "Dark", dark: true },
+  { value: "#1F2937", label: "Dark", dark: true },
 ];
 export const DEFAULT_BG = "#FAFAF8";
 
@@ -1043,7 +1043,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   const [arrowVariant, setArrowVariant] = useState<EdgeStyleVariant>("arrow");
   const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
   const [bgOpen, setBgOpen] = useState(false);
-  const isDarkBoard = bgColor === "#0D0D0D";
+  const isDarkBoard = bgColor === "#1F2937";
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
   // Reset on board prop change
@@ -1401,7 +1401,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border p-1 sm:p-1.5 shadow-elegant backdrop-blur transition-colors"
         style={
           isDarkBoard
-            ? { background: "rgba(26,26,26,0.95)", borderColor: "#2A2A2A", color: "#fff" }
+            ? { background: "rgba(45,55,72,0.95)", borderColor: "#4B5563", color: "#F9FAFB" }
             : { background: "rgba(255,255,255,0.9)" }
         }
       >
@@ -1444,18 +1444,50 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           <Maximize2 className="h-4 w-4" />
         </Button>
 
-        {/* Background color picker */}
+        {/* Sélecteur de style de flèche par défaut */}
+        <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
+          {([
+            { v: "arrow", icon: ArrowRight, title: "Simple arrow" },
+            { v: "double", icon: MoveHorizontal, title: "Double arrow" },
+            { v: "line", icon: Minus, title: "Line without arrow" },
+          ] as const).map(({ v, icon: Icon, title }) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setArrowVariant(v)}
+              title={title}
+              className={`flex h-7 w-7 items-center justify-center rounded transition ${
+                arrowVariant === v
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+
+        <div className="hidden md:block px-2 text-xs" style={{ color: isDarkBoard ? "#D1D5DB" : undefined }}>
+          Double-click: edit · Right-click: menu · Double-click arrow: label
+        </div>
+      </div>
+
+      {/* Background color picker — déplacé en haut, centré (légèrement à droite) */}
+      <div
+        className="absolute top-2 sm:top-3 z-10"
+        style={{ left: "calc(50% + 40px)", transform: "translateX(-50%)" }}
+      >
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
             <Button
               size="sm"
               variant="outline"
               title="Background color"
-              className="px-2 sm:px-3"
+              className="px-2 sm:px-3 shadow-elegant backdrop-blur"
               style={
                 isDarkBoard
-                  ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
-                  : undefined
+                  ? { background: "rgba(55,65,81,0.95)", borderColor: "#4B5563", color: "#F9FAFB" }
+                  : { background: "rgba(255,255,255,0.9)" }
               }
             >
               <PaintBucket className="h-4 w-4 sm:mr-1" />
@@ -1463,17 +1495,20 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            side="top"
-            align="start"
+            side="bottom"
+            align="center"
             sideOffset={8}
             className="w-auto p-3"
             style={
               isDarkBoard
-                ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
                 : undefined
             }
           >
-            <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div
+              className="mb-2 text-[10px] uppercase tracking-wide"
+              style={{ color: isDarkBoard ? "#D1D5DB" : undefined }}
+            >
               Board background
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -1509,7 +1544,10 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
                       )}
                     </button>
                     {s.dark && (
-                      <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                      <span
+                        className="flex items-center gap-0.5 text-[9px]"
+                        style={{ color: isDarkBoard ? "#D1D5DB" : undefined }}
+                      >
                         <Moon className="h-2.5 w-2.5" /> Dark
                       </span>
                     )}
@@ -1519,33 +1557,6 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             </div>
           </PopoverContent>
         </Popover>
-
-        {/* Sélecteur de style de flèche par défaut */}
-        <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
-          {([
-            { v: "arrow", icon: ArrowRight, title: "Simple arrow" },
-            { v: "double", icon: MoveHorizontal, title: "Double arrow" },
-            { v: "line", icon: Minus, title: "Line without arrow" },
-          ] as const).map(({ v, icon: Icon, title }) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setArrowVariant(v)}
-              title={title}
-              className={`flex h-7 w-7 items-center justify-center rounded transition ${
-                arrowVariant === v
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-accent"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-            </button>
-          ))}
-        </div>
-
-        <div className="hidden md:block px-2 text-xs text-muted-foreground">
-          Double-click: edit · Right-click: menu · Double-click arrow: label
-        </div>
       </div>
 
       {/* Legend (bottom-left) — masquée sur mobile pour laisser de la place */}
@@ -1602,7 +1613,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         minZoom={0.2}
         maxZoom={2.5}
       >
-        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#2A2A2A" : "#FDBA74"} gap={28} size={1.5} />
+        <Background variant={BackgroundVariant.Dots} color={isDarkBoard ? "#4B5563" : "#FDBA74"} gap={28} size={1.5} />
         <Controls
           showZoom={false}
           showFitView={false}
