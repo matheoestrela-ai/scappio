@@ -500,10 +500,23 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
   const editorRef = useRef<Editor | null>(null);
   const dataRef = useRef<BoardData>(data);
   const onChangeRef = useRef(onChange);
+  const [bgColor, setBgColor] = useState<string>(data.bgColor ?? DEFAULT_BG);
+  const [bgOpen, setBgOpen] = useState(false);
+  const isDarkBoard = bgColor === "#0D0D0D";
 
   useEffect(() => {
     dataRef.current = data;
+    if (data.bgColor && data.bgColor !== bgColor) setBgColor(data.bgColor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
+
+  // Persist bg changes through onChange
+  useEffect(() => {
+    const next = { ...dataRef.current, bgColor };
+    dataRef.current = next;
+    onChangeRef.current?.(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bgColor]);
 
   useEffect(() => {
     onChangeRef.current = onChange;
