@@ -377,6 +377,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     const existingTrack = cameraStreamRef.current?.getVideoTracks()[0] ?? null;
     if (isTrackLive(existingTrack)) {
       existingTrack.enabled = true;
+      cameraOnRef.current = true;
       if (micTrackRef.current && isTrackLive(micTrackRef.current)) {
         micTrackRef.current.enabled = micOnRef.current;
       }
@@ -413,6 +414,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       videoTrack.contentHint = "motion";
       videoTrack.enabled = true;
       videoTrack.onended = () => {
+        cameraOnRef.current = false;
         setCameraOn(false);
         toast.error("Caméra interrompue", {
           description: "Le studio continue sans caméra.",
@@ -425,11 +427,13 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     if (audioTrack) {
       audioTrack.enabled = micOnRef.current;
       audioTrack.onended = () => {
+        micOnRef.current = false;
         setMicOn(false);
       };
       micTrackRef.current = audioTrack;
     }
 
+    cameraOnRef.current = !!videoTrack;
     setCameraOn(!!videoTrack);
     await syncAudioGraph();
     return cameraStreamRef.current;
@@ -439,6 +443,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     cameraStreamRef.current?.getVideoTracks().forEach((track) => {
       track.enabled = false;
     });
+    cameraOnRef.current = false;
     setCameraOn(false);
     await syncAudioGraph();
   }, [syncAudioGraph]);
@@ -449,6 +454,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     screenStreamRef.current = null;
     screenAudioTrackRef.current = null;
     screenVideoRef.current = null;
+    screenOnRef.current = false;
     setScreenOn(false);
     if (notify) {
       toast.message("Partage d'écran arrêté", {
@@ -493,6 +499,7 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       screenStreamRef.current = new MediaStream([videoTrack]);
       screenVideoRef.current = await createPlaybackVideo(screenStreamRef.current);
       screenAudioTrackRef.current = audioTrack ?? null;
+      screenOnRef.current = true;
       setScreenOn(true);
       await syncAudioGraph();
       return screenStreamRef.current;
@@ -526,13 +533,12 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   }, [disableCamera, ensureCamera]);
 
   const toggleMic = useCallback(async () => {
-    setMicOn((current) => {
-      const next = !current;
-      if (micTrackRef.current && isTrackLive(micTrackRef.current)) {
-        micTrackRef.current.enabled = next;
-      }
-      return next;
-    });
+    const next = !micOnRef.current;
+    micOnRef.current = next;
+    if (micTrackRef.current && isTrackLive(micTrackRef.current)) {
+      micTrackRef.current.enabled = next;
+    }
+    setMicOn(next);
     await syncAudioGraph();
   }, [syncAudioGraph]);
 
