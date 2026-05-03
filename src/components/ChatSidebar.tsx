@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PenLine, Trash2, Settings, LogOut, Loader2, Menu, X, History as HistoryIcon } from "lucide-react";
+import { PenLine, Trash2, Settings, LogOut, Loader2, Menu, X, History as HistoryIcon, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listBoards, deleteBoard, type BoardRow } from "@/lib/boards-history";
 import { toast } from "sonner";
@@ -113,7 +113,7 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
       </div>
 
       {/* New board */}
-      <div className="px-3 pb-2">
+      <div className="px-3 pb-2 space-y-2">
         <button
           onClick={() => {
             onNewBoard();
@@ -123,6 +123,13 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
         >
           <PenLine className="h-4 w-4" />
           New board
+        </button>
+        <button
+          onClick={() => { onOpenChange(false); navigate("/studio"); }}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background font-medium text-sm h-10 hover:opacity-90 transition shadow-sm"
+        >
+          <Video className="h-4 w-4" />
+          Studio
         </button>
       </div>
 
