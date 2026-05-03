@@ -5,6 +5,8 @@ import {
   ArrowLeft,
   Camera,
   CameraOff,
+  Mic,
+  MicOff,
   Monitor,
   MonitorOff,
   Smartphone,
@@ -12,6 +14,7 @@ import {
   Play,
   Square,
   Circle,
+  ArrowLeftRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
