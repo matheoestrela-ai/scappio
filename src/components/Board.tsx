@@ -1401,7 +1401,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
         className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border p-1 sm:p-1.5 shadow-elegant backdrop-blur transition-colors"
         style={
           isDarkBoard
-            ? { background: "rgba(45,55,72,0.95)", borderColor: "#4B5563", color: "#F9FAFB" }
+            ? { background: "rgba(17,17,17,0.95)", borderColor: "#242424", color: "#FAFAF0" }
             : { background: "rgba(255,255,255,0.9)" }
         }
       >
@@ -1486,7 +1486,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
               className="px-2 sm:px-3 shadow-elegant backdrop-blur"
               style={
                 isDarkBoard
-                  ? { background: "rgba(55,65,81,0.95)", borderColor: "#4B5563", color: "#F9FAFB" }
+                  ? { background: "rgba(26,26,26,0.95)", borderColor: "#242424", color: "#FAFAF0" }
                   : { background: "rgba(255,255,255,0.9)" }
               }
             >
@@ -1501,7 +1501,7 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             className="w-auto p-3"
             style={
               isDarkBoard
-                ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
+                ? { background: "#1A1A1A", borderColor: "#242424", color: "#FAFAF0" }
                 : undefined
             }
           >

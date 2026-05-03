@@ -622,7 +622,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
               className="shadow-md backdrop-blur"
               style={
                 isDarkBoard
-                  ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
+                  ? { background: "#1A1A1A", borderColor: "#242424", color: "#FAFAF0" }
                   : { background: "rgba(255,255,255,0.95)" }
               }
             >
@@ -637,7 +637,7 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
             className="w-auto p-3"
             style={
               isDarkBoard
-                ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
+                ? { background: "#1A1A1A", borderColor: "#242424", color: "#FAFAF0" }
                 : undefined
             }
           >
