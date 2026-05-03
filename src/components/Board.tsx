@@ -1444,18 +1444,24 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
           <Maximize2 className="h-4 w-4" />
         </Button>
 
-        {/* Background color picker */}
+      </div>
+
+      {/* Background color picker — déplacé en haut, centré (légèrement à droite) */}
+      <div
+        className="absolute top-2 sm:top-3 z-10"
+        style={{ left: "calc(50% + 40px)", transform: "translateX(-50%)" }}
+      >
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
             <Button
               size="sm"
               variant="outline"
               title="Background color"
-              className="px-2 sm:px-3"
+              className="px-2 sm:px-3 shadow-elegant backdrop-blur"
               style={
                 isDarkBoard
-                  ? { background: "#374151", borderColor: "#4B5563", color: "#F9FAFB" }
-                  : undefined
+                  ? { background: "rgba(55,65,81,0.95)", borderColor: "#4B5563", color: "#F9FAFB" }
+                  : { background: "rgba(255,255,255,0.9)" }
               }
             >
               <PaintBucket className="h-4 w-4 sm:mr-1" />
@@ -1463,8 +1469,8 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            side="top"
-            align="start"
+            side="bottom"
+            align="center"
             sideOffset={8}
             className="w-auto p-3"
             style={
@@ -1473,7 +1479,10 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
                 : undefined
             }
           >
-            <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div
+              className="mb-2 text-[10px] uppercase tracking-wide"
+              style={{ color: isDarkBoard ? "#D1D5DB" : undefined }}
+            >
               Board background
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -1509,7 +1518,10 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
                       )}
                     </button>
                     {s.dark && (
-                      <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                      <span
+                        className="flex items-center gap-0.5 text-[9px]"
+                        style={{ color: isDarkBoard ? "#D1D5DB" : undefined }}
+                      >
                         <Moon className="h-2.5 w-2.5" /> Dark
                       </span>
                     )}
@@ -1519,6 +1531,10 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
             </div>
           </PopoverContent>
         </Popover>
+      </div>
+
+      {/* Toolbar continued (hidden placeholder removed) */}
+      <div className="hidden">
 
         {/* Sélecteur de style de flèche par défaut */}
         <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
