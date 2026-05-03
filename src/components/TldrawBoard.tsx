@@ -596,12 +596,97 @@ const TldrawBoard = ({ data, apiRef, onChange }: TldrawBoardProps) => {
   };
 
   return (
-    <div className="h-full w-full relative">
-      <Tldraw
-        persistenceKey={PERSIST_KEY}
-        onMount={handleMount}
-        licenseKey="tldraw-2026-08-03/WyJOWWwxMEtsaiIsWyIqIl0sMTYsIjIwMjYtMDgtMDMiXQ.xedsaiEOkJIoMSqTxL5xT8ebkwSIXsIeI2uamoT3SdvJb4EFJPUFE0gw/PSIpKhS9UIuzW6BqgGRVaqKJDzT9g"
-      />
+    <div
+      className="h-full w-full relative transition-colors duration-300"
+      style={{ background: bgColor }}
+    >
+      <style>{`
+        .tldraw-bg-overlay .tl-background { background-color: ${bgColor} !important; }
+      `}</style>
+      <div className="tldraw-bg-overlay h-full w-full">
+        <Tldraw
+          persistenceKey={PERSIST_KEY}
+          onMount={handleMount}
+          licenseKey="tldraw-2026-08-03/WyJOWWwxMEtsaiIsWyIqIl0sMTYsIjIwMjYtMDgtMDMiXQ.xedsaiEOkJIoMSqTxL5xT8ebkwSIXsIeI2uamoT3SdvJb4EFJPUFE0gw/PSIpKhS9UIuzW6BqgGRVaqKJDzT9g"
+        />
+      </div>
+
+      {/* Background color picker — top-left overlay */}
+      <div className="absolute left-3 top-3 z-[200]">
+        <Popover open={bgOpen} onOpenChange={setBgOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              variant="outline"
+              title="Couleur de fond"
+              className="shadow-md backdrop-blur"
+              style={
+                isDarkBoard
+                  ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                  : { background: "rgba(255,255,255,0.95)" }
+              }
+            >
+              <PaintBucket className="h-4 w-4 mr-1.5" />
+              Fond
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="bottom"
+            align="start"
+            sideOffset={8}
+            className="w-auto p-3"
+            style={
+              isDarkBoard
+                ? { background: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+                : undefined
+            }
+          >
+            <div className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+              Fond du board
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {BG_SWATCHES.map((s) => {
+                const selected = bgColor === s.value;
+                return (
+                  <div key={s.value} className="flex flex-col items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBgColor(s.value);
+                        setBgOpen(false);
+                      }}
+                      title={s.label}
+                      className="relative flex items-center justify-center rounded-full transition hover:scale-110"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        background: s.value,
+                        border: selected
+                          ? "2px solid hsl(var(--foreground))"
+                          : s.dark
+                          ? "2px solid #FFFFFF"
+                          : "1px solid rgba(0,0,0,0.12)",
+                      }}
+                    >
+                      {selected && (
+                        <Check
+                          className="h-3.5 w-3.5"
+                          style={{ color: isLightHex(s.value) ? "#0F172A" : "#fff" }}
+                        />
+                      )}
+                    </button>
+                    {s.dark && (
+                      <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                        <Moon className="h-2.5 w-2.5" /> Sombre
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 };
