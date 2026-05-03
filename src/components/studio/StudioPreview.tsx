@@ -1,74 +1,33 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { CameraOff } from "lucide-react";
+import { CameraOff, MonitorOff, Move } from "lucide-react";
 import type { StudioFormat } from "@/lib/studio-recorder";
 import type { WebcamBubble } from "@/hooks/useStudioRecorder";
 
 type Props = {
   format: StudioFormat;
-  cameraStream: MediaStream | null;
-  screenStream: MediaStream | null;
   cameraOn: boolean;
   screenOn: boolean;
   swapped?: boolean;
   bubble: WebcamBubble;
   onBubbleChange: (b: WebcamBubble) => void;
+  attachCanvas: (node: HTMLCanvasElement | null) => void;
 };
-
-const CameraPlaceholder = () => (
-  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-zinc-900 to-zinc-800 text-white/60 animate-fade-in">
-    <div className="h-14 w-14 rounded-full bg-white/10 flex items-center justify-center">
-      <CameraOff className="h-7 w-7" />
-    </div>
-    <span className="text-xs">Caméra désactivée</span>
-  </div>
-);
 
 const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
   format,
-  cameraStream,
-  screenStream,
   cameraOn,
   screenOn,
   swapped = false,
   bubble,
   onBubbleChange,
+  attachCanvas,
 }, forwardedRef) {
-  const camRef = useRef<HTMLVideoElement>(null);
-  const bubbleCamRef = useRef<HTMLVideoElement>(null);
-  const scrRef = useRef<HTMLVideoElement>(null);
-  const bubbleScrRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
-    const bind = (el: HTMLVideoElement | null, stream: MediaStream | null) => {
-      if (!el) return;
-      if (el.srcObject !== stream) el.srcObject = stream;
-      if (!stream) return;
-      const start = () => el.play().catch(() => {});
-      el.addEventListener("loadedmetadata", start, { once: true });
-      start();
-    };
-    bind(camRef.current, cameraStream);
-    bind(bubbleCamRef.current, cameraStream);
-  }, [cameraStream]);
+    if (format !== "16:9" || !screenOn || !cameraOn || !dragging) return;
 
-  useEffect(() => {
-    const bind = (el: HTMLVideoElement | null, stream: MediaStream | null) => {
-      if (!el) return;
-      if (el.srcObject !== stream) el.srcObject = stream;
-      if (!stream) return;
-      const start = () => el.play().catch(() => {});
-      el.addEventListener("loadedmetadata", start, { once: true });
-      start();
-    };
-    bind(scrRef.current, screenStream);
-    bind(bubbleScrRef.current, screenStream);
-  }, [screenStream]);
-
-  useEffect(() => {
-    if (format !== "16:9" || !screenOn || !cameraOn) return;
-    if (!dragging) return;
     const onMove = (e: PointerEvent) => {
       const el = containerRef.current;
       if (!el) return;
@@ -80,36 +39,21 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
       const yPct = Math.max(0, Math.min(1 - (2 * r) / rect.height, y / rect.height));
       onBubbleChange({ ...bubble, xPct, yPct });
     };
+
     const onUp = () => setDragging(false);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [dragging, bubble, format, screenOn, cameraOn, onBubbleChange]);
+  }, [bubble, cameraOn, dragging, format, onBubbleChange, screenOn]);
 
   const aspect = format === "9:16" ? "aspect-[9/16]" : "aspect-video";
-  const isSplit = format === "9:16" && screenOn && cameraOn;
-  const isPip = format === "16:9" && screenOn && cameraOn;
-  const showCameraFull = cameraOn && !isSplit && !isPip;
-  const showScreenFull = screenOn && !cameraOn;
-  const nothing = !cameraOn && !screenOn;
-
-  // For split: position by swapped flag
-  const camSplitClass = isSplit
-    ? swapped
-      ? "inset-x-0 bottom-0 h-1/2 w-full object-cover z-10"
-      : "inset-x-0 top-0 h-1/2 w-full object-cover z-10"
-    : "";
-  const scrSplitClass = isSplit
-    ? swapped
-      ? "inset-x-0 top-0 h-1/2 w-full object-contain z-0"
-      : "inset-x-0 bottom-0 h-1/2 w-full object-contain z-0"
-    : "";
-
-  // For PiP: when swapped, camera is bg, screen in bubble
-  const pipBgIsCamera = isPip && swapped;
+  const isSplit = format === "9:16" && cameraOn && screenOn;
+  const isPip = format === "16:9" && cameraOn && screenOn;
+  const bubbleLabel = swapped ? "Zone écran" : "Zone caméra";
 
   return (
     <div className="w-full h-full flex items-center justify-center">
@@ -119,64 +63,61 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
           if (typeof forwardedRef === "function") forwardedRef(node);
           else if (forwardedRef) forwardedRef.current = node;
         }}
-        className={`relative ${aspect} bg-black rounded-xl overflow-hidden shadow-elegant transition-all duration-300 ${
+        className={`relative ${aspect} overflow-hidden rounded-xl border border-white/10 bg-black shadow-elegant transition-all duration-300 ${
           format === "9:16" ? "h-full max-h-full" : "w-full max-w-full"
         }`}
         style={format === "9:16" ? { width: "auto" } : { height: "auto" }}
       >
-        {/* Camera full */}
-        <video
-          ref={camRef}
-          autoPlay
-          muted
-          playsInline
-          className={`absolute bg-black transition-opacity duration-200 ${
-            isSplit
-              ? `${camSplitClass} opacity-100`
-              : isPip && !pipBgIsCamera
-                ? "opacity-0 pointer-events-none"
-                : isPip && pipBgIsCamera
-                  ? "inset-0 h-full w-full object-cover z-0 opacity-100"
-                  : showCameraFull
-                    ? "inset-0 h-full w-full object-cover z-10 opacity-100"
-                    : "opacity-0 pointer-events-none"
-          }`}
+        <canvas
+          ref={attachCanvas}
+          className="absolute inset-0 h-full w-full"
         />
 
-        {/* Camera placeholder when off but no screen */}
-        {!cameraOn && !screenOn && <CameraPlaceholder />}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[11px] text-white/80 backdrop-blur">
+            {screenOn ? "Écran actif" : "Caméra active"}
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[11px] text-white/70 backdrop-blur">
+            {format}
+          </div>
+        </div>
 
-        {/* Screen full */}
-        <video
-          ref={scrRef}
-          autoPlay
-          muted
-          playsInline
-          className={`absolute bg-black transition-opacity duration-200 ${
-            isSplit
-              ? `${scrSplitClass} opacity-100`
-              : isPip && !pipBgIsCamera
-                ? "inset-0 h-full w-full object-contain z-0 opacity-100"
-                : isPip && pipBgIsCamera
-                  ? "opacity-0 pointer-events-none"
-                  : showScreenFull
-                    ? "inset-0 h-full w-full object-contain z-0 opacity-100"
-                    : "opacity-0 pointer-events-none"
-          }`}
-        />
+        {!cameraOn && !screenOn && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/65 text-white/75 backdrop-blur-sm">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5">
+              <CameraOff className="h-6 w-6" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium">Aucune source active</p>
+              <p className="text-xs text-white/55">Active la caméra ou partage ton écran pour voir le live.</p>
+            </div>
+          </div>
+        )}
 
-        {/* Camera off overlay when in split/pip with camera disabled but screen on */}
-        {!cameraOn && screenOn && isSplit === false && isPip === false && null}
+        {!cameraOn && screenOn && (
+          <div className="pointer-events-none absolute left-3 bottom-3 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[11px] text-white/75 backdrop-blur">
+            <CameraOff className="h-3.5 w-3.5" /> Caméra coupée
+          </div>
+        )}
 
-        {isSplit && <div className="absolute inset-x-0 top-1/2 h-px bg-white/20 pointer-events-none z-20" />}
+        {cameraOn && !screenOn && format === "16:9" && (
+          <div className="pointer-events-none absolute left-3 bottom-3 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[11px] text-white/75 backdrop-blur">
+            <MonitorOff className="h-3.5 w-3.5" /> Partage d'écran inactif
+          </div>
+        )}
+
+        {isSplit && (
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 h-px bg-white/20" />
+        )}
 
         {isPip && (
-          <div
+          <button
+            type="button"
             onPointerDown={(e) => {
               e.preventDefault();
               setDragging(true);
             }}
-            className="absolute rounded-full overflow-hidden border-2 border-white shadow-lg cursor-grab active:cursor-grabbing z-20 transition-transform hover:scale-105"
+            className="absolute z-20 rounded-full border-2 border-white/70 bg-transparent shadow-lg outline-none transition-transform hover:scale-105 active:scale-100"
             style={{
               left: `${bubble.xPct * 100}%`,
               top: `${bubble.yPct * 100}%`,
@@ -184,31 +125,14 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
               aspectRatio: "1 / 1",
               touchAction: "none",
             }}
+            aria-label={bubbleLabel}
           >
-            {pipBgIsCamera ? (
-              <video
-                ref={bubbleScrRef}
-                autoPlay
-                muted
-                playsInline
-                className="h-full w-full object-cover pointer-events-none"
-              />
-            ) : (
-              <video
-                ref={bubbleCamRef}
-                autoPlay
-                muted
-                playsInline
-                className="h-full w-full object-cover pointer-events-none"
-              />
-            )}
-          </div>
-        )}
-
-        {nothing && false && (
-          <div className="absolute inset-0 flex items-center justify-center text-white/50 text-sm">
-            Aucun flux actif
-          </div>
+            <span className="absolute inset-0 rounded-full border border-white/30" />
+            <span className="absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 text-[10px] text-white/85">
+              <Move className="h-3 w-3" />
+              {bubbleLabel}
+            </span>
+          </button>
         )}
       </div>
     </div>
