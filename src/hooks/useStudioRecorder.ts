@@ -716,7 +716,8 @@ export function useStudioRecorder({ format, onFinished }: Options) {
       disconnectAudioNode(screenAudioSourceRef.current);
       disconnectAudioNode(screenGainRef.current);
       audioContextRef.current?.close().catch(() => {});
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      // Do NOT revoke previewUrlRef here — the result page consumes this blob URL
+      // immediately after we navigate away, so revoking would break playback/download.
     };
   }, [ensureCamera, startRenderLoop, stopCombinedStream, stopElapsedTimer]);
 
