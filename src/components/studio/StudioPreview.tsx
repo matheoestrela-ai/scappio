@@ -54,14 +54,16 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
   }, [cameraStream]);
 
   useEffect(() => {
-    const el = scrRef.current;
-    if (!el) return;
-    if (el.srcObject !== screenStream) el.srcObject = screenStream;
-    if (screenStream) {
+    const bind = (el: HTMLVideoElement | null, stream: MediaStream | null) => {
+      if (!el) return;
+      if (el.srcObject !== stream) el.srcObject = stream;
+      if (!stream) return;
       const start = () => el.play().catch(() => {});
       el.addEventListener("loadedmetadata", start, { once: true });
       start();
-    }
+    };
+    bind(scrRef.current, screenStream);
+    bind(bubbleScrRef.current, screenStream);
   }, [screenStream]);
 
   useEffect(() => {
