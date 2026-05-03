@@ -645,6 +645,7 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
           {presenting ? "Exit" : "Présentation"}
         </Button>
 
+        {!presenting && (
         <Popover open={bgOpen} onOpenChange={setBgOpen}>
           <PopoverTrigger asChild>
             <Button
