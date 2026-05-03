@@ -107,7 +107,7 @@ const StudioPreview = forwardRef<HTMLDivElement, Props>(function StudioPreview({
         )}
 
         {isSplit && (
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 h-px bg-white/20" />
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 h-px bg-border/70" />
         )}
 
         {isPip && (
