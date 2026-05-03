@@ -1316,8 +1316,8 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   }, [nodes, edges, fitView]);
 
   const getBoardData = useCallback(
-    () => snapshotToBoardData(nodes, edges),
-    [nodes, edges],
+    () => snapshotToBoardData(nodes, edges, bgColor),
+    [nodes, edges, bgColor],
   );
 
   // Recompute clean hierarchical layout for the current board (keeps styles + edges).
