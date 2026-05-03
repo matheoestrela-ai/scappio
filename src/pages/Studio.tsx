@@ -5,6 +5,8 @@ import {
   ArrowLeft,
   Camera,
   CameraOff,
+  Mic,
+  MicOff,
   Monitor,
   MonitorOff,
   Smartphone,
@@ -12,6 +14,7 @@ import {
   Play,
   Square,
   Circle,
+  ArrowLeftRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -19,8 +22,43 @@ import { useStudioRecorder, type WebcamBubble } from "@/hooks/useStudioRecorder"
 import StudioPreview from "@/components/studio/StudioPreview";
 import Teleprompter from "@/components/studio/Teleprompter";
 import { fmtTime, type StudioFormat } from "@/lib/studio-recorder";
+import type { LucideIcon } from "lucide-react";
 
 const FORMAT_KEY = "scappio:studio:format";
+
+type ToneTone = "emerald" | "blue";
+const toneClasses: Record<ToneTone, string> = {
+  emerald: "bg-emerald-500/90 hover:bg-emerald-500 border-emerald-400 text-white shadow-[0_0_20px_-4px_rgba(16,185,129,0.6)]",
+  blue: "bg-blue-500/90 hover:bg-blue-500 border-blue-400 text-white shadow-[0_0_20px_-4px_rgba(59,130,246,0.6)]",
+};
+
+const ControlToggle = ({
+  active, onClick, activeLabel, inactiveLabel, ActiveIcon, InactiveIcon, tone,
+}: {
+  active: boolean;
+  onClick: () => void;
+  activeLabel: string;
+  inactiveLabel: string;
+  ActiveIcon: LucideIcon;
+  InactiveIcon: LucideIcon;
+  tone: ToneTone;
+}) => {
+  const Icon = active ? ActiveIcon : InactiveIcon;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 h-9 px-3 rounded-full border text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${
+        active
+          ? toneClasses[tone]
+          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      <span className="hidden sm:inline">{active ? activeLabel : inactiveLabel}</span>
+    </button>
+  );
+};
 
 const Studio = () => {
   const navigate = useNavigate();
@@ -103,6 +141,7 @@ const Studio = () => {
             screenStream={studio.screenStream}
             cameraOn={studio.cameraOn}
             screenOn={studio.screenOn}
+            swapped={studio.swapped}
             bubble={bubble}
             onBubbleChange={setBubble}
           />
@@ -128,33 +167,55 @@ const Studio = () => {
       {/* Controls bar */}
       <footer className="sticky bottom-0 border-t border-white/10 bg-black/70 backdrop-blur">
         <div className="container py-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-          <Button
-            variant="outline"
-            size="sm"
+          <ControlToggle
+            active={studio.cameraOn}
             onClick={studio.toggleCamera}
-            className="bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2"
-          >
-            {studio.cameraOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
-            <span className="hidden sm:inline">Caméra</span>
-          </Button>
-
+            activeLabel="Caméra"
+            inactiveLabel="Caméra off"
+            ActiveIcon={Camera}
+            InactiveIcon={CameraOff}
+            tone="emerald"
+          />
+          <ControlToggle
+            active={studio.micOn}
+            onClick={studio.toggleMic}
+            activeLabel="Micro"
+            inactiveLabel="Micro off"
+            ActiveIcon={Mic}
+            InactiveIcon={MicOff}
+            tone="emerald"
+          />
           {studio.screenSupported && (
+            <ControlToggle
+              active={studio.screenOn}
+              onClick={studio.toggleScreen}
+              activeLabel="Écran partagé"
+              inactiveLabel="Partager l'écran"
+              ActiveIcon={Monitor}
+              InactiveIcon={MonitorOff}
+              tone="blue"
+            />
+          )}
+          {studio.cameraOn && studio.screenOn && (
             <Button
               variant="outline"
               size="sm"
-              onClick={studio.screenOn ? studio.stopScreen : studio.enableScreen}
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2"
+              onClick={studio.swapStreams}
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2 transition-transform hover:scale-105"
+              title="Inverser caméra et écran"
             >
-              {studio.screenOn ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
-              <span className="hidden sm:inline">{studio.screenOn ? "Stop écran" : "Partager l'écran"}</span>
+              <ArrowLeftRight className="h-4 w-4" />
+              <span className="hidden sm:inline">Inverser</span>
             </Button>
           )}
+
+          <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block" />
 
           {!studio.recording ? (
             <Button
               size="lg"
               onClick={studio.start}
-              className="bg-red-500 hover:bg-red-600 text-white gap-2 rounded-full px-5"
+              className="bg-red-500 hover:bg-red-600 text-white gap-2 rounded-full px-5 transition-transform hover:scale-105"
             >
               <Circle className="h-4 w-4 fill-white" />
               Lancer l'enregistrement

@@ -31,7 +31,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [cameraOn, setCameraOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
   const [screenOn, setScreenOn] = useState(false);
+  const [swapped, setSwapped] = useState(false);
   const [screenSupported, setScreenSupported] = useState(false);
   const [cameraPreviewStream, setCameraPreviewStream] = useState<MediaStream | null>(null);
   const [screenPreviewStream, setScreenPreviewStream] = useState<MediaStream | null>(null);
@@ -54,10 +56,15 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const timerRef = useRef<number | null>(null);
   const formatRef = useRef<StudioFormat>(format);
   const bubbleRef = useRef<WebcamBubble>({ xPct: 0.78, yPct: 0.7, rPct: 0.12 });
+  const swappedRef = useRef(false);
+  const cameraOnRef = useRef(true);
 
   useEffect(() => {
     formatRef.current = format;
   }, [format]);
+
+  useEffect(() => { swappedRef.current = swapped; }, [swapped]);
+  useEffect(() => { cameraOnRef.current = cameraOn; }, [cameraOn]);
 
   useEffect(() => {
     setScreenSupported(!!getDisplayMediaSafely() && !isLikelyMobile());
@@ -94,7 +101,12 @@ export function useStudioRecorder({ format, onFinished }: Options) {
 
   // ----- Stream helpers -----
   const ensureCamera = useCallback(async () => {
-    if (cameraStreamRef.current) return cameraStreamRef.current;
+    if (cameraStreamRef.current && micStreamRef.current) {
+      cameraStreamRef.current.getVideoTracks().forEach((t) => (t.enabled = true));
+      micStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = micOn));
+      setCameraOn(true);
+      return cameraStreamRef.current;
+    }
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: true,
@@ -103,6 +115,9 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     const audio = stream.getAudioTracks();
     cameraStreamRef.current = video.length ? new MediaStream(video) : null;
     micStreamRef.current = audio.length ? new MediaStream(audio) : null;
+    if (micStreamRef.current) {
+      micStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = micOn));
+    }
 
     if (cameraStreamRef.current) {
       cameraVideoRef.current = await createPlaybackVideo(cameraStreamRef.current);
@@ -110,13 +125,10 @@ export function useStudioRecorder({ format, onFinished }: Options) {
     setCameraPreviewStream(cameraStreamRef.current);
     setCameraOn(!!cameraStreamRef.current);
     return cameraStreamRef.current;
-  }, [createPlaybackVideo]);
+  }, [createPlaybackVideo, micOn]);
 
-  const stopCamera = useCallback(() => {
-    cameraStreamRef.current?.getTracks().forEach((t) => { try { t.stop(); } catch {} });
-    cameraStreamRef.current = null;
-    cameraVideoRef.current = null;
-    setCameraPreviewStream(null);
+  const disableCamera = useCallback(() => {
+    cameraStreamRef.current?.getVideoTracks().forEach((t) => (t.enabled = false));
     setCameraOn(false);
   }, []);
 
@@ -148,22 +160,44 @@ export function useStudioRecorder({ format, onFinished }: Options) {
         stopScreen();
       });
     } catch (err: any) {
-      if (err?.name === "NotAllowedError" || err?.name === "AbortError") return;
+      if (err?.name === "NotAllowedError" || err?.name === "AbortError") {
+        toast.message("Partage d'écran annulé", { description: "Tu peux réessayer à tout moment." });
+        return;
+      }
       console.error(err);
       toast.error("Partage d'écran indisponible");
     }
   }, [createPlaybackVideo, stopScreen]);
 
   const toggleCamera = useCallback(async () => {
-    if (cameraOn) stopCamera();
-    else {
+    if (cameraOn) {
+      disableCamera();
+    } else {
       try {
         await ensureCamera();
       } catch {
-        toast.error("Caméra non disponible");
+        toast.error("Caméra refusée. Vérifie les autorisations du navigateur.");
       }
     }
-  }, [cameraOn, ensureCamera, stopCamera]);
+  }, [cameraOn, ensureCamera, disableCamera]);
+
+  const toggleMic = useCallback(() => {
+    setMicOn((on) => {
+      const next = !on;
+      micStreamRef.current?.getAudioTracks().forEach((t) => (t.enabled = next));
+      return next;
+    });
+  }, []);
+
+  const toggleScreen = useCallback(async () => {
+    if (screenOn) stopScreen();
+    else await enableScreen();
+  }, [screenOn, stopScreen, enableScreen]);
+
+  const swapStreams = useCallback(() => {
+    if (!screenOn || !cameraOn) return;
+    setSwapped((s) => !s);
+  }, [screenOn, cameraOn]);
 
   // Initialise camera on mount for live preview.
   useEffect(() => {
@@ -213,14 +247,18 @@ export function useStudioRecorder({ format, onFinished }: Options) {
 
       const cam = cameraVideoRef.current;
       const scr = screenVideoRef.current;
-      const camReady = cam && cam.readyState >= 2;
-      const scrReady = scr && scr.readyState >= 2;
+      const camReady = !!(cam && cam.readyState >= 2 && cameraOnRef.current);
+      const scrReady = !!(scr && scr.readyState >= 2);
+      const swapped = swappedRef.current;
 
       if (fmt === "9:16") {
         if (scrReady && camReady) {
-          // Camera top half, screen bottom half.
-          drawCover(ctx, cam!, 0, 0, w, h / 2);
-          drawContain(ctx, scr!, 0, h / 2, w, h / 2);
+          const top = swapped ? scr! : cam!;
+          const bot = swapped ? cam! : scr!;
+          if (swapped) drawContain(ctx, top, 0, 0, w, h / 2);
+          else drawCover(ctx, top, 0, 0, w, h / 2);
+          if (swapped) drawCover(ctx, bot, 0, h / 2, w, h / 2);
+          else drawContain(ctx, bot, 0, h / 2, w, h / 2);
           ctx.fillStyle = "rgba(255,255,255,0.15)";
           ctx.fillRect(0, h / 2 - 1, w, 2);
         } else if (camReady) {
@@ -229,14 +267,16 @@ export function useStudioRecorder({ format, onFinished }: Options) {
           drawContain(ctx, scr!, 0, 0, w, h);
         }
       } else {
-        // 16:9
         if (scrReady && camReady) {
-          drawContain(ctx, scr!, 0, 0, w, h);
+          const bg = swapped ? cam! : scr!;
+          const pip = swapped ? scr! : cam!;
+          if (swapped) drawCover(ctx, bg, 0, 0, w, h);
+          else drawContain(ctx, bg, 0, 0, w, h);
           const b = bubbleRef.current;
           const r = b.rPct * h;
           const cx = b.xPct * w + r;
           const cy = b.yPct * h + r;
-          drawCircle(ctx, cam!, cx, cy, r);
+          drawCircle(ctx, pip, cx, cy, r);
         } else if (camReady) {
           drawCover(ctx, cam!, 0, 0, w, h);
         } else if (scrReady) {
@@ -337,22 +377,24 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   }, []);
 
   return {
-    // state
     recording,
     paused,
     elapsed,
     cameraOn,
+    micOn,
     screenOn,
+    swapped,
     screenSupported,
     previewUrl,
-    // streams (for the live preview)
     cameraStream: cameraPreviewStream,
     screenStream: screenPreviewStream,
-    // controls
     start,
     stop,
     togglePause,
     toggleCamera,
+    toggleMic,
+    toggleScreen,
+    swapStreams,
     enableScreen,
     stopScreen,
     setBubble,
