@@ -1392,9 +1392,19 @@ const BoardInner = ({ data, apiRef, onChange }: BoardProps) => {
   }, []);
 
   return (
-    <div className="relative h-full w-full bg-gradient-board">
+    <div
+      className="relative h-full w-full transition-colors duration-300"
+      style={{ background: bgColor }}
+    >
       {/* Top toolbar */}
-      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border border-border bg-background/90 p-1 sm:p-1.5 shadow-elegant backdrop-blur">
+      <div
+        className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 rounded-xl border p-1 sm:p-1.5 shadow-elegant backdrop-blur transition-colors"
+        style={
+          isDarkBoard
+            ? { background: "rgba(26,26,26,0.95)", borderColor: "#2A2A2A", color: "#fff" }
+            : { background: "rgba(255,255,255,0.9)" }
+        }
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" className="bg-gradient-primary shadow-glow hover:opacity-90 px-2 sm:px-3">
