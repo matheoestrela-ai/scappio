@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PenLine, Trash2, Settings, LogOut, Loader2, Menu, X, History as HistoryIcon, Video } from "lucide-react";
+import { PenLine, Trash2, Settings, LogOut, Loader2, Menu, X, History as HistoryIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listBoards, deleteBoard, type BoardRow } from "@/lib/boards-history";
 import { toast } from "sonner";
@@ -196,9 +196,6 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
           <DropdownMenuContent align="start" side="top" className="w-56">
             <DropdownMenuItem onClick={() => navigate("/history")}>
               <HistoryIcon className="h-4 w-4 mr-2" /> History
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/recordings")}>
-              <Video className="h-4 w-4 mr-2" /> My recordings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
