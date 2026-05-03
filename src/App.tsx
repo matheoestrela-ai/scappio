@@ -8,6 +8,7 @@ import Auth from "./pages/Auth.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import History from "./pages/History.tsx";
 import Studio from "./pages/Studio.tsx";
+import Recordings from "./pages/Recordings.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/history" element={<History />} />
           <Route path="/studio" element={<Studio />} />
+          <Route path="/recordings" element={<Recordings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
