@@ -56,10 +56,15 @@ export function useStudioRecorder({ format, onFinished }: Options) {
   const timerRef = useRef<number | null>(null);
   const formatRef = useRef<StudioFormat>(format);
   const bubbleRef = useRef<WebcamBubble>({ xPct: 0.78, yPct: 0.7, rPct: 0.12 });
+  const swappedRef = useRef(false);
+  const cameraOnRef = useRef(true);
 
   useEffect(() => {
     formatRef.current = format;
   }, [format]);
+
+  useEffect(() => { swappedRef.current = swapped; }, [swapped]);
+  useEffect(() => { cameraOnRef.current = cameraOn; }, [cameraOn]);
 
   useEffect(() => {
     setScreenSupported(!!getDisplayMediaSafely() && !isLikelyMobile());
