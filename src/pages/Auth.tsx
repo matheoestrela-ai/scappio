@@ -130,8 +130,7 @@ const Auth = () => {
       {/* LEFT — Form */}
       <div className="relative flex flex-col px-6 py-8 sm:px-12 lg:px-16">
         <Link to="/" className="flex items-center gap-2 w-fit group">
-          <div className="h-9 w-9 rounded-xl bg-gradient-primary shadow-glow transition-transform group-hover:scale-110 group-hover:rotate-6" />
-          <span className="text-xl font-semibold tracking-tight">scappio</span>
+          <span className="text-xl font-semibold tracking-tight bg-gradient-primary bg-clip-text text-transparent">scappio</span>
         </Link>
 
         <div className="flex-1 flex items-center justify-center py-10">
