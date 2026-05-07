@@ -159,13 +159,17 @@ const Auth = () => {
             </div>
 
             <div key={mode} className="animate-fade-in">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {mode === "signin" ? "Welcome back 👋" : "Create your account"}
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground mb-4">
+                <Sparkles className="h-3 w-3 text-primary" />
+                {mode === "signin" ? "Welcome back" : "Get started for free"}
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                {mode === "signin" ? "Sign in to scappio" : "Create your account"}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 {mode === "signin"
-                  ? "Sign in to resume your mindmaps."
-                  : "A few seconds to start for free."}
+                  ? "Resume your mindmaps in one click."
+                  : "Just a few seconds — no credit card required."}
               </p>
 
               <form onSubmit={handleSubmit} className="mt-8 space-y-4">
