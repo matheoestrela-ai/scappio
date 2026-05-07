@@ -173,7 +173,7 @@ const Index = () => {
   const placeholder = useTypewriter(reducedMotion);
 
   const { scrollY } = useScroll();
-  const gridY = useTransform(scrollY, [0, 1000], [0, 200]);
+  const gridY = useTransform(scrollY, [0, 1000], [0, 80]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -196,8 +196,9 @@ const Index = () => {
       {/* FigJam-style fine grid background (parallax) */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0"
         style={{
+          height: "calc(100% + 200px)",
           y: reducedMotion ? 0 : gridY,
           backgroundImage:
             "linear-gradient(to right, rgba(232,224,216,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(232,224,216,0.5) 1px, transparent 1px)",
@@ -269,7 +270,7 @@ const Index = () => {
                   aria-hidden
                   viewBox="0 0 200 14"
                   preserveAspectRatio="none"
-                  className="absolute left-0 right-0 -bottom-2 w-full h-3 pointer-events-none"
+                  className="absolute left-0 right-0 -bottom-4 md:-bottom-5 w-full h-3 pointer-events-none"
                 >
                   <path
                     d="M2 8 C 50 2, 150 2, 198 8"
