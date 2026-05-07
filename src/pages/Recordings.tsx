@@ -106,7 +106,7 @@ const Recordings = () => {
         <section className="bg-card border border-border rounded-2xl overflow-hidden">
           {active && activeUrl ? (
             <>
-              <video src={activeUrl} controls className="w-full aspect-video bg-black" />
+              <video src={activeUrl} controls className="w-full max-h-[70vh] object-contain bg-black" />
               <div className="p-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="font-semibold">{active.title}</h2>
