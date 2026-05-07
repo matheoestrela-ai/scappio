@@ -193,18 +193,14 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen pb-24 md:pb-0 overflow-x-hidden" style={{ backgroundColor: "#faf7f4" }}>
-      {/* FigJam-style fine grid background (parallax) */}
-      <motion.div
+      {/* FigJam-style fine grid background (static) */}
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{
-          height: "calc(100% + 200px)",
-          y: reducedMotion ? 0 : gridY,
           backgroundImage:
             "linear-gradient(to right, rgba(232,224,216,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(232,224,216,0.5) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
-          maskImage: "linear-gradient(180deg, black, black 85%, transparent)",
-          WebkitMaskImage: "linear-gradient(180deg, black, black 85%, transparent)",
         }}
       />
       <div className="relative z-10">
