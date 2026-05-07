@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Square } from "lucide-react";
+import { Camera, Square, Monitor, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { saveRecording } from "@/lib/recordings-db";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type Corner = "tl" | "tr" | "bl" | "br";
+type Format = "16:9" | "9:16";
 
 type Props = {
   targetRef: React.RefObject<HTMLElement>;
@@ -41,6 +43,8 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
   const [elapsed, setElapsed] = useState(0);
   const [corner, setCorner] = useState<Corner>("bl");
   const [camReady, setCamReady] = useState(false);
+  const [formatDialogOpen, setFormatDialogOpen] = useState(false);
+  const [activeFormat, setActiveFormat] = useState<Format>("16:9");
 
   const screenStreamRef = useRef<MediaStream | null>(null);
   const camStreamRef = useRef<MediaStream | null>(null);
@@ -69,7 +73,8 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  const startRecording = async () => {
+  const startRecording = async (format: Format) => {
+    setActiveFormat(format);
     if (typeof MediaRecorder === "undefined") {
       toast.error("Your browser does not support recording");
       return;
@@ -97,13 +102,13 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     let cam: MediaStream | null = null;
     try {
       cam = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 480 }, height: { ideal: 480 }, facingMode: "user" },
+        video: { width: { ideal: 720 }, height: { ideal: 720 }, facingMode: "user" },
         audio: true,
       });
     } catch {
       try {
         cam = await navigator.mediaDevices.getUserMedia({ audio: true });
-        toast.warning("Camera denied — recording without webcam bubble");
+        toast.warning("Camera denied — recording without webcam");
       } catch {
         toast.warning("Camera & mic denied — recording screen only");
       }
@@ -117,7 +122,9 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       v.muted = true; v.playsInline = true; v.autoplay = true;
       try { await v.play(); } catch {}
       camVideoElRef.current = v;
-      setCamReady(true);
+      // In 16:9 mode we render the bubble overlay so it's captured by screen stream.
+      // In 9:16 mode we draw the camera directly on canvas — no bubble overlay needed.
+      if (format === "16:9") setCamReady(true);
     }
 
     // Screen video element to feed canvas
@@ -130,20 +137,82 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     // wait one frame so videoWidth is populated
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     const sTrackSettings = screen.getVideoTracks()[0].getSettings();
-    const W = sv.videoWidth || sTrackSettings.width || 1920;
-    const H = sv.videoHeight || sTrackSettings.height || 1080;
+    const SW = sv.videoWidth || sTrackSettings.width || 1920;
+    const SH = sv.videoHeight || sTrackSettings.height || 1080;
+
+    // Output canvas dimensions
+    const W = format === "9:16" ? 1080 : SW;
+    const H = format === "9:16" ? 1920 : SH;
 
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
     canvasRef.current = canvas;
     const ctx = canvas.getContext("2d", { alpha: false })!;
 
+    // Helper: draw "cover" (center-crop) of source into target rect
+    const drawCover = (
+      src: CanvasImageSource,
+      sw: number,
+      sh: number,
+      dx: number,
+      dy: number,
+      dw: number,
+      dh: number,
+    ) => {
+      if (!sw || !sh) return;
+      const srcRatio = sw / sh;
+      const dstRatio = dw / dh;
+      let cx = 0, cy = 0, cw = sw, ch = sh;
+      if (srcRatio > dstRatio) {
+        // source wider -> crop sides
+        cw = sh * dstRatio;
+        cx = (sw - cw) / 2;
+      } else {
+        ch = sw / dstRatio;
+        cy = (sh - ch) / 2;
+      }
+      try { ctx.drawImage(src, cx, cy, cw, ch, dx, dy, dw, dh); } catch {}
+    };
+
+    // Helper: draw "contain" (fit) of source into target rect (letterboxed)
+    const drawContain = (
+      src: CanvasImageSource,
+      sw: number,
+      sh: number,
+      dx: number,
+      dy: number,
+      dw: number,
+      dh: number,
+    ) => {
+      if (!sw || !sh) return;
+      const srcRatio = sw / sh;
+      const dstRatio = dw / dh;
+      let tw = dw, th = dh;
+      if (srcRatio > dstRatio) {
+        th = dw / srcRatio;
+      } else {
+        tw = dh * srcRatio;
+      }
+      const tx = dx + (dw - tw) / 2;
+      const ty = dy + (dh - th) / 2;
+      try { ctx.drawImage(src, 0, 0, sw, sh, tx, ty, tw, th); } catch {}
+    };
+
     const draw = () => {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, W, H);
-      try { ctx.drawImage(sv, 0, 0, W, H); } catch {}
-      // Camera bubble is rendered as a DOM overlay and already captured by the screen stream.
-      // Do NOT redraw it here, otherwise the face appears twice in the final video.
+      if (format === "9:16") {
+        // top half = board (screen), bottom half = camera
+        const halfH = H / 2;
+        drawContain(sv, SW, SH, 0, 0, W, halfH);
+        const cv = camVideoElRef.current;
+        if (cv && cv.videoWidth) {
+          drawCover(cv, cv.videoWidth, cv.videoHeight, 0, halfH, W, halfH);
+        }
+      } else {
+        try { ctx.drawImage(sv, 0, 0, W, H); } catch {}
+        // Camera bubble is captured by the screen stream (DOM overlay), no redraw.
+      }
       rafRef.current = requestAnimationFrame(draw);
     };
     draw();
@@ -209,7 +278,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     }
   };
 
-  // Mount cam <video> into the visible bubble
+  // Mount cam <video> into the visible bubble (16:9 mode only)
   const bubbleHostRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!camReady) return;
@@ -250,6 +319,13 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     return `${m}:${ss}`;
   };
 
+  const handleSelectFormat = async (format: Format) => {
+    setFormatDialogOpen(false);
+    // Slight delay so dialog close doesn't swallow the user gesture for getDisplayMedia
+    await new Promise((r) => setTimeout(r, 50));
+    await startRecording(format);
+  };
+
   return (
     <>
       {recording && (
@@ -266,7 +342,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={recording ? stopRecording : startRecording}
+                onClick={recording ? stopRecording : () => setFormatDialogOpen(true)}
                 aria-label={recording ? "Stop recording" : "Record screen"}
                 className={`h-9 w-9 inline-flex items-center justify-center rounded-full shadow-md transition text-white ${
                   recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-red-600 hover:bg-red-500"
@@ -282,7 +358,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
         </TooltipProvider>
       </div>
 
-      {camReady && (
+      {camReady && activeFormat === "16:9" && (
         <div
           data-recorder-ui="true"
           ref={bubbleHostRef}
@@ -303,6 +379,43 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           }}
         />
       )}
+
+      <Dialog open={formatDialogOpen} onOpenChange={setFormatDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choisir le format d'enregistrement</DialogTitle>
+            <DialogDescription>
+              Sélectionne l'orientation de la vidéo finale.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <button
+              onClick={() => handleSelectFormat("16:9")}
+              className="group flex flex-col items-center gap-3 rounded-xl border border-border p-4 hover:border-primary hover:bg-accent transition"
+            >
+              <div className="flex items-center justify-center w-full aspect-video rounded-md bg-muted group-hover:bg-background border border-border">
+                <Monitor className="h-8 w-8 text-muted-foreground group-hover:text-primary" />
+              </div>
+              <div className="text-center">
+                <div className="font-medium">16:9</div>
+                <div className="text-xs text-muted-foreground">Paysage — écran + bulle caméra</div>
+              </div>
+            </button>
+            <button
+              onClick={() => handleSelectFormat("9:16")}
+              className="group flex flex-col items-center gap-3 rounded-xl border border-border p-4 hover:border-primary hover:bg-accent transition"
+            >
+              <div className="flex items-center justify-center w-full rounded-md bg-muted group-hover:bg-background border border-border" style={{ aspectRatio: "9 / 16", maxHeight: 140 }}>
+                <Smartphone className="h-8 w-8 text-muted-foreground group-hover:text-primary" />
+              </div>
+              <div className="text-center">
+                <div className="font-medium">9:16</div>
+                <div className="text-xs text-muted-foreground">Portrait — board en haut, caméra en bas</div>
+              </div>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
