@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Trash2, Share2, Loader2, Video } from "lucide-react";
+import { ArrowLeft, Download, Trash2, Share2, Loader2, Video, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { listRecordings, deleteRecording, type Recording } from "@/lib/recordings-db";
+import { supabase } from "@/integrations/supabase/client";
 
 const fmtDuration = (s: number) => {
   const m = Math.floor(s / 60).toString().padStart(2, "0");
@@ -17,6 +18,7 @@ const Recordings = () => {
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -88,6 +90,38 @@ const Recordings = () => {
     }
   };
 
+  const handlePublicShare = async (r: Recording) => {
+    if (sharing) return;
+    setSharing(true);
+    const t = toast.loading("Création du lien…");
+    try {
+      const id = crypto.randomUUID();
+      const ext = r.mimeType.includes("mp4") ? "mp4" : "webm";
+      const path = `${id}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("shared-videos")
+        .upload(path, r.blob, { contentType: r.blob.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("shared-videos").getPublicUrl(path);
+      const format = r.format === "9:16" ? "tiktok" : "standard";
+      const { error: insErr } = await supabase.from("shared_videos").insert({
+        id,
+        video_url: pub.publicUrl,
+        format,
+      });
+      if (insErr) throw insErr;
+      const link = `https://scappio.fr/v/${id}`;
+      await navigator.clipboard.writeText(link);
+      toast.dismiss(t);
+      toast.success("Lien copié ✓ — Partageable sans compte");
+    } catch (e: any) {
+      toast.dismiss(t);
+      toast.error("Échec du partage : " + (e?.message || e));
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const active = items.find((i) => i.id === activeId) ?? null;
 
   return (
@@ -117,6 +151,15 @@ const Recordings = () => {
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => handleDownload(active)}>
                     <Download className="h-4 w-4 mr-1.5" /> Download
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handlePublicShare(active)}
+                    disabled={sharing}
+                    className="bg-white text-orange-600 border border-orange-500 hover:bg-orange-50"
+                  >
+                    <Link2 className="h-4 w-4 mr-1.5" />
+                    {sharing ? "Création…" : "🔗 Partager la vidéo"}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => handleShare(active)}>
                     <Share2 className="h-4 w-4 mr-1.5" /> Share

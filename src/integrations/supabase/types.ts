@@ -88,6 +88,30 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_videos: {
+        Row: {
+          created_at: string
+          expires_at: string
+          format: string
+          id: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          format?: string
+          id?: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          format?: string
+          id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
