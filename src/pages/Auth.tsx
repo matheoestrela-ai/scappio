@@ -95,36 +95,58 @@ const Auth = () => {
         // (Lovable Cloud reste la source de vérité ; ce POST permet de garder
         //  une copie sur ton propre serveur pour te détacher plus tard.)
         const generatedUserId = signUpData.user?.id;
-        if (generatedUserId) {
-          const payload = {
-            action: "sign up",
-            // clés en minuscules (utilisées par get_user_data['mail'], ['password'], ['user_gen_id'])
-            mail: parsed.data.email,
-            password: parsed.data.password,
-            user_gen_id: generatedUserId,
-            // clés capitalisées (utilisées par get_user_data['Name'], ['Surname'], ['Mail'])
-            Name: parsed.data.firstName,
-            Surname: parsed.data.lastName,
-            Mail: parsed.data.email,
-          };
-          try {
-            console.log("[ScappioAuth] POST payload:", payload);
-            const resp = await fetch(
-              "https://scappio-project-auth-part.onrender.com/ScappioAuth",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-              }
-            );
-            const text = await resp.text();
-            console.log("[ScappioAuth] response", resp.status, text);
-            if (!resp.ok) {
-              console.error("[ScappioAuth] server error", resp.status, text);
-            }
-          } catch (syncErr) {
-            console.warn("[ScappioAuth] network error:", syncErr);
+        if (!generatedUserId) {
+          throw new Error("Sign-up failed: no user id returned");
+        }
+
+        const payload = {
+          action: "sign up",
+          mail: parsed.data.email,
+          password: parsed.data.password,
+          user_gen_id: generatedUserId,
+          Name: parsed.data.firstName,
+          Surname: parsed.data.lastName,
+          Mail: parsed.data.email,
+        };
+
+        // Mirror to Scappio Flask server. If it rejects, roll back the Supabase user.
+        let flaskOk = false;
+        let flaskMessage = "Le serveur Scappio n'a pas validé l'inscription";
+        try {
+          console.log("[ScappioAuth] POST payload:", payload);
+          const resp = await fetch(
+            "https://scappio-project-auth-part.onrender.com/ScappioAuth",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
+          const text = await resp.text();
+          console.log("[ScappioAuth] response", resp.status, text);
+          let body: any = null;
+          try { body = JSON.parse(text); } catch { /* not JSON */ }
+          if (resp.ok && body && body.status === true) {
+            flaskOk = true;
+          } else if (body && typeof body.message === "string") {
+            flaskMessage = body.message;
           }
+        } catch (syncErr) {
+          console.error("[ScappioAuth] network error:", syncErr);
+          flaskMessage = "Impossible de joindre le serveur Scappio";
+        }
+
+        if (!flaskOk) {
+          // Roll back: delete the just-created auth user to avoid an orphan.
+          try {
+            await supabase.functions.invoke("delete-auth-user", {
+              body: { user_id: generatedUserId },
+            });
+          } catch (rollbackErr) {
+            console.error("[ScappioAuth] rollback failed:", rollbackErr);
+          }
+          await supabase.auth.signOut();
+          throw new Error(flaskMessage);
         }
 
         toast.success("Account created! Check your email.");
