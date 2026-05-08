@@ -18,6 +18,7 @@ const Recordings = () => {
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
