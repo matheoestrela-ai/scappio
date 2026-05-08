@@ -27,6 +27,7 @@ const App = () => (
           <Route path="/history" element={<History />} />
           <Route path="/studio" element={<Studio />} />
           <Route path="/recordings" element={<Recordings />} />
+          <Route path="/v/:id" element={<SharedVideo />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
