@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import History from "./pages/History.tsx";
 import Studio from "./pages/Studio.tsx";
 import Recordings from "./pages/Recordings.tsx";
+import SharedVideo from "./pages/SharedVideo.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
