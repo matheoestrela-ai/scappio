@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Trash2, Share2, Loader2, Video } from "lucide-react";
+import { ArrowLeft, Download, Trash2, Share2, Loader2, Video, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { listRecordings, deleteRecording, type Recording } from "@/lib/recordings-db";
+import { supabase } from "@/integrations/supabase/client";
 
 const fmtDuration = (s: number) => {
   const m = Math.floor(s / 60).toString().padStart(2, "0");
