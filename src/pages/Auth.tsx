@@ -77,7 +77,7 @@ const Auth = () => {
           toast.error(parsed.error.errors[0].message);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
@@ -90,6 +90,35 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+
+        // Mirror the new user to the external Scappio Flask server
+        // (Lovable Cloud reste la source de vérité ; ce POST permet de garder
+        //  une copie sur ton propre serveur pour te détacher plus tard.)
+        const generatedUserId = signUpData.user?.id;
+        if (generatedUserId) {
+          const payload = {
+            action: "sign up",
+            // clés en minuscules (utilisées par get_user_data['mail'], ['password'], ['user_gen_id'])
+            mail: parsed.data.email,
+            password: parsed.data.password,
+            user_gen_id: generatedUserId,
+            // clés capitalisées (utilisées par get_user_data['Name'], ['Surname'], ['Mail'])
+            Name: parsed.data.firstName,
+            Surname: parsed.data.lastName,
+            Mail: parsed.data.email,
+          };
+          try {
+            await fetch("http://127.0.0.1:5555/ScappioAuth", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          } catch (syncErr) {
+            // On n'échoue pas l'inscription si le serveur Flask local est down
+            console.warn("Scappio server sync failed:", syncErr);
+          }
+        }
+
         toast.success("Account created! Check your email.");
       } else {
         const parsed = signinSchema.safeParse({ email, password });
