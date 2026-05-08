@@ -44,11 +44,100 @@ const Auth = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    const handleSession = async (session: any) => {
+      if (!session?.user) return;
+      const user = session.user;
+      const provider = user.app_metadata?.provider;
+      const alreadySynced = user.user_metadata?.scappio_synced === true;
+
+      // First-time Google sign-up → mirror to Scappio Flask server
+      if (provider === "google" && !alreadySynced) {
+        try {
+          const meta = user.user_metadata ?? {};
+          const firstName: string =
+            meta.given_name ?? meta.first_name ?? (meta.full_name ?? meta.name ?? "").split(" ")[0] ?? "";
+          const lastName: string =
+            meta.family_name ?? meta.last_name ??
+            ((meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ")) ?? "";
+
+          // Generate a random password (user can change it later in their account settings)
+          const generatedPassword =
+            (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) +
+            "Aa1!";
+
+          // Persist password + names on the Lovable Cloud auth user, mark as synced
+          const { error: updErr } = await supabase.auth.updateUser({
+            password: generatedPassword,
+            data: {
+              first_name: firstName,
+              last_name: lastName,
+              full_name: meta.full_name ?? `${firstName} ${lastName}`.trim(),
+              scappio_synced: true,
+            },
+          });
+          if (updErr) throw updErr;
+
+          const payload = {
+            action: "sign up",
+            mail: user.email,
+            password: generatedPassword,
+            user_gen_id: user.id,
+            Name: firstName,
+            Surname: lastName,
+            Mail: user.email,
+          };
+          console.log("[ScappioAuth][google] POST payload:", payload);
+          const resp = await fetch(
+            "https://scappio-project-auth-part.onrender.com/ScappioAuth",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
+          const text = await resp.text();
+          console.log("[ScappioAuth][google] response", resp.status, text);
+          let body: any = null;
+          try { body = JSON.parse(text); } catch { /* not JSON */ }
+
+          if (!resp.ok || !body || body.status !== true) {
+            const msg =
+              (body && typeof body.message === "string" && body.message) ||
+              "Le serveur Scappio n'a pas validé l'inscription Google";
+            // Roll back the just-created auth user to avoid an orphan
+            try {
+              await supabase.functions.invoke("delete-auth-user", {
+                body: { user_id: user.id },
+              });
+            } catch (rbErr) {
+              console.error("[ScappioAuth][google] rollback failed:", rbErr);
+            }
+            await supabase.auth.signOut();
+            toast.error(msg);
+            return;
+          }
+          toast.success("Compte Google connecté !");
+        } catch (err: any) {
+          console.error("[ScappioAuth][google] sync error:", err);
+          try {
+            await supabase.functions.invoke("delete-auth-user", {
+              body: { user_id: user.id },
+            });
+          } catch {/* ignore */}
+          await supabase.auth.signOut();
+          toast.error(err?.message ?? "Erreur lors de la synchronisation Google");
+          return;
+        }
+      }
+
+      navigate("/dashboard", { replace: true });
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/dashboard", { replace: true });
+      handleSession(session);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate("/dashboard", { replace: true });
+      handleSession(session);
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
