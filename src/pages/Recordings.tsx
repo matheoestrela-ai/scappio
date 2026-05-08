@@ -152,6 +152,15 @@ const Recordings = () => {
                   <Button size="sm" variant="outline" onClick={() => handleDownload(active)}>
                     <Download className="h-4 w-4 mr-1.5" /> Download
                   </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handlePublicShare(active)}
+                    disabled={sharing}
+                    className="bg-white text-orange-600 border border-orange-500 hover:bg-orange-50"
+                  >
+                    <Link2 className="h-4 w-4 mr-1.5" />
+                    {sharing ? "Création…" : "🔗 Partager la vidéo"}
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => handleShare(active)}>
                     <Share2 className="h-4 w-4 mr-1.5" /> Share
                   </Button>
