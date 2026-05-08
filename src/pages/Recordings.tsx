@@ -90,6 +90,38 @@ const Recordings = () => {
     }
   };
 
+  const handlePublicShare = async (r: Recording) => {
+    if (sharing) return;
+    setSharing(true);
+    const t = toast.loading("Création du lien…");
+    try {
+      const id = crypto.randomUUID();
+      const ext = r.mimeType.includes("mp4") ? "mp4" : "webm";
+      const path = `${id}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("shared-videos")
+        .upload(path, r.blob, { contentType: r.blob.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("shared-videos").getPublicUrl(path);
+      const format = r.format === "9:16" ? "tiktok" : "standard";
+      const { error: insErr } = await supabase.from("shared_videos").insert({
+        id,
+        video_url: pub.publicUrl,
+        format,
+      });
+      if (insErr) throw insErr;
+      const link = `https://scappio.fr/v/${id}`;
+      await navigator.clipboard.writeText(link);
+      toast.dismiss(t);
+      toast.success("Lien copié ✓ — Partageable sans compte");
+    } catch (e: any) {
+      toast.dismiss(t);
+      toast.error("Échec du partage : " + (e?.message || e));
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const active = items.find((i) => i.id === activeId) ?? null;
 
   return (
