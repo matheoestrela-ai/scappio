@@ -108,14 +108,22 @@ const Auth = () => {
             Mail: parsed.data.email,
           };
           try {
-            await fetch("https://scappio-project-auth-part.onrender.com/ScappioAuth", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
+            console.log("[ScappioAuth] POST payload:", payload);
+            const resp = await fetch(
+              "https://scappio-project-auth-part.onrender.com/ScappioAuth",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              }
+            );
+            const text = await resp.text();
+            console.log("[ScappioAuth] response", resp.status, text);
+            if (!resp.ok) {
+              console.error("[ScappioAuth] server error", resp.status, text);
+            }
           } catch (syncErr) {
-            // On n'échoue pas l'inscription si le serveur Flask local est down
-            console.warn("Scappio server sync failed:", syncErr);
+            console.warn("[ScappioAuth] network error:", syncErr);
           }
         }
 
