@@ -11,6 +11,7 @@ export type RecordingMeta = {
   createdAt: number;
   mimeType: string;
   thumbnail: string | null; // data URL
+  format?: "16:9" | "9:16";
 };
 
 export type Recording = RecordingMeta & { blob: Blob };
