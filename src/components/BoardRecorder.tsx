@@ -251,6 +251,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           createdAt: Date.now(),
           mimeType: blob.type,
           thumbnail: thumb,
+          format,
           blob,
         });
         toast.success("Recording saved");
