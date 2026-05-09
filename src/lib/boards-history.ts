@@ -175,8 +175,14 @@ export const getBoard = async (id: string): Promise<BoardRow | null> => {
 };
 
 export const deleteBoard = async (id: string): Promise<void> => {
+  const user_id = await requireUserId();
   const { error } = await supabase.from("boards").delete().eq("id", id);
   if (error) throw error;
+  syncToScappio({
+    action: "delete board",
+    user_gen_id: user_id,
+    id,
+  });
 };
 
 export const duplicateBoard = async (id: string): Promise<BoardRow> => {
