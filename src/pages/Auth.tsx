@@ -44,14 +44,28 @@ const Auth = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    const processedUsers = new Set<string>();
     const handleSession = async (session: any) => {
       if (!session?.user) return;
       const user = session.user;
       const provider = user.app_metadata?.provider;
       const alreadySynced = user.user_metadata?.scappio_synced === true;
 
-      // First-time Google sign-up → mirror to Scappio Flask server
-      if (provider === "google" && !alreadySynced) {
+      // Read intent stored before the OAuth redirect (signin vs signup tab)
+      const intent =
+        (typeof sessionStorage !== "undefined" &&
+          sessionStorage.getItem("scappio_google_intent")) || "signin";
+
+      // Dedupe: handleSession fires from both getSession() and onAuthStateChange
+      if (provider === "google" && processedUsers.has(user.id)) {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+      if (provider === "google") processedUsers.add(user.id);
+
+      // Google SIGN-UP path: only when user clicked Google from the "Sign up" tab
+      // AND the account hasn't been mirrored to Scappio yet
+      if (provider === "google" && intent === "signup" && !alreadySynced) {
         try {
           const meta = user.user_metadata ?? {};
           const firstName: string =
