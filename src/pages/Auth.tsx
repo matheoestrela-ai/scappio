@@ -192,6 +192,10 @@ const Auth = () => {
         }
       }
 
+      if (provider === "google" && typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem("scappio_google_intent");
+      }
+
       navigate("/dashboard", { replace: true });
     };
 
