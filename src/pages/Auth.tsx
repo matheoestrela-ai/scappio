@@ -142,8 +142,8 @@ const Auth = () => {
           toast.error(err?.message ?? "Erreur lors de la synchronisation Google");
           return;
         }
-      } else if (provider === "google" && alreadySynced) {
-        // Google sign-IN (returning user) — identify via mail + Name + Surname
+      } else if (provider === "google" && intent === "signin") {
+        // Google SIGN-IN (returning user) — identify via mail + Name + Surname
         // (no password since it was auto-generated at sign-up)
         try {
           const meta = user.user_metadata ?? {};
@@ -154,7 +154,14 @@ const Auth = () => {
             ((meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ")) ?? "";
 
           const payload = {
-            action: "google sign in",
+            action: "Google Sign In",
+            mail: user.email,
+            user_gen_id: user.id,
+            Name: firstName,
+            Surname: lastName,
+            Mail: user.email,
+            provider: "google",
+          };
             mail: user.email,
             user_gen_id: user.id,
             Name: firstName,
