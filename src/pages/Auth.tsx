@@ -44,14 +44,28 @@ const Auth = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    const processedUsers = new Set<string>();
     const handleSession = async (session: any) => {
       if (!session?.user) return;
       const user = session.user;
       const provider = user.app_metadata?.provider;
       const alreadySynced = user.user_metadata?.scappio_synced === true;
 
-      // First-time Google sign-up → mirror to Scappio Flask server
-      if (provider === "google" && !alreadySynced) {
+      // Read intent stored before the OAuth redirect (signin vs signup tab)
+      const intent =
+        (typeof sessionStorage !== "undefined" &&
+          sessionStorage.getItem("scappio_google_intent")) || "signin";
+
+      // Dedupe: handleSession fires from both getSession() and onAuthStateChange
+      if (provider === "google" && processedUsers.has(user.id)) {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+      if (provider === "google") processedUsers.add(user.id);
+
+      // Google SIGN-UP path: only when user clicked Google from the "Sign up" tab
+      // AND the account hasn't been mirrored to Scappio yet
+      if (provider === "google" && intent === "signup" && !alreadySynced) {
         try {
           const meta = user.user_metadata ?? {};
           const firstName: string =
@@ -128,8 +142,8 @@ const Auth = () => {
           toast.error(err?.message ?? "Erreur lors de la synchronisation Google");
           return;
         }
-      } else if (provider === "google" && alreadySynced) {
-        // Google sign-IN (returning user) — identify via mail + Name + Surname
+      } else if (provider === "google" && intent === "signin") {
+        // Google SIGN-IN (returning user) — identify via mail + Name + Surname
         // (no password since it was auto-generated at sign-up)
         try {
           const meta = user.user_metadata ?? {};
@@ -140,7 +154,7 @@ const Auth = () => {
             ((meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ")) ?? "";
 
           const payload = {
-            action: "google sign in",
+            action: "Google Sign In",
             mail: user.email,
             user_gen_id: user.id,
             Name: firstName,
@@ -176,6 +190,10 @@ const Auth = () => {
           toast.error(err?.message ?? "Erreur lors de la connexion Google");
           return;
         }
+      }
+
+      if (provider === "google" && typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem("scappio_google_intent");
       }
 
       navigate("/dashboard", { replace: true });
@@ -516,6 +534,9 @@ const Auth = () => {
                   onClick={async () => {
                     setLoading(true);
                     try {
+                      // Remember which tab the user was on so handleSession knows
+                      // whether to send "sign up" or "Google Sign In" to Flask
+                      sessionStorage.setItem("scappio_google_intent", mode);
                       const result = await lovable.auth.signInWithOAuth("google", {
                         redirect_uri: `${window.location.origin}/auth`,
                       });
