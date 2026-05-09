@@ -128,6 +128,54 @@ const Auth = () => {
           toast.error(err?.message ?? "Erreur lors de la synchronisation Google");
           return;
         }
+      } else if (provider === "google" && alreadySynced) {
+        // Google sign-IN (returning user) — identify via mail + Name + Surname
+        // (no password since it was auto-generated at sign-up)
+        try {
+          const meta = user.user_metadata ?? {};
+          const firstName: string =
+            meta.first_name ?? meta.given_name ?? (meta.full_name ?? meta.name ?? "").split(" ")[0] ?? "";
+          const lastName: string =
+            meta.last_name ?? meta.family_name ??
+            ((meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ")) ?? "";
+
+          const payload = {
+            action: "sign in",
+            mail: user.email,
+            user_gen_id: user.id,
+            Name: firstName,
+            Surname: lastName,
+            Mail: user.email,
+            provider: "google",
+          };
+          console.log("[ScappioAuth][google][signin] POST payload:", payload);
+          const resp = await fetch(
+            "https://scappio-project-auth-part.onrender.com/ScappioAuth",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
+          const text = await resp.text();
+          console.log("[ScappioAuth][google][signin] response", resp.status, text);
+          let body: any = null;
+          try { body = JSON.parse(text); } catch { /* not JSON */ }
+
+          if (!resp.ok || !body || body.status !== true) {
+            const msg =
+              (body && typeof body.message === "string" && body.message) ||
+              "Le serveur Scappio n'a pas validé la connexion Google";
+            await supabase.auth.signOut();
+            toast.error(msg);
+            return;
+          }
+        } catch (err: any) {
+          console.error("[ScappioAuth][google][signin] error:", err);
+          await supabase.auth.signOut();
+          toast.error(err?.message ?? "Erreur lors de la connexion Google");
+          return;
+        }
       }
 
       navigate("/dashboard", { replace: true });
