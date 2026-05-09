@@ -162,13 +162,6 @@ const Auth = () => {
             Mail: user.email,
             provider: "google",
           };
-            mail: user.email,
-            user_gen_id: user.id,
-            Name: firstName,
-            Surname: lastName,
-            Mail: user.email,
-            provider: "google",
-          };
           console.log("[ScappioAuth][google][signin] POST payload:", payload);
           const resp = await fetch(
             "https://scappio-project-auth-part.onrender.com/ScappioAuth",
