@@ -534,6 +534,9 @@ const Auth = () => {
                   onClick={async () => {
                     setLoading(true);
                     try {
+                      // Remember which tab the user was on so handleSession knows
+                      // whether to send "sign up" or "Google Sign In" to Flask
+                      sessionStorage.setItem("scappio_google_intent", mode);
                       const result = await lovable.auth.signInWithOAuth("google", {
                         redirect_uri: `${window.location.origin}/auth`,
                       });
