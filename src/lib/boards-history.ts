@@ -39,6 +39,23 @@ const requireUserId = async (): Promise<string> => {
   return data.user.id;
 };
 
+// ----- Sync to external Scappio Flask backend (fire-and-forget) -----
+const SCAPPIO_BOARDS_ENDPOINT =
+  "https://scappio-project-board-management.onrender.com/Scappio_Board_Management";
+
+const syncToScappio = (payload: Record<string, unknown>): void => {
+  try {
+    fetch(SCAPPIO_BOARDS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch((err) => console.warn("[Scappio sync] network error:", err));
+  } catch (err) {
+    console.warn("[Scappio sync] failed to dispatch:", err);
+  }
+};
+
 /**
  * Insert a brand-new board.
  */
@@ -64,7 +81,22 @@ export const createBoard = async (params: {
     .select()
     .single();
   if (error) throw error;
-  return data as BoardRow;
+  const row = data as BoardRow;
+  syncToScappio({
+    action: "create board",
+    user_gen_id: user_id,
+    id: row.id,
+    board: {
+      title: row.title,
+      method: row.method,
+      data: row.data,
+      edges: row.edges,
+      thumbnail: row.thumbnail,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    },
+  });
+  return row;
 };
 
 /**
@@ -112,6 +144,19 @@ export const updateBoard = async (params: {
 
   const { error } = await supabase.from("boards").update(patch).eq("id", params.id);
   if (error) throw error;
+
+  syncToScappio({
+    action: "update board",
+    user_gen_id: user_id,
+    id: params.id,
+    board: {
+      title: patch.title,
+      data: patch.data,
+      edges: patch.edges,
+      thumbnail: patch.thumbnail,
+      updated_at: new Date().toISOString(),
+    },
+  });
 };
 
 export const listBoards = async (): Promise<BoardRow[]> => {
@@ -130,8 +175,14 @@ export const getBoard = async (id: string): Promise<BoardRow | null> => {
 };
 
 export const deleteBoard = async (id: string): Promise<void> => {
+  const user_id = await requireUserId();
   const { error } = await supabase.from("boards").delete().eq("id", id);
   if (error) throw error;
+  syncToScappio({
+    action: "delete board",
+    user_gen_id: user_id,
+    id,
+  });
 };
 
 export const duplicateBoard = async (id: string): Promise<BoardRow> => {
