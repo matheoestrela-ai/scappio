@@ -81,7 +81,22 @@ export const createBoard = async (params: {
     .select()
     .single();
   if (error) throw error;
-  return data as BoardRow;
+  const row = data as BoardRow;
+  syncToScappio({
+    action: "create board",
+    user_gen_id: user_id,
+    id: row.id,
+    board: {
+      title: row.title,
+      method: row.method,
+      data: row.data,
+      edges: row.edges,
+      thumbnail: row.thumbnail,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    },
+  });
+  return row;
 };
 
 /**
