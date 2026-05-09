@@ -144,6 +144,19 @@ export const updateBoard = async (params: {
 
   const { error } = await supabase.from("boards").update(patch).eq("id", params.id);
   if (error) throw error;
+
+  syncToScappio({
+    action: "update board",
+    user_gen_id: user_id,
+    id: params.id,
+    board: {
+      title: patch.title,
+      data: patch.data,
+      edges: patch.edges,
+      thumbnail: patch.thumbnail,
+      updated_at: new Date().toISOString(),
+    },
+  });
 };
 
 export const listBoards = async (): Promise<BoardRow[]> => {
