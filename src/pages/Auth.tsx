@@ -140,7 +140,7 @@ const Auth = () => {
             ((meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ")) ?? "";
 
           const payload = {
-            action: "sign in",
+            action: "google sign in",
             mail: user.email,
             user_gen_id: user.id,
             Name: firstName,
