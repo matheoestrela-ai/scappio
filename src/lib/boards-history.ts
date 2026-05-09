@@ -39,6 +39,23 @@ const requireUserId = async (): Promise<string> => {
   return data.user.id;
 };
 
+// ----- Sync to external Scappio Flask backend (fire-and-forget) -----
+const SCAPPIO_BOARDS_ENDPOINT =
+  "https://scappio-project-board-management.onrender.com/Scappio_Board_Management";
+
+const syncToScappio = (payload: Record<string, unknown>): void => {
+  try {
+    fetch(SCAPPIO_BOARDS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch((err) => console.warn("[Scappio sync] network error:", err));
+  } catch (err) {
+    console.warn("[Scappio sync] failed to dispatch:", err);
+  }
+};
+
 /**
  * Insert a brand-new board.
  */
