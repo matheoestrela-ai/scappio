@@ -234,9 +234,25 @@ const Dashboard = () => {
   }, [navigate]);
 
   const generateThumbnail = useCallback(async (): Promise<string | null> => {
+    // Prefer tldraw's native exporter — faithful, high-res snapshot of ALL shapes
+    // (not limited to the current viewport like a DOM screenshot would be).
+    try {
+      const api = boardApiRef.current;
+      if (api?.exportImage) {
+        const url = await api.exportImage();
+        if (url) return url;
+      }
+    } catch (err) {
+      console.warn("exportImage failed, falling back to DOM snapshot:", err);
+    }
+    // Fallback: DOM snapshot of the visible board container.
     if (!boardRef.current) return null;
     try {
-      const url = await toPng(boardRef.current, { cacheBust: true, backgroundColor: "#ffffff", pixelRatio: 0.5 });
+      const url = await toPng(boardRef.current, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
       return url;
     } catch {
       return null;

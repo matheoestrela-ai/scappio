@@ -583,6 +583,30 @@ const TldrawBoard = ({ data, apiRef, onChange, onPresentationChange }: TldrawBoa
           dataRef.current = next;
           renderBoardInEditor(editor, next);
         },
+        exportImage: async () => {
+          try {
+            const allShapeIds = Array.from(editor.getCurrentPageShapeIds());
+            if (allShapeIds.length === 0) return null;
+            const result = await editor.toImage(allShapeIds, {
+              format: "png",
+              background: true,
+              scale: 2,
+              padding: 48,
+              darkMode: false,
+            });
+            const blob = (result as any)?.blob ?? result;
+            if (!blob) return null;
+            return await new Promise<string | null>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
+              reader.onerror = () => resolve(null);
+              reader.readAsDataURL(blob as Blob);
+            });
+          } catch (err) {
+            console.warn("[TldrawBoard] exportImage failed:", err);
+            return null;
+          }
+        },
       };
     }
 
