@@ -44,13 +44,20 @@ const SCAPPIO_BOARDS_ENDPOINT =
   "https://scappio-project-board-management.onrender.com/Scappio_Board_Management";
 
 const syncToScappio = (payload: Record<string, unknown>): void => {
+  // NOTE: do NOT use { keepalive: true } here — it caps the request body at
+  // ~64 KB, which silently strips large fields like base64 thumbnails.
   try {
+    const body = JSON.stringify(payload);
+    console.debug("[Scappio sync] →", payload.action, "size:", body.length, "bytes");
     fetch(SCAPPIO_BOARDS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    }).catch((err) => console.warn("[Scappio sync] network error:", err));
+      body,
+    })
+      .then(async (r) => {
+        if (!r.ok) console.warn("[Scappio sync] HTTP", r.status, await r.text().catch(() => ""));
+      })
+      .catch((err) => console.warn("[Scappio sync] network error:", err));
   } catch (err) {
     console.warn("[Scappio sync] failed to dispatch:", err);
   }
