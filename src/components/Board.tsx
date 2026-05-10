@@ -1022,6 +1022,8 @@ export type BoardApi = {
   getBoardData: () => BoardData;
   replaceBoard: (data: BoardData) => void;
   relayout: () => void;
+  /** High-resolution PNG snapshot of the full board (all shapes). Returns a data URL. */
+  exportImage?: () => Promise<string | null>;
 };
 
 export type BoardProps = {
