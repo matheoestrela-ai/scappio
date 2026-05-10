@@ -350,7 +350,16 @@ const Dashboard = () => {
       setInsights(null);
       setCreationMethod(method);
       try {
-        const created = await createBoard({ data: parsedBoard, method, title: titleFromBoard(parsedBoard) });
+        // Wait a tick so the board is rendered, then generate the thumbnail
+        // BEFORE the initial create so the Scappio payload carries it.
+        await new Promise((r) => window.setTimeout(r, 400));
+        const initialThumb = await generateThumbnail();
+        const created = await createBoard({
+          data: parsedBoard,
+          method,
+          title: titleFromBoard(parsedBoard),
+          thumbnail: initialThumb,
+        });
         setCurrentBoardId(created.id);
         lastSerializedRef.current = JSON.stringify(parsedBoard);
         setSearchParams({ board: created.id }, { replace: true });
