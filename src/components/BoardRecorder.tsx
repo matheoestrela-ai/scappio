@@ -42,12 +42,17 @@ const cornerStyle = (c: Corner): React.CSSProperties => {
 
 const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
   const navigate = useNavigate();
+  const { plan, recordingsUsed, refresh: refreshPlan } = usePlan();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [corner, setCorner] = useState<Corner>("bl");
   const [camReady, setCamReady] = useState(false);
   const [formatDialogOpen, setFormatDialogOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const [activeFormat, setActiveFormat] = useState<Format>("16:9");
+
+  const planRef = useRef(plan);
+  useEffect(() => { planRef.current = plan; }, [plan]);
 
   const screenStreamRef = useRef<MediaStream | null>(null);
   const camStreamRef = useRef<MediaStream | null>(null);
