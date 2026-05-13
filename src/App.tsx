@@ -29,6 +29,7 @@ const App = () => (
           <Route path="/studio" element={<Studio />} />
           <Route path="/recordings" element={<Recordings />} />
           <Route path="/v/:id" element={<SharedVideo />} />
+          <Route path="/upgrade" element={<Upgrade />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
