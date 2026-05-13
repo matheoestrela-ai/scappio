@@ -11,6 +11,7 @@ import Studio from "./pages/Studio.tsx";
 import Recordings from "./pages/Recordings.tsx";
 import SharedVideo from "./pages/SharedVideo.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Upgrade from "./pages/Upgrade.tsx";
 
 const queryClient = new QueryClient();
 
