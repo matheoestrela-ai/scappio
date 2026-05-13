@@ -84,7 +84,7 @@ const Upgrade = () => {
               onClick={() => setCycle("annual")}
               className={`px-4 py-1.5 rounded-full transition ${cycle === "annual" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
             >
-              Annuel <span className="ml-1 text-[11px] text-orange-500 font-medium">2 mois offerts</span>
+              Annuel <span className="ml-1 text-[11px] text-orange-500 font-medium">−17%</span>
             </button>
           </div>
         </div>
