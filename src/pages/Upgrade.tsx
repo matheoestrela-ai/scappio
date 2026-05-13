@@ -158,8 +158,9 @@ const Upgrade = () => {
                 </>
               ) : (
                 <>
-                  <span className="text-4xl font-bold">197€</span>
+                  <span className="text-4xl font-bold">299€</span>
                   <span className="text-muted-foreground">/an</span>
+                  <span className="ml-2 text-[11px] font-semibold text-foreground bg-foreground/10 px-2 py-0.5 rounded-full">économise 17%</span>
                 </>
               )}
             </div>
@@ -169,43 +170,15 @@ const Upgrade = () => {
             <Feature>Toutes les futures fonctionnalités équipe</Feature>
             <Button
               className="mt-auto bg-foreground hover:bg-foreground/90 text-background"
-              disabled={!!loadingKey || isOnStudio || isLifetime}
+              disabled={!!loadingKey || isOnStudio}
               onClick={() => goCheckout(cycle === "monthly" ? "studio_monthly" : "studio_annual")}
             >
               {loadingKey?.startsWith("studio")
                 ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirection…</>
                 : isOnStudio ? "Plan actuel"
-                : isLifetime ? "Inclus dans Lifetime"
                 : "Passer en Studio"}
             </Button>
           </article>
-        </div>
-
-        {/* Lifetime banner */}
-        <div className="mt-10 rounded-2xl border-2 border-orange-500 bg-gradient-to-r from-orange-50 to-amber-50 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-orange-500 text-white inline-flex items-center justify-center shrink-0">
-              <Crown className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-base sm:text-lg font-semibold">
-                Accès à vie — 49€ une seule fois
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Offre limitée aux 50 premiers · Toutes les features Creator, à vie.
-              </div>
-            </div>
-          </div>
-          <Button
-            className="bg-orange-500 hover:bg-orange-500/90 text-white"
-            disabled={!!loadingKey || isLifetime}
-            onClick={() => goCheckout("lifetime")}
-          >
-            {loadingKey === "lifetime"
-              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirection…</>
-              : isLifetime ? "Tu as déjà l'accès Lifetime ✦"
-              : "Obtenir l'accès lifetime"}
-          </Button>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
