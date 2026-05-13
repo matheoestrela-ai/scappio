@@ -631,18 +631,6 @@ const Auth = () => {
             <p className="text-white/80 text-lg leading-relaxed">
               Capture, organize and share your notes with AI. Built for creators.
             </p>
-            <div className="flex items-center gap-3 pt-2">
-              <div className="flex -space-x-2">
-                {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-9 w-9 rounded-full border-2 border-white/80 bg-white/20 backdrop-blur"
-                    style={{ animationDelay: `${i * 100}ms` }}
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-white/80">1000+ creators trust us</p>
-            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
