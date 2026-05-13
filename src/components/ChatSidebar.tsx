@@ -134,6 +134,9 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
         </button>
       </div>
 
+      {/* Plan banner */}
+      <PlanBanner />
+
       {/* History list */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
         {loading ? (
