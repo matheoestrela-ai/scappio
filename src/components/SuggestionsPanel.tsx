@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Sparkles,
   ChevronRight,
@@ -12,8 +13,11 @@ import {
   RefreshCcw,
   Wand2,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePlan } from "@/hooks/usePlan";
+import { isPaidPlan } from "@/lib/plans";
 import type { BoardLevel, BoardShape } from "@/components/Board";
 
 export type SuggestionCategory =
