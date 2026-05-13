@@ -125,8 +125,9 @@ const Upgrade = () => {
                 </>
               ) : (
                 <>
-                  <span className="text-4xl font-bold">97€</span>
+                  <span className="text-4xl font-bold">139,99€</span>
                   <span className="text-muted-foreground">/an</span>
+                  <span className="ml-2 text-[11px] font-semibold text-orange-600 bg-orange-500/10 px-2 py-0.5 rounded-full">économise 17%</span>
                 </>
               )}
             </div>
@@ -136,13 +137,12 @@ const Upgrade = () => {
             <Feature>Export PDF sans watermark</Feature>
             <Button
               className="mt-auto bg-orange-500 hover:bg-orange-500/90 text-white"
-              disabled={!!loadingKey || isOnCreator || isLifetime}
+              disabled={!!loadingKey || isOnCreator}
               onClick={() => goCheckout(cycle === "monthly" ? "creator_monthly" : "creator_annual")}
             >
               {loadingKey?.startsWith("creator")
                 ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirection…</>
                 : isOnCreator ? "Plan actuel"
-                : isLifetime ? "Inclus dans Lifetime"
                 : "Passer en Creator"}
             </Button>
           </article>
