@@ -479,6 +479,33 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={paywallOpen} onOpenChange={setPaywallOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Tu as atteint ta limite de 10 enregistrements ce mois-ci.
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Passe en Creator pour enregistrer sans limite.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <button
+              onClick={() => { setPaywallOpen(false); navigate("/upgrade"); }}
+              className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 transition"
+            >
+              Passer en Creator →
+            </button>
+            <button
+              onClick={() => setPaywallOpen(false)}
+              className="w-full rounded-lg bg-muted hover:bg-muted/80 text-foreground font-medium py-2.5 transition"
+            >
+              Annuler
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
