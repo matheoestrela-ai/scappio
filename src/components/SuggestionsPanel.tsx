@@ -97,6 +97,8 @@ export const SuggestionsPanel = ({
   onAutoImprove: () => void;
 }) => {
   const [open, setOpen] = useState(true);
+  const { plan, loading: planLoading } = usePlan();
+  const locked = !planLoading && !isPaidPlan(plan);
 
   if (!open) {
     return (
@@ -109,6 +111,40 @@ export const SuggestionsPanel = ({
       >
         <Sparkles className="h-4 w-4 text-primary" />
       </button>
+    );
+  }
+
+  if (locked) {
+    return (
+      <aside className="flex w-full md:w-[340px] h-full md:h-auto shrink-0 flex-col overflow-hidden rounded-none md:rounded-2xl border-0 md:border md:border-border bg-background/90 shadow-none md:shadow-elegant backdrop-blur">
+        <header className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-primary text-white shadow-glow">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <h2 className="text-sm font-semibold tracking-tight">AI Agent</h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="rounded-md p-1 text-muted-foreground transition hover:bg-accent"
+            aria-label="Close panel"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </header>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+          <Lock className="h-8 w-8 text-muted-foreground" />
+          <div className="text-base font-bold text-foreground">Agent IA</div>
+          <div className="text-sm text-muted-foreground">Disponible en Creator</div>
+          <Link
+            to="/upgrade"
+            className="mt-2 inline-flex items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 transition"
+          >
+            Passer en Creator →
+          </Link>
+        </div>
+      </aside>
     );
   }
 
