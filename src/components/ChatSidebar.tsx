@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { listBoards, deleteBoard, type BoardRow } from "@/lib/boards-history";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import PlanBanner from "@/components/PlanBanner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,6 +133,9 @@ const ChatSidebar = ({ currentBoardId, onNewBoard, onSelectBoard, refreshKey, op
           Studio
         </button>
       </div>
+
+      {/* Plan banner */}
+      <PlanBanner />
 
       {/* History list */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
