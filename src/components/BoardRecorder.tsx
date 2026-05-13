@@ -405,7 +405,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={recording ? stopRecording : () => setFormatDialogOpen(true)}
+                onClick={recording ? stopRecording : handleRecordClick}
                 aria-label={recording ? "Stop recording" : "Record screen"}
                 className={`h-9 w-9 inline-flex items-center justify-center rounded-full shadow-md transition text-white ${
                   recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-red-600 hover:bg-red-500"
