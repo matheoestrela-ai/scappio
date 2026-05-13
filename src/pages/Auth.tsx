@@ -142,7 +142,7 @@ const Auth = () => {
           toast.error(err?.message ?? "Erreur lors de la synchronisation Google");
           return;
         }
-      } else if (provider === "google" && intent === "signin") {
+      } else if (provider === "google" && alreadySynced) {
         // Google SIGN-IN (returning user) — identify via mail + Name + Surname
         // (no password since it was auto-generated at sign-up)
         try {
