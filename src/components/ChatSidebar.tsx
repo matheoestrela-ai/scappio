@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { listBoards, deleteBoard, type BoardRow } from "@/lib/boards-history";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import PlanBanner from "@/components/PlanBanner";
 import {
   DropdownMenu,
   DropdownMenuContent,
