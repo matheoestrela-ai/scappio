@@ -31,7 +31,11 @@ const signupSchema = z
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
+  const [mode, setMode] = useState<Mode>(() => {
+    if (typeof window === "undefined") return "signin";
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get("signup") === "1" || sp.get("mode") === "signup" ? "signup" : "signin";
+  });
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
