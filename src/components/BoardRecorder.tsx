@@ -297,6 +297,18 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           blob,
         });
         toast.success("Recording saved");
+        if (!isPaidPlan(planRef.current)) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              await supabase.rpc("consume_recording_quota", {
+                _user: user.id,
+                _free_limit: FREE_RECORDING_LIMIT,
+              });
+              refreshPlan();
+            }
+          } catch (e) { console.warn("quota increment failed", e); }
+        }
         navigate("/recordings");
       } catch (e: any) {
         toast.error("Save failed: " + (e?.message || e));
