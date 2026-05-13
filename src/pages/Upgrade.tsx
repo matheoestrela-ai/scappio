@@ -47,7 +47,6 @@ const Upgrade = () => {
 
   const isOnCreator = plan === "creator";
   const isOnStudio = plan === "studio";
-  const isLifetime = plan === "lifetime";
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
