@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { saveRecording } from "@/lib/recordings-db";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { usePlan } from "@/hooks/usePlan";
+import { isPaidPlan, FREE_RECORDING_LIMIT } from "@/lib/plans";
+import { supabase } from "@/integrations/supabase/client";
 
 type Corner = "tl" | "tr" | "bl" | "br";
 type Format = "16:9" | "9:16";
