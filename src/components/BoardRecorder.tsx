@@ -374,6 +374,14 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     return `${m}:${ss}`;
   };
 
+  const handleRecordClick = () => {
+    if (!isPaidPlan(plan) && recordingsUsed >= FREE_RECORDING_LIMIT) {
+      setPaywallOpen(true);
+      return;
+    }
+    setFormatDialogOpen(true);
+  };
+
   const handleSelectFormat = async (format: Format) => {
     setFormatDialogOpen(false);
     // Slight delay so dialog close doesn't swallow the user gesture for getDisplayMedia
