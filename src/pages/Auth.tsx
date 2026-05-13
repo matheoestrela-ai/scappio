@@ -55,11 +55,6 @@ const Auth = () => {
       const provider = user.app_metadata?.provider;
       const alreadySynced = user.user_metadata?.scappio_synced === true;
 
-      // Read intent stored before the OAuth redirect (signin vs signup tab)
-      const intent =
-        (typeof sessionStorage !== "undefined" &&
-          sessionStorage.getItem("scappio_google_intent")) || "signin";
-
       // Dedupe: handleSession fires from both getSession() and onAuthStateChange
       if (provider === "google" && processedUsers.has(user.id)) {
         navigate("/dashboard", { replace: true });
@@ -67,9 +62,10 @@ const Auth = () => {
       }
       if (provider === "google") processedUsers.add(user.id);
 
-      // Google SIGN-UP path: only when user clicked Google from the "Sign up" tab
-      // AND the account hasn't been mirrored to Scappio yet
-      if (provider === "google" && intent === "signup" && !alreadySynced) {
+      // Google flow: source of truth is the `scappio_synced` user_metadata flag.
+      // - Not synced yet  -> mirror as a new Scappio account (sign up)
+      // - Already synced  -> log in on Scappio side
+      if (provider === "google" && !alreadySynced) {
         try {
           const meta = user.user_metadata ?? {};
           const firstName: string =
@@ -146,7 +142,7 @@ const Auth = () => {
           toast.error(err?.message ?? "Erreur lors de la synchronisation Google");
           return;
         }
-      } else if (provider === "google" && intent === "signin") {
+      } else if (provider === "google" && alreadySynced) {
         // Google SIGN-IN (returning user) — identify via mail + Name + Surname
         // (no password since it was auto-generated at sign-up)
         try {
