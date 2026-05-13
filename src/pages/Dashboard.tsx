@@ -508,6 +508,11 @@ const Dashboard = () => {
       const dataUrl = await toPng(boardRef.current, { backgroundColor: "#F5F3FF", pixelRatio: 2 });
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1600, 1000] });
       pdf.addImage(dataUrl, "PNG", 0, 0, 1600, 1000);
+      if (exportsHaveWatermark(plan)) {
+        pdf.setFontSize(14);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text("✦ Créé avec Scappio — scappio.site", 800, 980, { align: "center" });
+      }
       pdf.save("scappio-board.pdf");
       toast.success("PDF exported!");
     } catch (e: any) {
