@@ -41,6 +41,8 @@ import {
 import ChatSidebar, { SidebarToggleButton } from "@/components/ChatSidebar";
 import ChatComposer from "@/components/ChatComposer";
 import BoardRecorder from "@/components/BoardRecorder";
+import { usePlan } from "@/hooks/usePlan";
+import { hasAgentAI, exportsHaveWatermark } from "@/lib/plans";
 
 
 const MAX_SIZE = 25 * 1024 * 1024;
@@ -335,11 +337,26 @@ const Dashboard = () => {
       r.readAsDataURL(file);
     });
 
+  const { plan, refresh: refreshPlan } = usePlan();
+
   const runAnalysis = useCallback(async (
     payload: { image?: string; text?: string; pdf?: string },
     method: BoardMethod,
     displayMessage: string,
   ) => {
+    // Quota gate (free plan: 4 boards/mois)
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: q } = await supabase.rpc("consume_board_quota", { _user: user.id });
+        const r = q as any;
+        if (r && r.allowed === false && r.reason === "limit_reached") {
+          toast.error("Tu as atteint ta limite de 4 boards ce mois-ci. Passe en Creator pour continuer sans limite.");
+          navigate("/upgrade");
+          return;
+        }
+      }
+    } catch (e) { console.warn("[quota] board check failed", e); }
     setProcessing(true);
     setBoard(null);
     setInsights(null);
@@ -491,6 +508,11 @@ const Dashboard = () => {
       const dataUrl = await toPng(boardRef.current, { backgroundColor: "#F5F3FF", pixelRatio: 2 });
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1600, 1000] });
       pdf.addImage(dataUrl, "PNG", 0, 0, 1600, 1000);
+      if (exportsHaveWatermark(plan)) {
+        pdf.setFontSize(14);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text("✦ Créé avec Scappio — scappio.site", 800, 980, { align: "center" });
+      }
       pdf.save("scappio-board.pdf");
       toast.success("PDF exported!");
     } catch (e: any) {

@@ -11,6 +11,7 @@ import Studio from "./pages/Studio.tsx";
 import Recordings from "./pages/Recordings.tsx";
 import SharedVideo from "./pages/SharedVideo.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Upgrade from "./pages/Upgrade.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/studio" element={<Studio />} />
           <Route path="/recordings" element={<Recordings />} />
           <Route path="/v/:id" element={<SharedVideo />} />
+          <Route path="/upgrade" element={<Upgrade />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

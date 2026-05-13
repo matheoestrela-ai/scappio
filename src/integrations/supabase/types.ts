@@ -91,32 +91,53 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          boards_generated_this_month: number
           created_at: string
           email: string | null
           first_name: string | null
           full_name: string | null
           id: string
           last_name: string | null
+          month_reset_date: string
+          plan: string
+          recordings_this_month: number
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          boards_generated_this_month?: number
           created_at?: string
           email?: string | null
           first_name?: string | null
           full_name?: string | null
           id: string
           last_name?: string | null
+          month_reset_date?: string
+          plan?: string
+          recordings_this_month?: number
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          boards_generated_this_month?: number
           created_at?: string
           email?: string | null
           first_name?: string | null
           full_name?: string | null
           id?: string
           last_name?: string | null
+          month_reset_date?: string
+          plan?: string
+          recordings_this_month?: number
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -150,7 +171,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      consume_board_quota: {
+        Args: { _free_limit?: number; _user: string }
+        Returns: Json
+      }
+      consume_recording_quota: {
+        Args: { _free_limit?: number; _user: string }
+        Returns: Json
+      }
     }
     Enums: {
       board_method: "photo" | "voice" | "text" | "pdf" | "manual"
