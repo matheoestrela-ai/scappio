@@ -431,6 +431,21 @@ const Dashboard = () => {
     await runAnalysis({ text }, "text", text);
   }, [runAnalysis]);
 
+  // Consume a prompt typed on the landing page (saved to localStorage before
+  // the user was redirected to /auth). Triggered once after auth is ready and
+  // when no specific board is requested via URL.
+  const pendingConsumedRef = useRef(false);
+  useEffect(() => {
+    if (!authChecked || pendingConsumedRef.current) return;
+    if (searchParams.get("board")) return;
+    let pending: string | null = null;
+    try { pending = localStorage.getItem("scappio_pending_prompt"); } catch {/* ignore */}
+    if (!pending || !pending.trim()) return;
+    pendingConsumedRef.current = true;
+    try { localStorage.removeItem("scappio_pending_prompt"); } catch {/* ignore */}
+    handleTextSend(pending.trim());
+  }, [authChecked, searchParams, handleTextSend]);
+
   const handleVoiceRecorded = useCallback(async (audioDataUrl: string) => {
     setProcessing(true);
     setBoard(null);
