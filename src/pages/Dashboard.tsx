@@ -41,6 +41,8 @@ import {
 import ChatSidebar, { SidebarToggleButton } from "@/components/ChatSidebar";
 import ChatComposer from "@/components/ChatComposer";
 import BoardRecorder from "@/components/BoardRecorder";
+import { usePlan } from "@/hooks/usePlan";
+import { hasAgentAI, exportsHaveWatermark } from "@/lib/plans";
 
 
 const MAX_SIZE = 25 * 1024 * 1024;
