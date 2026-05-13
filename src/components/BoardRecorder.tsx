@@ -206,6 +206,39 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       try { ctx.drawImage(src, 0, 0, sw, sh, tx, ty, tw, th); } catch {}
     };
 
+    const drawWatermark = () => {
+      if (isPaidPlan(planRef.current)) return;
+      const text = "✦ Scappio";
+      ctx.save();
+      ctx.font = "bold 24px Inter, system-ui, sans-serif";
+      ctx.textBaseline = "alphabetic";
+      const padX = 12, padY = 8, radius = 6;
+      const metrics = ctx.measureText(text);
+      const textW = metrics.width;
+      const textH = 24;
+      const boxW = textW + padX * 2;
+      const boxH = textH + padY * 2;
+      const x = W - 20 - boxW;
+      const y = H - 20 - boxH;
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      // rounded rect
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + boxW - radius, y);
+      ctx.quadraticCurveTo(x + boxW, y, x + boxW, y + radius);
+      ctx.lineTo(x + boxW, y + boxH - radius);
+      ctx.quadraticCurveTo(x + boxW, y + boxH, x + boxW - radius, y + boxH);
+      ctx.lineTo(x + radius, y + boxH);
+      ctx.quadraticCurveTo(x, y + boxH, x, y + boxH - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(text, x + padX, y + padY + textH - 4);
+      ctx.restore();
+    };
+
     const draw = () => {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, W, H);
@@ -221,6 +254,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
         try { ctx.drawImage(sv, 0, 0, W, H); } catch {}
         // Camera bubble is captured by the screen stream (DOM overlay), no redraw.
       }
+      drawWatermark();
       rafRef.current = requestAnimationFrame(draw);
     };
     draw();
