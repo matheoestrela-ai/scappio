@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { saveRecording } from "@/lib/recordings-db";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { usePlan } from "@/hooks/usePlan";
+import { isPaidPlan, FREE_RECORDING_LIMIT } from "@/lib/plans";
+import { supabase } from "@/integrations/supabase/client";
 
 type Corner = "tl" | "tr" | "bl" | "br";
 type Format = "16:9" | "9:16";
@@ -39,12 +42,17 @@ const cornerStyle = (c: Corner): React.CSSProperties => {
 
 const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
   const navigate = useNavigate();
+  const { plan, recordingsUsed, refresh: refreshPlan } = usePlan();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [corner, setCorner] = useState<Corner>("bl");
   const [camReady, setCamReady] = useState(false);
   const [formatDialogOpen, setFormatDialogOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const [activeFormat, setActiveFormat] = useState<Format>("16:9");
+
+  const planRef = useRef(plan);
+  useEffect(() => { planRef.current = plan; }, [plan]);
 
   const screenStreamRef = useRef<MediaStream | null>(null);
   const camStreamRef = useRef<MediaStream | null>(null);
@@ -198,6 +206,39 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       try { ctx.drawImage(src, 0, 0, sw, sh, tx, ty, tw, th); } catch {}
     };
 
+    const drawWatermark = () => {
+      if (isPaidPlan(planRef.current)) return;
+      const text = "✦ Scappio";
+      ctx.save();
+      ctx.font = "bold 24px Inter, system-ui, sans-serif";
+      ctx.textBaseline = "alphabetic";
+      const padX = 12, padY = 8, radius = 6;
+      const metrics = ctx.measureText(text);
+      const textW = metrics.width;
+      const textH = 24;
+      const boxW = textW + padX * 2;
+      const boxH = textH + padY * 2;
+      const x = W - 20 - boxW;
+      const y = H - 20 - boxH;
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      // rounded rect
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + boxW - radius, y);
+      ctx.quadraticCurveTo(x + boxW, y, x + boxW, y + radius);
+      ctx.lineTo(x + boxW, y + boxH - radius);
+      ctx.quadraticCurveTo(x + boxW, y + boxH, x + boxW - radius, y + boxH);
+      ctx.lineTo(x + radius, y + boxH);
+      ctx.quadraticCurveTo(x, y + boxH, x, y + boxH - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(text, x + padX, y + padY + textH - 4);
+      ctx.restore();
+    };
+
     const draw = () => {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, W, H);
@@ -213,6 +254,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
         try { ctx.drawImage(sv, 0, 0, W, H); } catch {}
         // Camera bubble is captured by the screen stream (DOM overlay), no redraw.
       }
+      drawWatermark();
       rafRef.current = requestAnimationFrame(draw);
     };
     draw();
@@ -255,6 +297,18 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           blob,
         });
         toast.success("Recording saved");
+        if (!isPaidPlan(planRef.current)) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              await supabase.rpc("consume_recording_quota", {
+                _user: user.id,
+                _free_limit: FREE_RECORDING_LIMIT,
+              });
+              refreshPlan();
+            }
+          } catch (e) { console.warn("quota increment failed", e); }
+        }
         navigate("/recordings");
       } catch (e: any) {
         toast.error("Save failed: " + (e?.message || e));
@@ -320,6 +374,14 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
     return `${m}:${ss}`;
   };
 
+  const handleRecordClick = () => {
+    if (!isPaidPlan(plan) && recordingsUsed >= FREE_RECORDING_LIMIT) {
+      setPaywallOpen(true);
+      return;
+    }
+    setFormatDialogOpen(true);
+  };
+
   const handleSelectFormat = async (format: Format) => {
     setFormatDialogOpen(false);
     // Slight delay so dialog close doesn't swallow the user gesture for getDisplayMedia
@@ -343,7 +405,7 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={recording ? stopRecording : () => setFormatDialogOpen(true)}
+                onClick={recording ? stopRecording : handleRecordClick}
                 aria-label={recording ? "Stop recording" : "Record screen"}
                 className={`h-9 w-9 inline-flex items-center justify-center rounded-full shadow-md transition text-white ${
                   recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-red-600 hover:bg-red-500"
@@ -413,6 +475,33 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
                 <div className="font-medium">9:16</div>
                 <div className="text-xs text-muted-foreground">Portrait — board en haut, caméra en bas</div>
               </div>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={paywallOpen} onOpenChange={setPaywallOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Tu as atteint ta limite de 10 enregistrements ce mois-ci.
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Passe en Creator pour enregistrer sans limite.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <button
+              onClick={() => { setPaywallOpen(false); navigate("/upgrade"); }}
+              className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 transition"
+            >
+              Passer en Creator →
+            </button>
+            <button
+              onClick={() => setPaywallOpen(false)}
+              className="w-full rounded-lg bg-muted hover:bg-muted/80 text-foreground font-medium py-2.5 transition"
+            >
+              Annuler
             </button>
           </div>
         </DialogContent>
