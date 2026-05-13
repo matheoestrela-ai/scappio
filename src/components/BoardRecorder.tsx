@@ -210,18 +210,17 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       if (isPaidPlan(planRef.current)) return;
       const text = "✦ Scappio";
       ctx.save();
-      ctx.font = "bold 24px Inter, system-ui, sans-serif";
+      ctx.font = "bold 36px Inter, system-ui, sans-serif";
       ctx.textBaseline = "alphabetic";
-      const padX = 12, padY = 8, radius = 6;
+      const padX = 18, padY = 12, radius = 10;
       const metrics = ctx.measureText(text);
       const textW = metrics.width;
-      const textH = 24;
+      const textH = 36;
       const boxW = textW + padX * 2;
       const boxH = textH + padY * 2;
-      const x = W - 20 - boxW;
-      const y = H - 20 - boxH;
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      // rounded rect
+      const x = W - 28 - boxW;
+      const y = H - 28 - boxH;
+      ctx.fillStyle = "rgba(0,0,0,0.7)";
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
       ctx.lineTo(x + boxW - radius, y);
@@ -234,8 +233,10 @@ const BoardRecorder = ({ targetRef, boardId, boardTitle }: Props) => {
       ctx.quadraticCurveTo(x, y, x + radius, y);
       ctx.closePath();
       ctx.fill();
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.shadowBlur = 4;
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(text, x + padX, y + padY + textH - 4);
+      ctx.fillText(text, x + padX, y + padY + textH - 6);
       ctx.restore();
     };
 
