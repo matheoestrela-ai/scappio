@@ -282,8 +282,11 @@ const Index = () => {
                 toast.error("Write something to get started");
                 return;
               }
-              toast.success("Taking you to create your board!");
-              window.location.href = "/auth";
+              try {
+                localStorage.setItem("scappio_pending_prompt", value);
+              } catch {/* ignore */}
+              toast.success("Create your account to generate your board!");
+              window.location.href = "/auth?signup=1";
             }}
             className="mx-auto mt-8 md:mt-10 flex w-full max-w-2xl items-center gap-1 sm:gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur p-1.5 sm:p-2 shadow-elegant focus-within:ring-2 focus-within:ring-ring"
           >
